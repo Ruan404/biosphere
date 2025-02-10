@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Niveau de charge de la batterie</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .battery-level {
+            font-size: 2em;
+            font-weight: bold;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div class="battery-level">Niveau de charge de la batterie : <span id="battery-level"></span>%</div>
+
+    <script>
+        window.onload = function () {
+            navigator.getBattery().then(function(battery) {
+                document.getElementById('battery-level').textContent = Math.round(battery.level * 100);
+            });
+        };
+    </script>
+</body>
+</html>
