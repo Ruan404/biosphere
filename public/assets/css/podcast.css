@@ -1,0 +1,43 @@
+.player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: rgb(var(--bg-2));
+  padding: 1.25rem;
+  border-radius: 1.5rem;
+  max-width: 360px;
+  row-gap: 0.875rem;
+  margin: auto;
+  font-size: 0.875rem;
+}
+
+.cover {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  border-radius: 0.5rem;
+}
+
+audio {
+  width: 100%;
+}
+
+.podcast-info,
+.player-sub-ctn {
+  display: flex;
+  flex-direction: column;
+}
+
+.podcast-info {
+  row-gap: 0.5rem;
+}
+
+.player-sub-ctn {
+  row-gap: 0.75rem;
+}
+
+@media (max-width: 496px) {
+  .player{
+    max-width: 100%;
+  }
+}
