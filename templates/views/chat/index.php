@@ -1,19 +1,15 @@
 <?php
 use App\Chat\{
+	ChatService,
 	Chat
 };
 
-use App\Topic\{
-	Topic
-};
+use App\Topic\TopicService;
+
 
 $style = "chat";
+$topics = new TopicService() -> getAllTopics();
 
-$pdo = new PDO('mysql:host=localhost:3306;dbname=espace_membres;charset=utf8;', 'root', '', [
-	PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-]);
-$query = $pdo->query('SELECT * FROM topic ORDER BY topic.name ASC');
-$topics = $query->fetchAll(PDO::FETCH_CLASS, Topic::class);
 ?>
 
 <?php
@@ -24,7 +20,7 @@ $topics = $query->fetchAll(PDO::FETCH_CLASS, Topic::class);
 
 
 if (isset($params['slug'])) {
-	$topic = new Topic()->getTopicByName($params['slug']);
+	$topic = new TopicService()->getTopicByName($params['slug']);
 	if ($topic == null) {
 		header('Location: ' . $router->url('chat'));
 		exit();
@@ -34,7 +30,7 @@ if (isset($params['slug'])) {
 
 	// récupère l'id du dernier message affiché
 	$lastMessageId = $_GET['lastMessageId'] ?? 0;
-	$messages = new Chat()->getChatMessages($topicId, $lastMessageId);
+	$messages = new ChatService()->getChatMessages($topicId, $lastMessageId);
 
 	if ($messages == null) {
 		header('Location: ' . $router->url('chat'));
@@ -58,7 +54,7 @@ if (!empty($_POST)) {
 	$chat->pseudo = "Biosphère";
 	$chat->topic_id = $topicId;
 
-	$result = $chat->addMessage($chat);
+	$result = new chatService()->addMessage($chat);
 
 	// redirection vers la page chat.php avec le topic sélectionné
 	header('Location: ' . $router->url('topic', ['slug' => $topic->name]));

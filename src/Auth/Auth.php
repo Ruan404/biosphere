@@ -1,31 +1,33 @@
 <?php
 
 namespace App\Auth;
+use \App\User\{
+    User,
+    UserService
+};
 
-use PDO;
-use \App\User\User;
+use Exception;
 
 class Auth
 {
-    private $pdo;
+    private $userService;
 
-    public function __construct(PDO $pdo)
+    public function __construct()
     {
-        $this->pdo = $pdo;
+        $this->userService = new UserService();
     }
 
-    public function login(string $pseudo, string $password): ?User
+    public function login(User $loginUser): ?User
     {
-        //get user
-        $query = $this->pdo->prepare('SELECT * FROM users WHERE pseudo = ?');
-        $query->execute([htmlspecialchars($pseudo)]);
-        $user = $query->fetchObject(User::class);
-      
-        if ($user == false) {
-            return null;
-        }
+        $user = $this->userService->getUserByPseudo($loginUser->pseudo);
+
         //verify password
-        if (sha1($password) == $user->mdp) {
+
+        if($user == null){
+            throw new Exception("the user does not exist");
+        }
+        
+        if (sha1($loginUser->mdp) == $user->mdp) {
             /**
              * 0 ----> PHP_SESSION_DISABLED if sessions are disabled.
              * 1 ----> PHP_SESSION_NONE if sessions are enabled, but none exists.
@@ -43,29 +45,17 @@ class Auth
         return null;
     }
 
-    public function signup(string $pseudo, string $password): bool
+    public function signup(User $signupUser): bool
     {
-        //verify if the user already exists in the database
-        $query = $this->pdo->prepare('SELECT * FROM users WHERE pseudo = ?');
-        $query->execute([htmlspecialchars($pseudo)]);
-        $user = $query->fetchObject(User::class);
+        $result = $this->userService->createUser($signupUser);
 
-        // dd($user);
-
-        if ($user === false) {
-            $req = $this->pdo->prepare('INSERT INTO users(pseudo, mdp)VALUES(?, ?)');
-            $result = $req->execute([htmlspecialchars($pseudo), sha1($password)]);
-            
-        }
-
-        return false;
+        return $result;
     }
 
     /**
      * la fonction est statique pour ne pas avoir à instancier la classe
      * instancier signifie créer un nouvel objet à partir d'une classe
-     * exemple : $auth = new Auth($pdo);
-     * $pdo sera à définir
+     * exemple : $auth = new Auth();
      */
     public static function logout()
     {

@@ -1,13 +1,19 @@
 <?php
 use App\Auth\Auth;
-use App\Database\Database;
+// use App\Database\Database;
+use App\User\User;
 
 $title = "connexion à biosphère";
 $error = false;
 if (!empty($_POST)) {
-    $auth = new Auth(Database::getPDO());
+    $auth = new Auth();
 
-    $user = $auth->login($_POST['pseudo'], $_POST['password']);
+    //create a new user
+    $loginUser = new User();
+    $loginUser->pseudo = $_POST['pseudo'];
+    $loginUser->mdp = $_POST['password'];
+
+    $user = $auth->login($loginUser);
 
     if ($user) {
         header('Location: '.$router->url('home'));

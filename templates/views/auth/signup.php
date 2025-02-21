@@ -1,26 +1,26 @@
 <?php
 use App\Auth\Auth;
-use App\Database\Database;
+use App\User\User;
 
 $title = "rejoindre biosphère";
 $error = false;
 
 if (!empty($_POST)) {
   //créer un nouvel objet auth
-  $auth = new Auth(Database::getPDO());
+  $auth = new Auth();
+
+  //create a new user
+  $signupUser = new User();
+  $signupUser->pseudo = $_POST['pseudo'];
+  $signupUser->mdp = $_POST['password'];
 
   //essayer d'inscrire l'utilisateur
-  $result = $auth->signup($_POST['pseudo'], $_POST['password']);
+  $result = $auth->signup($signupUser);
 
-  //l'utilisateur existe déjà
-  if ($result == false) {
-    header('Location: '.$router->url('login'));
+  if ($result == true) {
+    header('Location: ' . $router->url('login'));
+    exit();
   }
-
-  header('Location: '.$router->url('home'));                      
-  
-
-  $error = true;
 }
 ?>
 <div class="sign-ctn">

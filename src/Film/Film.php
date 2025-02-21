@@ -9,33 +9,23 @@ namespace App\Film;
  */
 class Film
 {
-
-    private $id;
-    private $cover;
-    private $video;
-    private $genre_id;
-    private $title;
-    private $description;
-    
-
-    public function getCover(){
-        return htmlspecialchars($this -> cover);
-    }
-
-    public function getVideo(){
-        return htmlspecialchars($this -> video);
-    }
-
-    public function getGenre(){
-        return htmlspecialchars($this -> genre_id);
+    public string $cover{
+        get => htmlspecialchars($this -> cover);
     }
     
-    public function getTitle(){
-        return htmlspecialchars($this -> title);
+    public string $video{
+        get => htmlspecialchars($this -> video);
     }
 
-    public function getDesc(){
-        return htmlspecialchars($this -> description);
+    public int $genre_id{
+        get => $this -> genre_id;
+    }
+
+    public string $title{
+        get => htmlspecialchars($this -> title);
+    }
+    public string $description{
+        get => htmlspecialchars($this -> description);
     }
 
 }

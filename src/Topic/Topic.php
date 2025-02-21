@@ -2,8 +2,6 @@
 
 namespace App\Topic;
 
-use App\Database\Database;
-
 //voir les messages par rapport à un topic
 /**
  * récupérer le topic
@@ -25,20 +23,5 @@ class Topic
             $this->name = array_pop($slug);
             
         }
-    }
-
-    public function getTopicByName($name): ?Topic
-    {
-        $this->name = $name; //set a name
-
-        $query = Database::getPDO()->prepare('SELECT * FROM topic WHERE name = ?');
-        $query->execute([$this->name]);
-        $topic = $query->fetchObject(Topic::class);
-
-        if ($topic) {
-            return $topic;
-        }
-
-        return null;
     }
 }

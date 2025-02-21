@@ -1,13 +1,9 @@
 <?php
-
-use App\Film\Film;
-use App\Database\Database;
+use App\Film\FilmService;
 
 $style = "film";
 
-$query = Database::getPDO()->query('SELECT * FROM film JOIN genre ON film.genre_id = genre.id');
-
-$films = $query->fetchAll(PDO::FETCH_CLASS, Film::class);
+$films = new FilmService()->getAllFilms();
 
 ?>
 
@@ -16,9 +12,9 @@ $films = $query->fetchAll(PDO::FETCH_CLASS, Film::class);
         <div class="film-card">
 
             <div class="film-cover">
-                <img src=<?= '/assets/images/'.$film -> getCover() ?> />
+                <img src=<?= '/assets/images/' . $film->cover ?> />
             </div>
-            <a href="#"><?= $film -> getTitle() ?></a>
+            <a href="#"><?= $film->title ?></a>
 
         </div>
     <?php endforeach ?>

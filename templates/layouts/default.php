@@ -1,5 +1,5 @@
 <?php
-use \App\User\User;
+use \App\User\UserService;
 use \App\Helpers\Text;
 
 session_start();
@@ -14,7 +14,9 @@ if (session_status() == 1 || empty($_SESSION['auth'])) {
     exit();
 }
 
-$user = new User()->getUserById($_SESSION['auth'])->pseudo;
+$userService = new UserService();
+
+$user = $userService->getUserById($_SESSION['auth'])->pseudo;
 
 $profile = Text::getFirstStr($user); //à développer
 ?>
@@ -75,8 +77,7 @@ $profile = Text::getFirstStr($user); //à développer
 
         <?php endif ?>
     </footer>
-    <script src="/assets/js/script.js">
-    </script>
+    <script src="/assets/js/script.js"></script>
 </body>
 
 </html>
