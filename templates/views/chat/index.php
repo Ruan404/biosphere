@@ -58,7 +58,6 @@ if (!empty($_POST)) {
 
 	// redirection vers la page chat.php avec le topic sélectionné
 	header('Location: ' . $router->url('topic', ['slug' => $topic->name]));
-
 	exit();
 }
 

@@ -22,6 +22,7 @@ main, .container{
 main {
   margin-inline: 0;
   display: grid;
+  width: 100%;
 }
 
 /*===Container===*/

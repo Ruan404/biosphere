@@ -73,7 +73,7 @@ $profile = Text::getFirstStr($user); //à développer
     <footer>
         <?php if (defined('DEBUG_TIME')): ?>
 
-            temps d'affichage en ms : <?= round(1000 * (microtime(true) - DEBUG_TIME)) ?> ms
+            temps d'affichage: <?= round(1000 * (microtime(true) - DEBUG_TIME)) ?> ms
 
         <?php endif ?>
     </footer>
