@@ -1,9 +1,10 @@
 @font-face {
-  font-family: "Andale Mono";
-  src: url("/assets/font/ANDALEMO.TTF");
+  font-family: "Outfit";
+  src: url("/assets/font/Outfit-VariableFont_wght.ttf");
 }
 
-html, body{
+html,
+body {
   height: 100%;
 }
 
@@ -24,8 +25,8 @@ html, body{
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: "Andale Mono", monospace;
   scrollbar-width: thin;
+  font-family: "Outfit", sans-serif;
 }
 
 a {
@@ -47,7 +48,7 @@ main {
   width: calc(100% - 10rem);
 }
 
-svg{
+svg {
   display: flex;
 }
 
@@ -98,7 +99,7 @@ svg{
 }
 
 .icon-btn:hover {
-  background-color: rgb(var(--bg-4),0.14);
+  background-color: rgb(var(--bg-4), 0.14);
 }
 
 button {
@@ -109,7 +110,8 @@ button {
 }
 
 input[type="text"],
-input[type="password"], textarea {
+input[type="password"],
+textarea {
   width: 100%;
   padding: 0.625rem;
   border-radius: 0.5rem;
@@ -120,11 +122,9 @@ input[type="password"], textarea {
   outline-color: rgb(var(--accent-blue));
 }
 
-
-
 /*titles*/
 
-h1{
+h1 {
   font-size: 1.5rem;
 }
 
@@ -136,7 +136,7 @@ h3 {
   font-size: 1.125rem;
 }
 
-footer{
+footer {
   display: flex;
   position: absolute;
   z-index: 2000;
@@ -145,8 +145,9 @@ footer{
   background: rgb(var(--bg-1));
   border-radius: 2rem;
   padding: 1rem;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   box-shadow: 1px 1px 4px #e4e4e4;
+  font-weight: bold;
 }
 
 @media (min-width: 1440px) {
@@ -158,6 +159,6 @@ footer{
 @media (max-width: 768px) {
   main {
     margin-inline: 1rem;
-    width: calc(100% - 2rem) ;
+    width: calc(100% - 2rem);
   }
 }
