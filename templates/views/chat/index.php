@@ -5,10 +5,11 @@ use App\Chat\{
 };
 
 use App\Topic\TopicService;
+use App\Helpers\Text;
 
 
 $style = "chat";
-$topics = new TopicService() -> getAllTopics();
+$topics = new TopicService()->getAllTopics();
 
 ?>
 
@@ -64,7 +65,12 @@ if (!empty($_POST)) {
 ?>
 
 <div class="container">
-	<button class="tab-btn tertiary-btn" onclick="showTab()"><?= $params['slug'] ?? 'voir les topics' ?></button>
+	<div class="tab-topic">
+		<button class="tab-btn tertiary-btn" onclick="showTab()">Topics</button>
+		<?php if (isset($params["slug"])): ?>
+			<h3 class="current-topic"><?= Text::removeUnderscore($params['slug']) ?></h3>
+		<?php endif ?>
+	</div>
 	<div class="topics">
 		<button class="close-btn icon-btn" onclick="hideTab()" aria-label="close button">
 			<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -76,9 +82,10 @@ if (!empty($_POST)) {
 			<?php foreach ($topics as $topic): ?>
 				<?php if (isset($params['slug']) && $topic->name == $params['slug']): ?>
 					<a class='topic-link current'
-						href="<?= $router->url('topic', ['slug' => $topic->name]) ?>"><?= $topic->name ?></a>
+						href="<?= $router->url('topic', ['slug' => $topic->name]) ?>"><?= Text::removeUnderscore($topic->name) ?></a>
 				<?php else: ?>
-					<a class='topic-link' href="<?= $router->url('topic', ['slug' => $topic->name]) ?>"><?= $topic->name ?></a>
+					<a class='topic-link'
+						href="<?= $router->url('topic', ['slug' => $topic->name]) ?>"><?= Text::removeUnderscore($topic->name) ?></a>
 				<?php endif ?>
 			<?php endforeach ?>
 		</div>
@@ -107,7 +114,7 @@ if (!empty($_POST)) {
 				<input class="primary-btn" type="submit" name="valider" value="envoyer">
 			</form>
 		<?php else: ?>
-			<div class="no">Choisis un topic...</div>
+			<div class="no-topic">aucun topic sélectionné</div>
 		<?php endif ?>
 
 	</div>

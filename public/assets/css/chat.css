@@ -23,6 +23,7 @@ main {
   margin-inline: 0;
   display: grid;
   width: 100%;
+  justify-self: center;
 }
 
 /*===Container===*/
@@ -54,6 +55,9 @@ main {
 .topic-link {
   padding: 0.625rem 1rem;
   border-radius: 10rem;
+}
+
+.topic-link::first-letter{
   text-transform: capitalize;
 }
 
@@ -67,15 +71,29 @@ main {
   color: rgb(var(--fg-2));
 }
 
+.tab-topic{
+  margin-left: 1rem;
+  row-gap: 0.5rem;
+  display: none;
+}
+
+.current-topic::first-letter{
+  text-transform: capitalize;
+}
+
 .tab-btn {
   width: fit-content;
-  display: none;
-  margin-left: 1rem;
 }
 
 .close-btn {
   display: none;
   place-self: end;
+}
+
+.no-topic{
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* messages display style */
@@ -167,9 +185,12 @@ main {
   .container {
     flex-direction: column;
   }
-  .tab-btn,
   .close-btn {
     display: inline-block;
+  }
+
+  .tab-topic{
+    display: grid;
   }
   .black-mask::after{
     display: inline-block;
