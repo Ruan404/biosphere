@@ -1,20 +1,19 @@
 # biosphere
 
 ## Instructions de démarrage
-### Installer php
-#### Sur windows
-Télécharger la dernière version sur le site [php.net](https://windows.php.net/download) pour windows
+### Installer php pour windows
+Télécharger la dernière version sur le site [php.net](https://windows.php.net/download)
 
 >[!TIP]
 >un tuto de [Grafikart](https://www.youtube.com/watch?v=OVTnj3hcHuc) explique comment installer **php** sur **windows**
 
 >[!NOTE]
->Dans la vidéo il s'agit d'une version antérieure.
->Voir plus sur  la nouvelle version de  [php](https://www.php.net/releases/8.4/en.php)
+>Dans la vidéo il s'agit d'une version antérieure\
+>Voir plus sur  la nouvelle version de [php](https://www.php.net/releases/8.4/en.php)
 
 <br />
 
-### Créer un file **.env** à la racine du projet
+### Créer un fichier ***.env*** à la racine du projet
 >[!IMPORTANT]
 >Il faudra définir les variables suivantes dans le fichier créé
 
@@ -27,7 +26,7 @@ DB_PSWD = mot de passe
 <br />
 
 ### Exécuter le code
-démarrer le server sur un port (*8000 par exemple*) en entrant la commande suivante dans le terminal d'un éditeur de code tel que *VScode*
+Démarrer le server sur un port (*8000 par exemple*) en entrant la commande suivante dans le terminal d'un éditeur de code tel que *VScode*
 
 ```powershell
 php -S localhost:8000  -t public/
