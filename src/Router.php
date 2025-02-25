@@ -15,6 +15,7 @@ class Router
      */
     private $router; //initialiser le router
 
+
     //initialisation des variables
     public function __construct(string $viewPath)
     {
@@ -22,7 +23,8 @@ class Router
         $this->router = new AltoRouter(); //initialiser le router
     }
 
-    public function url(string $name, array $params = []): ? string{
+    public function url(string $name, array $params = []): ?string
+    {
         return $this->router->generate($name, $params);
     }
 
@@ -43,22 +45,29 @@ class Router
     public function run(): self
     {
         $match = $this->router->match();
-            $view = $match['target'];
-           
-            //verifier si la route contient 'auth'
-            $isAuth = str_contains($view, 'auth');
-            
-            $params = $match['params']; //récupérer les paramètres
-            $layout = $isAuth ? 'auth' : 'default'; //get the correct layout
+        $view = $match['target'];
 
-            //renvoyer le routeur courant et non l'objet router déclaré dans la classe
-            $router = $this; 
+        //verifier si la route contient 'auth'
+        $isAuth = str_contains($view, 'auth');
 
-            ob_start();
-            require $this->viewPath . DIRECTORY_SEPARATOR .'views'. DIRECTORY_SEPARATOR . $view . '.php';
-            $content = ob_get_clean();
-            require $this->viewPath . DIRECTORY_SEPARATOR .'layouts'. DIRECTORY_SEPARATOR . $layout . '.php';
+        $isApi = str_contains($view, 'api');
 
+        $params = $match['params']; //récupérer les paramètres
+        $layout = $isAuth ? 'auth' : 'default'; //get the correct layout
+
+        //renvoyer le routeur courant et non l'objet router déclaré dans la classe
+        $router = $this;
+
+        if ($isApi) {
+            require $this->viewPath . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . $view . '.php';
             return $this;
+        }
+
+        ob_start();
+        require $this->viewPath . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . $view . '.php';
+        $content = ob_get_clean();
+        require $this->viewPath . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . $layout . '.php';
+
+        return $this;
     }
 }

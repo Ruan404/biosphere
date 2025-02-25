@@ -50,6 +50,7 @@ main {
 
 svg {
   display: flex;
+  fill: currentColor;
 }
 
 .primary-btn,

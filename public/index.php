@@ -19,12 +19,16 @@ $router = new \App\Router(dirname(__DIR__) . '/templates');
 $router
     ->get('/', '/home/index', 'home')
     ->get('/podcast', '/podcast/index', 'podcast')
-    ->get('/films', '/film/index', 'film')
 
     //chat
     ->get('/chat/[*:slug]', '/chat/index', 'topic')
     ->get('/chat', '/chat/index', 'chat')
     ->post('/chat[*:slug]', '/chat/index', 'new message')
+
+    //film
+    ->get('/films', '/film/index', 'film')
+    ->get('/film/details/[*:slug]', '/film/api/details', 'film details')
+    ->get('/films/[*:slug]', '/film/show', 'show a film')
 
     //connexion
     ->get('/login', '/auth/login', 'login')
