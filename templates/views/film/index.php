@@ -13,7 +13,7 @@ $films = new FilmService()->getAllFilms();
             <div class="film-cover">
                 <img src=<?= '/assets/images/' . $film->cover ?> />
             </div>
-            <button onclick='fetchdata("<?= $film->title ?>")'><?= $film->title ?></button>
+            <button class="pop-film-details-btn" onclick='fetchdata("<?= $film->title ?>")'><?= $film->title ?></button>
         </div>
     <?php endforeach ?>
 </div>

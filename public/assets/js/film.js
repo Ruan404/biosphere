@@ -14,7 +14,7 @@ function fetchdata(title) {
                 <img src='/assets/images/${data.cover}' />
                     <div class='film-info'>
                         <div class='film-info-ctn'>
-                            <p>${data.title}</p>
+                            <p class='film-title'>${data.title}</p>
                             <a class='primary-btn' href='/films/${data.title}'>regarder le film</a>
                         </div>
                         <div class='film-info-ctn'>
