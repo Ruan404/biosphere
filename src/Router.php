@@ -45,15 +45,25 @@ class Router
     public function run(): self
     {
         $match = $this->router->match();
+
+        //la page n'a pas été trouvée
+        if (!$match) {
+            ob_start();
+            require $this->viewPath . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'errors/404.php';
+            $content = ob_get_clean();
+            require $this->viewPath . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR .'default.php';
+            return $this;
+        
+        }
+
         $view = $match['target'];
 
         //verifier si la route contient 'auth'
-        $isAuth = str_contains($view, 'auth');
-
-        $isApi = str_contains($view, 'api');
+        $isAuth = strpos($view, 'auth');
+        $isApi = strpos($view, 'api');
 
         $params = $match['params']; //récupérer les paramètres
-        $layout = $isAuth ? 'auth' : 'default'; //get the correct layout
+        $layout = $isAuth ? 'auth' : 'default'; //récupérer le bon layout
 
         //renvoyer le routeur courant et non l'objet router déclaré dans la classe
         $router = $this;
