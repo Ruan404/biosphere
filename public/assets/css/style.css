@@ -54,8 +54,7 @@ svg {
 }
 
 .primary-btn,
-.secondary-btn,
-.tertiary-btn {
+.shadow-btn {
   padding: 0.625rem 1rem;
   border: none;
   border-radius: 10rem;
@@ -70,32 +69,23 @@ svg {
   color: rgb(var(--fg-2));
 }
 
-.secondary-btn {
-  background-color: rgb(var(--bg-1));
-  color: rgb(var(--fg-1));
-}
-
 .icon-btn {
   border-radius: 10rem;
   padding: 0.5rem;
   color: rgb(var(--fg-1));
 }
 
-.tertiary-btn {
+.shadow-btn {
   background: rgb(var(--bg-1));
   color: rgb(var(--fg-1));
   border: 2px solid rgb(var(--bg-3));
 }
 
-.primary-btn:hover,
-.secondary-btn:hover {
+.primary-btn:hover{
   background-color: rgb(var(--bg-4));
 }
-.secondary-btn:hover {
-  color: rgb(var(--fg-2));
-}
 
-.tertiary-btn:hover {
+.shadow-btn:hover {
   background-color: rgba(var(--bg-4), 0.14);
 }
 

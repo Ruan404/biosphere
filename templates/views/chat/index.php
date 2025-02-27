@@ -66,7 +66,7 @@ if (!empty($_POST)) {
 
 <div class="container">
 	<div class="tab-topic">
-		<button class="tab-btn tertiary-btn" onclick="showTab()">Topics</button>
+		<button class="tab-btn shadow-btn" onclick="showTab()">Topics</button>
 		<?php if (isset($params["slug"])): ?>
 			<h3 class="current-topic"><?= Text::removeUnderscore($params['slug']) ?></h3>
 		<?php endif ?>

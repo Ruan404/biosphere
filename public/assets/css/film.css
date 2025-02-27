@@ -100,14 +100,14 @@ video {
   position: absolute;
   top: 1rem;
   right: 1rem;
-  border-radius: 40px;
-  padding: 0.875rem;
+  border-radius: 10rem;
+  padding: 0.5rem;
   color: rgb(var(--fg-1));
   background: rgb(var(--bg-1));
 }
 
 .film-card-close-btn:hover {
-  background: rgb(var(--bg-4));
+  background: rgb(var(--bg-3));
   color: rgb(var(--fg-2));
 }
 
