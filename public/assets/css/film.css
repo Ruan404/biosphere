@@ -75,7 +75,7 @@ video {
 
 .details-ctn {
   width: 100%;
-  max-width: 600px;
+  max-width: 480px;
   overflow: hidden;
   border-radius: 1rem;
   background: rgb(var(--bg-1));
@@ -125,5 +125,11 @@ video {
 @media (max-width : 780px){
   .film-card{
     max-width: 100%;
+  }
+}
+
+@media (max-width : 480px){
+  .details-ctn{
+    max-width: calc(100% - 2rem);
   }
 }
