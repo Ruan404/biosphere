@@ -37,4 +37,8 @@ $router
     //inscription
     ->get('/signup', '/auth/signup', 'signup')
     ->post('/signup', '/auth/signup')
+
+    //déconnexion
+    ->get('/logout', '/auth/logout', 'logout')
+
     ->run();
