@@ -48,3 +48,14 @@ h1 {
   text-align: center;
 }
 
+.sign-link{
+  color: rgb(var(--fg-3));
+}
+
+.sign-link:hover{
+  text-decoration: underline;
+}
+
+.sub-ctn{
+  font-size: 0.875rem;
+}

@@ -27,7 +27,7 @@ if (!empty($_POST)) {
         <h1>Se connecter à Biosphère</h1>
         <?php
         if ($error) {
-            echo "<div class='error'>pseudo ou  mot de passe indirect</div>";
+            echo "<div class='error'>pseudo ou  mot de passe incorrecte</div>";
         }
         ?>
     </div>
@@ -46,7 +46,7 @@ if (!empty($_POST)) {
         </div>
         <div class="sub-ctn">
             <input class="primary-btn" type="submit" name="envoi" value="Se connecter">
-            <a class="secondary-btn" href="/signup">S'inscrire</a>
+            <p>Nouveau sur Biosphère ? <a class="sign-link" href="/signup">Créer un compte</a></p>
         </div>
     </form>
 </div>

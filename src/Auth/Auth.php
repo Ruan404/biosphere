@@ -24,7 +24,7 @@ class Auth
         //verify password
 
         if($user == null){
-            throw new Exception("the user does not exist");
+            return null;
         }
         
         if (sha1($loginUser->mdp) == $user->mdp) {

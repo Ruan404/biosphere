@@ -21,6 +21,8 @@ if (!empty($_POST)) {
     header('Location: ' . $router->url('login'));
     exit();
   }
+
+  $error = true;
 }
 ?>
 <div class="sign-ctn">
@@ -28,7 +30,7 @@ if (!empty($_POST)) {
     <h1>Rejoindre Biosphère</h1>
     <?php
     if ($error) {
-      echo "<div class='error'>utilisateur déjà existant</div>";
+      echo "<div class='error'>le pseudo est indisponible</div>";
     }
     ?>
   </div>
@@ -44,6 +46,9 @@ if (!empty($_POST)) {
           placeholder="Entrez un mot de passe">
       </div>
     </div>
-    <input id="btn" class="primary-btn" type="submit" name="envoi" value="S'inscrire">
+    <div class="sub-ctn">
+      <input id="btn" class="primary-btn" type="submit" name="envoi" value="S'inscrire">
+      <p>Déjà un compte ? <a class="sign-link" href="/login">Se connecter</a></p>
+    </div>
   </form>
 </div>
