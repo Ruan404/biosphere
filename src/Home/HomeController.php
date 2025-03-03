@@ -4,16 +4,29 @@ use App\Attributes\{
     Route
 };
 
-use App\Entities\Roles;
+use App\Auth\AuthService;
+
+use App\Helpers\{
+    Text,
+    Page
+};
 
 class HomeController
 {
-
     #[Route(method: "GET", path: "/")]
     public function index()
     {
-        echo <<<HTML
-            <h1>home</h1>
-        HTML;
+        $user = AuthService::getUserSession();
+
+        if ($user) {
+            $profile = Text::getFirstStr($user->pseudo);
+
+            Page::print(view: 'home/index');
+
+            return $profile;
+        }
+
+        echo "pas connecté";
+
     }
 }

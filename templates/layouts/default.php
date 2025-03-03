@@ -1,27 +1,3 @@
-<?php
-use \App\User\UserService;
-use \App\Helpers\Text;
-
-session_start();
-/**
- * 0 ----> PHP_SESSION_DISABLED if sessions are disabled.
- * 1 ----> PHP_SESSION_NONE if sessions are enabled, but none exists.
- * 2 ----> PHP_SESSION_ACTIVE if sessions are enabled, and one exists.
- */
-
-if (session_status() == 1 || empty($_SESSION['auth'])) {
-    header("Location: " . $router->url('login'));
-    exit();
-}
-
-$userService = new UserService();
-
-$user = $userService->getUserById($_SESSION['auth'])->pseudo;
-
-$profile = Text::getFirstStr($user); //à développer
-?>
-
-
 <!DOCTYPE html>
 <html lang="fr">
 
