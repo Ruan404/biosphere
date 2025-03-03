@@ -1,9 +1,9 @@
 <?php
-namespace Core;
+namespace App\Core;
 
 use AltoRouter;
 use ReflectionClass;
-use App\routeAttributes\{
+use App\Attributes\{
     Route
 };
 
@@ -16,12 +16,15 @@ class Router
         $this->router = new AltoRouter();
     }
 
+    public function url(string $name, array $params = []): ?string
+    {
+        return $this->router->generate($name, $params);
+    }
+
     public function registerController($controller)
     {
         $reflection = new ReflectionClass($controller);
         $methods = $reflection->getMethods();
-
-        dd($methods);
 
         foreach ($methods as $method) {
 
