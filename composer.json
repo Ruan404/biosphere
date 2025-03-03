@@ -1,0 +1,10 @@
+{
+    "require": {
+        "altorouter/altorouter": "^2.0",
+        "vlucas/phpdotenv": "^5.6"
+    },
+    "require-dev": {
+        "filp/whoops": "^2.17",
+        "symfony/var-dumper": "^7.2"
+    }
+}
