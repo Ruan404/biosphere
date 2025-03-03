@@ -1,26 +1,6 @@
 <?php
-// use App\Database\Database;
-use App\Auth\AuthService;
-use App\User\User;
-
 $title = "connexion à biosphère";
-$error = false;
-if (!empty($_POST)) {
-    $auth = new AuthService();
-
-    //create a new user
-    $loginUser = new User();
-    $loginUser->pseudo = $_POST['pseudo'];
-    $loginUser->mdp = $_POST['password'];
-
-    $user = $auth->login($loginUser);
-
-    if ($user) {
-        header('Location: '.$router->url('home'));
-        exit();
-    }
-    $error = true;
-}
+$error = $data['error']; //à améliorer
 ?>
 <div class="sign-ctn">
     <div class="sub-ctn">

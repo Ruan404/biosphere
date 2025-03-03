@@ -1,3 +1,7 @@
+<?php
+    $profile = htmlspecialchars($data['profile']);
+?>
+
 <!DOCTYPE html>
 <html lang="fr">
 

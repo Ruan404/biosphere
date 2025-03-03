@@ -21,12 +21,14 @@ class HomeController
         if ($user) {
             $profile = Text::getFirstStr($user->pseudo);
 
-            Page::print(view: 'home/index');
-
-            return $profile;
+            Page::print(view: 'home/index', infos: ['profile'=> $profile]);
         }
 
-        echo "pas connecté";
+        //l'utilisiteur n'est pas connecté
+        elseif($user == null){
+           header('Location: /login');
+           exit();
+        }
 
     }
 }
