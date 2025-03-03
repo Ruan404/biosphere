@@ -16,24 +16,30 @@ class Router
         $this->router = new AltoRouter();
     }
 
-    public function url(string $name, array $params = []): ?string
-    {
-        return $this->router->generate($name, $params);
-    }
-
     public function registerController($controller)
     {
         $reflection = new ReflectionClass($controller);
-        $methods = $reflection->getMethods();
 
-        foreach ($methods as $method) {
+        $routeAttributes = $reflection->getAttributes();
+
+        $prefix = '';
+
+        if(!empty($routeAttributes)){
+            $prefix = $routeAttributes[0]->newInstance()->path;
+        }
+
+        foreach ($reflection->getMethods() as $method) {
 
             $attributes = $method->getAttributes(Route::class);
+
+            if(empty($routeAttributes)){
+                continue; //reviens au début de la boucle sans exécuter la suite
+            }
 
             foreach ($attributes as $attribute) {
                 $route = $attribute->newInstance();
 
-                $this->router->map($route->method, $route->path, [
+                $this->router->map($route->method, $prefix.$route->path, [
                     'controller' => $controller, //controller class
                     'action' => $method->getName(), //method name
                 ]);
@@ -50,6 +56,7 @@ class Router
         
         $action = $target['action']; //get the class method
 
+
         //there is some parameters in the url
         if ($match['params'] != null) {
             //use the method with params
@@ -57,5 +64,6 @@ class Router
         } else {
             $controller->$action(); //use the method
         }
+
     }
 }

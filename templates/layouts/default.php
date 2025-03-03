@@ -1,5 +1,5 @@
 <?php
-    $profile = htmlspecialchars($data['profile']);
+    $profile = htmlspecialchars($data['profile'] ?? '');
 ?>
 
 <!DOCTYPE html>

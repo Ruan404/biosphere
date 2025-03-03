@@ -2,6 +2,7 @@
 require '../vendor/autoload.php'; 
 
 use App\Auth\AuthController;
+use App\Chat\ChatController;
 use App\Core\Router;
 use App\Home\HomeController;
 
@@ -12,8 +13,8 @@ $whoops->register();
 
 $router = new Router();
 
-$router->registerController(HomeController::class);
-$router->registerController(AuthController::class);
-
+// $router->registerController(HomeController::class);
+// $router->registerController(AuthController::class);
+$router->registerController(ChatController::class);
 
 $router->run();
