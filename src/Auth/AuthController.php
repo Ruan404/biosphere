@@ -15,7 +15,11 @@ class AuthController
 {
 
     private Layout $layout = Layout::Auth;
-    private $authService = new AuthService();
+    private $authService;
+
+    public function __construct(){
+        $this->authService = new AuthService();
+    }
 
     #[Route(method: "GET", path: "/login")]
     public function loginPage()

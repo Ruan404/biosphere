@@ -1,0 +1,155 @@
+@font-face {
+  font-family: "Outfit";
+  src: url("/assets/font/Outfit-VariableFont_wght.ttf");
+}
+
+html,
+body {
+  height: 100%;
+}
+
+:root {
+  --bg-1: 253, 254, 255;
+  --bg-2: 234, 240, 244;
+  --bg-3: 0, 15, 27;
+  --bg-4: 24, 66, 101;
+  --fg-1: 0, 15, 27;
+  --fg-2: 253, 254, 255;
+  --fg-3: 4, 107, 190;
+  --accent-blue: 11, 123, 217;
+  --accent-pink: 255, 236, 233;
+  --accent-red: 228, 88, 66;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  font-family: "Outfit", sans-serif;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+body {
+  background: rgb(var(--bg-1));
+  font-size: 16px;
+  color: rgb(var(--fg-1));
+  display: grid;
+}
+
+main {
+  margin-top: 5rem;
+  max-width: 1280px;
+  margin-inline: 5rem;
+  width: calc(100% - 10rem);
+}
+
+svg {
+  display: flex;
+  fill: currentColor;
+}
+
+.primary-btn,
+.shadow-btn {
+  padding: 0.625rem 1rem;
+  border: none;
+  border-radius: 10rem;
+  cursor: pointer;
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: bold;
+}
+
+.primary-btn {
+  background-color: rgb(var(--bg-3));
+  color: rgb(var(--fg-2));
+}
+
+.icon-btn {
+  border-radius: 10rem;
+  padding: 0.5rem;
+  color: rgb(var(--fg-1));
+}
+
+.shadow-btn {
+  background: rgb(var(--bg-1));
+  color: rgb(var(--fg-1));
+  border: 2px solid rgb(var(--bg-3));
+}
+
+.primary-btn:hover{
+  background-color: rgb(var(--bg-4));
+}
+
+.shadow-btn:hover {
+  background-color: rgba(var(--bg-4), 0.14);
+}
+
+.icon-btn:hover {
+  background-color: rgb(var(--bg-4), 0.14);
+}
+
+button {
+  cursor: pointer;
+  transition: all 300ms ease-in;
+  appearance: none;
+  border: none;
+}
+
+input[type="text"],
+input[type="password"],
+textarea {
+  width: 100%;
+  padding: 0.625rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgb(var(--bg-3));
+}
+
+:is(input[type="text"], input[type="password"], textarea):focus-visible {
+  outline-color: rgb(var(--accent-blue));
+}
+
+/*titles*/
+
+h1 {
+  font-size: 1.5rem;
+}
+
+h2 {
+  font-size: 1.25rem;
+}
+
+h3 {
+  font-size: 1.125rem;
+}
+
+footer {
+  display: flex;
+  position: absolute;
+  z-index: 2000;
+  left: 0.625rem;
+  bottom: 0.625rem;
+  background: rgb(var(--bg-1));
+  border-radius: 2rem;
+  padding: 1rem;
+  font-size: 0.75rem;
+  box-shadow: 1px 1px 4px #e4e4e4;
+  font-weight: bold;
+}
+
+@media (min-width: 1440px) {
+  main {
+    margin-inline: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  main {
+    margin-inline: 1rem;
+    width: calc(100% - 2rem);
+  }
+}

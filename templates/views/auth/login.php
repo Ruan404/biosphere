@@ -1,6 +1,6 @@
 <?php
 $title = "connexion à biosphère";
-$error = $data['error']; //à améliorer
+$error = $data['error'] ?? false; //à améliorer
 ?>
 <div class="sign-ctn">
     <div class="sub-ctn">
