@@ -30,7 +30,7 @@ DB_PSWD = mot de passe
 composer require altorouter/altorouter
 composer require vlucas/phpdotenv
 composer require --dev filp/whoops
-composer require --dev symfonyvar-dumper
+composer require --dev symfony/var-dumper
 ```
 <br />
 
