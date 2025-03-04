@@ -36,6 +36,7 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 	</div>
 </div>
 <script>
+	let currentTopic = '';
 	var topics = document.querySelector('.topics')
 
 	function showTab() {
@@ -48,6 +49,7 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 	}
 
 	const messageCtn = document.querySelector(".messages");
+	const msgsDisplay = document.querySelector(".msgs-display");
 
 	function fetchdata(topic) {
 		fetch(`/chat/${topic}`)
@@ -81,9 +83,45 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 						<textarea name = "message" required autocomplete = "off" placeholder = "Entrez votre message"></textarea>
 						<input class="primary-btn" type="submit" name="valider" value="envoyer">
 					</form>`;
-				
+
 				messageCtn.innerHTML = htmlString;
+				sendMsgForm(topic);
 			})
 			.catch((err) => console.error(`Fetch problem: ${err.message}`));
 	}
+
+	function sendMsgForm(topic) {
+		document.querySelector(".send-msg-form").addEventListener("submit", function (event) {
+			event.preventDefault();  // Prevent the form from being submitted in the traditional way
+
+			const formData = new FormData(this);  // Get the form data
+			// Send form data using Fetch API
+			fetch(`/chat/${topic}`, {
+				method: 'POST',  // Send a POST request
+				body: formData   // Attach the form data
+			})
+				.then(response => response.json())  // Assuming the response is in JSON format
+				.then(data => {
+					// msgsDisplay.innerHTML =`
+					// 	<div class='msg-ctn'>
+					// 		<div class="msg-img">
+					// 		</div>
+					// 		<div class="msg-info-ctn">
+					// 			<div class="msg-pseudo-date-ctn">
+					// 				<p class="msg-pseudo">${element['pseudo']}</p>
+					// 				<p class="msg-date">${element['date']}</p>
+					// 			</div>
+					// 			<p>${element['message']}</p>
+					// 		</div>
+					// 	</div>
+					// `
+				})
+				.catch(error => {
+					console.error("Error submitting the form:", error);
+					// Handle any error that occurs during the fetch
+				});
+		});
+	}
+
+
 </script>

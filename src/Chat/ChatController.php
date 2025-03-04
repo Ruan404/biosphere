@@ -76,7 +76,6 @@ class ChatController
         
             $result = new chatService()->addMessage($chat);
         
-           return $this->viewChat($params);
         }
     }
 }
