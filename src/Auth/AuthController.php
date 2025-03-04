@@ -82,6 +82,7 @@ class AuthController
     {
         $this->authService::logout();
 
-        return $this->loginPage();
+        header('Location: /login');
+        exit();
     }
 }
