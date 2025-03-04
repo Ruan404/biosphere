@@ -2,7 +2,7 @@ const details = document.querySelector(".film-details");
 const detailsCtn = document.querySelector(".details-ctn");
 
 function fetchdata(title) {
-  fetch(`/film/details/${title}`)
+  fetch(`/films/details/${title}`)
     .then((response) => {
       if (!response.ok) {
         throw new Error(`HTTP error: ${response.status}`);
