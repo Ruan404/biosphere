@@ -3,13 +3,14 @@ use App\Helpers\Text;
 $style = "chat";
 $messages = $data['messages'] ?? [];
 $topics = $data['topics'] ?? [];
+$currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 ?>
 
 <div class="container">
 	<div class="tab-topic">
 		<button class="tab-btn shadow-btn" onclick="showTab()">Topics</button>
-		<?php if (isset($params["slug"])): ?>
-			<h3 class="current-topic"><?= Text::removeUnderscore(htmlspecialchars($params['slug'])) ?></h3>
+		<?php if (!empty($currentTopic)): ?>
+			<h3 class="current-topic"><?= Text::removeUnderscore($currentTopic) ?></h3>
 		<?php endif ?>
 	</div>
 	<div class="topics">
@@ -21,7 +22,7 @@ $topics = $data['topics'] ?? [];
 		</button>
 		<div class="topics-list">
 			<?php foreach ($topics as $topic): ?>
-				<?php if (isset($params['slug']) && $topic->name == $params['slug']): ?>
+				<?php if (!empty($currentTopic) && $topic->name == $currentTopic): ?>
 					<a class='topic-link current'
 						href="<?= '/chat/'.$topic->name ?>"><?= Text::removeUnderscore($topic->name) ?></a>
 				<?php else: ?>

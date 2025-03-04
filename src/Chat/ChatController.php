@@ -52,7 +52,7 @@ class ChatController
                 exit();
             }
 
-            return Page::print(view: '/chat/index', infos: ['messages' => $messages, 'topics' => $this->topics]);
+            return Page::print(view: '/chat/index', infos: ['messages' => $messages, 'topics' => $this->topics, 'currentTopic' => $topic->name]);
 
         }
     }
@@ -78,9 +78,7 @@ class ChatController
         
             $result = new chatService()->addMessage($chat);
         
-            // redirection vers la page chat.php avec le topic sélectionné
-            header('Location: /chat/' . $topic->name);
-            exit();
+           return $this->viewChat($params);
         }
     }
 }
