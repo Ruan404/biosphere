@@ -52,8 +52,7 @@ class ChatController
                 exit();
             }
 
-            return Page::print(view: '/chat/index', infos: ['messages' => $messages, 'topics' => $this->topics, 'currentTopic' => $topic->name]);
-
+            print_r(json_encode($messages));
         }
     }
 

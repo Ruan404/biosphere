@@ -1,7 +1,6 @@
 <?php
 use App\Helpers\Text;
 $style = "chat";
-$messages = $data['messages'] ?? [];
 $topics = $data['topics'] ?? [];
 $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 ?>
@@ -23,42 +22,17 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 		<div class="topics-list">
 			<?php foreach ($topics as $topic): ?>
 				<?php if (!empty($currentTopic) && $topic->name == $currentTopic): ?>
-					<a class='topic-link current'
-						href="<?= '/chat/'.$topic->name ?>"><?= Text::removeUnderscore($topic->name) ?></a>
+					<p class='topic-link current' href="<?= '/chat/' . $topic->name ?>">
+						<?= Text::removeUnderscore($topic->name) ?>
+					</p>
 				<?php else: ?>
-					<a class='topic-link'
-						href="<?= '/chat/'.$topic->name ?>"><?= Text::removeUnderscore($topic->name) ?></a>
+					<a class='topic-link' onclick='fetchdata("<?= $topic->name ?>")'
+						href="#"><?= Text::removeUnderscore($topic->name) ?></a>
 				<?php endif ?>
 			<?php endforeach ?>
 		</div>
 	</div>
 	<div class="messages">
-		<?php if (!empty($messages)): ?>
-			<div class="msgs-display">
-				<?php foreach ($messages as $message): ?>
-					<div class='msg-ctn'>
-						<div class="msg-img">
-
-						</div>
-						<div class="msg-info-ctn">
-							<div class="msg-pseudo-date-ctn">
-								<p class="msg-pseudo"><?= $message->pseudo ?></p>
-								<p class="msg-date"><?= $message->date ?></p>
-							</div>
-							<p><?= $message->message ?></p>
-						</div>
-					</div>
-				<?php endforeach ?>
-			</div>
-
-			<form class="send-msg-form" method="POST">
-				<textarea name="message" required autocomplete="off" placeholder="Entrez votre message"></textarea>
-				<input class="primary-btn" type="submit" name="valider" value="envoyer">
-			</form>
-		<?php else: ?>
-			<div class="no-topic">aucun topic sélectionné</div>
-		<?php endif ?>
-
 	</div>
 </div>
 <script>
@@ -71,5 +45,45 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 	function hideTab() {
 		topics.classList.remove('show')
 		document.body.classList.remove('black-mask')
+	}
+
+	const messageCtn = document.querySelector(".messages");
+
+	function fetchdata(topic) {
+		fetch(`/chat/${topic}`)
+			.then((response) => {
+				if (!response.ok) {
+					throw new Error(`HTTP error: ${response.status}`);
+				}
+				return response.json();
+			})
+			.then((data) => {
+				let htmlString = '<div class="msgs-display">';
+				data.forEach(element => {
+					htmlString += `
+					<div class='msg-ctn'>
+						<div class="msg-img">
+						</div>
+						<div class="msg-info-ctn">
+							<div class="msg-pseudo-date-ctn">
+								<p class="msg-pseudo">${element['pseudo']}</p>
+								<p class="msg-date">${element['date']}</p>
+							</div>
+							<p>${element['message']}</p>
+						</div>
+					</div>
+			`;
+				});
+
+				htmlString += `
+					</div>
+					<form class="send-msg-form" method="POST">
+						<textarea name = "message" required autocomplete = "off" placeholder = "Entrez votre message"></textarea>
+						<input class="primary-btn" type="submit" name="valider" value="envoyer">
+					</form>`;
+				
+				messageCtn.innerHTML = htmlString;
+			})
+			.catch((err) => console.error(`Fetch problem: ${err.message}`));
 	}
 </script>
