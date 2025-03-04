@@ -6,6 +6,7 @@ use App\Chat\ChatController;
 use App\Film\FilmController;
 use App\Core\Router;
 use App\Home\HomeController;
+use App\Podcast\PodcastController;
 
 
 $whoops = new \Whoops\Run;
@@ -20,5 +21,6 @@ $router->registerController(HomeController::class);
 $router->registerController(AuthController::class);
 $router->registerController(ChatController::class);
 $router->registerController(FilmController::class);
+$router->registerController(PodcastController::class);
 
 $router->run();
