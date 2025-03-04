@@ -32,7 +32,7 @@ class Router
 
             $attributes = $method->getAttributes(Route::class);
 
-            if(empty($routeAttributes)){
+            if(empty($attributes)){
                 continue; //reviens au début de la boucle sans exécuter la suite
             }
 
