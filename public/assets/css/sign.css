@@ -1,0 +1,61 @@
+.sign-ctn,
+form,
+.form-field-ctn,
+.form-field,
+.sub-ctn {
+  display: flex;
+  flex-direction: column;
+}
+
+.sign-ctn {
+  row-gap: 1rem; /*16px*/
+  max-width: 344px;
+  margin: auto;
+}
+
+form {
+  row-gap: 1.5rem; /*24px*/
+  background: rgb(var(--bg-2));
+  border-radius: 0.5rem;
+  padding: 2rem;
+}
+
+.form-field-ctn {
+  row-gap: 1.5rem;
+}
+
+.form-field {
+  row-gap: 0.5rem;
+}
+
+h1 {
+  text-align: center;
+  font-size: 1.5rem;
+}
+
+
+.sub-ctn {
+  row-gap: 1rem;
+}
+
+.error {
+  background: rgb(var(--accent-pink));
+  border-radius: 0.5rem;
+  color: rgb(var(--fg-1));
+  padding: 0.875rem 1rem;
+  font-size: 0.875rem;
+  border: 1px solid rgb(var(--accent-red));
+  text-align: center;
+}
+
+.sign-link{
+  color: rgb(var(--fg-3));
+}
+
+.sign-link:hover{
+  text-decoration: underline;
+}
+
+.sub-ctn{
+  font-size: 0.875rem;
+}
