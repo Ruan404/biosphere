@@ -11,25 +11,23 @@ use App\Topic\TopicService;
 class ChatController
 {
     private $authService;
+    private $topics;
 
     public function __construct()
     {
         $this->authService = new AuthService();
+        $this->topics = new TopicService()->getAllTopics();
     }
 
     #[Route("GET", "")]
     public function index()
     {
-        $topics = new TopicService()->getAllTopics();
-
-        Page::print(view: '/chat/index', infos: ['topics' => $topics]);
+        return Page::print(view: '/chat/index', infos: ['topics' => $this->topics]);
     }
 
     #[Route("GET", "/[*:slug]")]
     public function viewChat($params)
     {
-        $topics = new TopicService()->getAllTopics();
-
         /**
          * récupération des messages du chat en fonction du topic passé en url
          * 
@@ -54,7 +52,7 @@ class ChatController
                 exit();
             }
 
-            Page::print(view: '/chat/index', infos: ['messages' => $messages, 'topics' => $topics]);
+            return Page::print(view: '/chat/index', infos: ['messages' => $messages, 'topics' => $this->topics]);
 
         }
     }

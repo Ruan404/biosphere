@@ -25,7 +25,7 @@ class AuthController
     #[Route(method: "GET", path: "/login")]
     public function loginPage()
     {
-        Page::print(view: 'auth/login', layout: $this->layout);
+        return Page::print(view: 'auth/login', layout: $this->layout);
     }
 
     #[Route(method: "POST", path: "/login")]
@@ -46,13 +46,13 @@ class AuthController
             }
         }
 
-        Page::print(view: 'auth/login', layout: $this->layout, infos: ['error' => true]);
+        return Page::print(view: 'auth/login', layout: $this->layout, infos: ['error' => true]);
     }
 
     #[Route(method: "GET", path: "/signup")]
     public function signupPage()
     {
-        Page::print(view: 'auth/signup', layout: $this->layout);
+        return Page::print(view: 'auth/signup', layout: $this->layout);
     }
 
     #[Route(method: "POST", path: "/signup")]
@@ -73,7 +73,7 @@ class AuthController
                 exit();
             }
 
-            Page::print(view: 'auth/signup', layout: $this->layout, infos: ['error' => true]);
+            return Page::print(view: 'auth/signup', layout: $this->layout, infos: ['error' => true]);
         }
     }
 

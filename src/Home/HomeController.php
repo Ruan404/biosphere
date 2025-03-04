@@ -18,17 +18,15 @@ class HomeController
     {
         $user = AuthService::getUserSession();
 
-        if ($user) {
-            $profile = Text::getFirstStr($user->pseudo);
-
-            Page::print(view: 'home/index', infos: ['profile'=> $profile]);
-        }
-
         //l'utilisiteur n'est pas connecté
-        elseif($user == null){
+        if($user == null){
            header('Location: /login');
            exit();
         }
+
+        $profile = Text::getFirstStr($user->pseudo);
+
+        return Page::print(view: 'home/index', infos: ['profile'=> $profile]);
 
     }
 }
