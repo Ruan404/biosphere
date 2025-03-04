@@ -65,8 +65,7 @@ class ChatController
             $topic = new TopicService()->getTopicByName(htmlspecialchars($params['slug']));
             //topic does not exists
             if ($topic == null) {
-                header('Location: /chat');
-                exit();
+                return $this->index();
             }
             $topicId = $topic->id;
         

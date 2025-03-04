@@ -50,12 +50,12 @@ class Router
     public function run()
     {
         $match = $this->router->match();
+
         $target = $match['target'] ?? null;
         
         $controller = new $target['controller'](); //instantiate the controller class
         
         $action = $target['action']; //get the class method
-
 
         //there is some parameters in the url
         if ($match['params'] != null) {

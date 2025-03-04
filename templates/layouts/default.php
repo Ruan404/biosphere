@@ -1,5 +1,16 @@
 <?php
-    $profile = htmlspecialchars($data['profile'] ?? '');
+    use App\Auth\AuthService;
+    use App\Helpers\Text;
+    
+    $user = AuthService::getUserSession();
+
+    //l'utilisiteur n'est pas connecté
+    if($user == null){
+       header('Location: /login');
+       exit();
+    }
+
+    $profile = Text::getFirstStr($user->pseudo);
 ?>
 
 <!DOCTYPE html>
