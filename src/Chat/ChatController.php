@@ -45,28 +45,4 @@ class ChatController
 
         }
     }
-
-
-    #[Route("POST", "/[*:slug]")]
-    public function addMessage($params)
-    {
-        if (!empty($_POST) && isset($params['slug'])) {
-            $topic = new TopicService()->getTopicByName(htmlspecialchars($params['slug']));
-            //topic does not exists
-            if ($topic == null) {
-                return $this->index();
-            }
-            $topicId = $topic->id;
-        
-            //create a new chat
-            $chat = new Chat();
-            $chat->message = $_POST['message'];
-            $chat->pseudo = $this->authService->getUserSession()->pseudo;
-            $chat->topic_id = $topicId;
-        
-            $result = new chatService()->addMessage($chat);
-        
-           return $this->viewChat($params);
-        }
-    }
 }
