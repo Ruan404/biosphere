@@ -27,8 +27,9 @@
     <button onclick="sendMessage()">Send</button>
 
     <script>
+      const topic = "repair_cafe";
       // Create a WebSocket connection to the server
-      const socket = new WebSocket("ws://localhost:8000");
+      const socket = new WebSocket(`ws://localhost:8000/chat/${topic}`);
 
       // When WebSocket connection is open
       socket.onopen = function () {
@@ -58,13 +59,12 @@
 
         // Replace with actual user ID and subchat ID
         const userId = "Biosphère"; // Example user ID
-        const topicId = 4; // Example subchat ID
 
         // Send the message data to the WebSocket server
         socket.send(
           JSON.stringify({
             pseudo: userId,
-            topic_id: topicId,
+            topic: topic,
             message: message,
           })
         );

@@ -1,38 +1,47 @@
-const WebSocket = require("ws");
-const Chat = require("./models/Chat.js");
+const http = require("http");
+const WebSocketServer = require("ws").Server;
 
-// Create WebSocket server
-const wss = new WebSocket.Server({ port: 8000 });
+const chat = require("./models/Chat.js");
 
-wss.on("connection", (ws) => {
-  console.log("New client connected");
+const server = http.createServer();
+const wss1 = new WebSocketServer({ noServer: true });
+const wss2 = new WebSocketServer({ noServer: true });
+const Chat = new chat();
 
-  // Listen for incoming messages
+//chat
+wss1.on("connection", function connection(ws, req) {
+  ws.on("error", console.error);
+  console.log("chat websocket");
+  var topic = req.url.substring(req.url.lastIndexOf("/") + 1);
+
+  //send messages chat
+  Chat.getChat(topic, ws);
+
   ws.on("message", (data) => {
-    const messageData = JSON.parse(data);
-    // Save message in the database
-    if (messageData.topic_id) {
-      if(new Chat().newChat(messageData)){
-        wss.clients.forEach((client) => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(
-              JSON.stringify({
-                pseudo: messageData.pseudo,
-                date: new Date(Date.now()),
-                message: messageData.message,
-              })
-            );
-          }
-        });
-      }
-    }
-  });
-
-  new Chat(ws).getChat(4, ws); 
-
-  ws.on("error", (error) => {
-    console.error("WebSocket error:", error);
+    Chat.newChat(JSON.parse(data), wss1)
   });
 });
 
-console.log("WebSocket server running on ws://localhost:8000");
+wss2.on("connection", function connection(ws) {
+  ws.on("error", console.error);
+
+  // ...
+});
+
+server.on("upgrade", function upgrade(request, socket, head) {
+  const { pathname } = new URL(request.url, "wss://localhost");
+
+  if (pathname.match(/^\/chat\/[\a-z]+(?:_[\a-z]+)*$/g)) {
+    wss1.handleUpgrade(request, socket, head, function done(ws) {
+      wss1.emit("connection", ws, request);
+    });
+  } else if (pathname === "/bar") {
+    wss2.handleUpgrade(request, socket, head, function done(ws) {
+      wss2.emit("connection", ws, request);
+    });
+  } else {
+    socket.destroy();
+  }
+});
+
+server.listen(8000);
