@@ -1,8 +1,16 @@
 <?php
 use App\Helpers\Text;
+use App\User\UserService;
 $style = "chat";
 $topics = $data['topics'] ?? [];
 $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
+
+if (session_status() == 1) {
+	session_start();
+}
+
+$user = new UserService()->getUserById($_SESSION['auth']);
+
 ?>
 
 <div class="container">
@@ -103,7 +111,7 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 			const formData = new FormData(form)
 
 			const formObject = {
-				pseudo: "Biosphère",
+				pseudo: "<?= $user->pseudo ?>",
 				topic: `<?= $currentTopic ?>`,
 				message: formData.get("message")
 			}

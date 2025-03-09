@@ -1,7 +1,6 @@
 <?php
     use App\Auth\AuthService;
     use App\Helpers\Text;
-    
     $user = AuthService::getUserSession();
 
     //l'utilisiteur n'est pas connecté
