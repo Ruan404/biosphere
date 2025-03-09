@@ -21,7 +21,7 @@ class Chat {
           JSON.stringify({
             pseudo: result.pseudo,
             message: result.message,
-            date: result.date,
+            date: result.date.toLocaleDateString(),
           })
         );
       });
@@ -33,13 +33,12 @@ class Chat {
       "INSERT INTO chat (pseudo, topic_id, message) VALUES (?, ?, ?)";
 
     Topic.getTopicByName(messageData.topic)
-      .then((data) => {
+      .then((result) => {
         db.query(
           query,
-          [messageData.pseudo, data[0].id, messageData.message],
+          [messageData.pseudo, result.id, messageData.message],
           (err, result) => {
             if (err) throw err;
-            console.log("Message saved:", result.insertId);
 
             // Broadcast message to all connected clients
 
@@ -48,7 +47,7 @@ class Chat {
                 client.send(
                   JSON.stringify({
                     pseudo: messageData.pseudo,
-                    date: new Date(Date.now()),
+                    date: new Date(Date.now()).toLocaleDateString(),
                     message: messageData.message,
                   })
                 );

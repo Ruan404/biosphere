@@ -14,7 +14,7 @@ class Topic {
             reject(null)
         }
         else{
-            resolve(results)
+            resolve(results[0])
         }
       });
     });

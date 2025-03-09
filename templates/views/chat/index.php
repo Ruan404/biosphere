@@ -1,7 +1,6 @@
 <?php
 use App\Helpers\Text;
 $style = "chat";
-$messages = $data['messages'] ?? [];
 $topics = $data['topics'] ?? [];
 $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 ?>
@@ -24,41 +23,24 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 			<?php foreach ($topics as $topic): ?>
 				<?php if (!empty($currentTopic) && $topic->name == $currentTopic): ?>
 					<a class='topic-link current'
-						href="<?= '/chat/'.$topic->name ?>"><?= Text::removeUnderscore($topic->name) ?></a>
+						href="<?= '/chat/' . $topic->name ?>"><?= Text::removeUnderscore($topic->name) ?></a>
 				<?php else: ?>
-					<a class='topic-link'
-						href="<?= '/chat/'.$topic->name ?>"><?= Text::removeUnderscore($topic->name) ?></a>
+					<a class='topic-link' href="<?= '/chat/' . $topic->name ?>"><?= Text::removeUnderscore($topic->name) ?></a>
 				<?php endif ?>
 			<?php endforeach ?>
 		</div>
 	</div>
 	<div class="messages">
-		<?php if (!empty($messages)): ?>
+		<?php if (!empty($currentTopic)): ?>
 			<div class="msgs-display">
-				<?php foreach ($messages as $message): ?>
-					<div class='msg-ctn'>
-						<div class="msg-img">
-
-						</div>
-						<div class="msg-info-ctn">
-							<div class="msg-pseudo-date-ctn">
-								<p class="msg-pseudo"><?= $message->pseudo ?></p>
-								<p class="msg-date"><?= $message->date ?></p>
-							</div>
-							<p><?= $message->message ?></p>
-						</div>
-					</div>
-				<?php endforeach ?>
 			</div>
-
-			<form class="send-msg-form" method="POST">
+			<form class="send-msg-form">
 				<textarea name="message" required autocomplete="off" placeholder="Entrez votre message"></textarea>
 				<input class="primary-btn" type="submit" name="valider" value="envoyer">
 			</form>
 		<?php else: ?>
 			<div class="no-topic">aucun topic sélectionné</div>
 		<?php endif ?>
-
 	</div>
 </div>
 <script>
@@ -71,5 +53,62 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 	function hideTab() {
 		topics.classList.remove('show')
 		document.body.classList.remove('black-mask')
+	}
+</script>
+
+<script>
+	const messageCtn = document.querySelector(".messages")
+	const msgsDisplayCtn = document.querySelector(".msgs-display")
+
+
+	const topic = "<?= $currentTopic ?>";
+
+	if (topic) {
+		// Create a WebSocket connection to the server
+		const socket = new WebSocket(`ws://localhost:8000/chat/${topic}`);
+
+		// When WebSocket connection is open
+		socket.onopen = function () {
+			console.log("Connected to WebSocket server");
+		};
+
+		// When a message is received from the WebSocket server
+		socket.onmessage = function (event) {
+			const data = JSON.parse(event.data);
+			// Display message if it's a chat message
+			if (data.message) {
+				const msgCtn = document.createElement("div")
+				msgCtn.classList.add("msg-ctn")
+				msgCtn.innerHTML = `
+			
+				<div class="msg-img">
+				</div>
+				<div class="msg-info-ctn">
+					<div class="msg-pseudo-date-ctn">
+						<p class="msg-pseudo">${data.pseudo}</p>
+						<p class="msg-date">${data.date}</p>
+					</div>
+					<p>${data.message}</p>
+				</div>
+			
+		`
+				msgsDisplayCtn.appendChild(msgCtn)
+			}
+		};
+
+		const form = document.querySelector(".send-msg-form")
+
+		form.addEventListener("submit", (ev) => {
+			ev.preventDefault();
+			const formData = new FormData(form)
+
+			const formObject = {
+				pseudo: "Biosphère",
+				topic: `<?= $currentTopic ?>`,
+				message: formData.get("message")
+			}
+
+			socket.send(JSON.stringify(formObject));
+		})
 	}
 </script>
