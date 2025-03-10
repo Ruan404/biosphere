@@ -31,7 +31,7 @@ wss2.on("connection", function connection(ws) {
 server.on("upgrade", function upgrade(request, socket, head) {
   const { pathname } = new URL(request.url, "wss://localhost");
 
-  if (pathname.match(/^\/chat\/[\a-z]+(?:_[\a-z]+)*$/g)) {
+  if (pathname.match(/^\/chat\/[a-z]+(?:_[a-z]+)*$/g)) {
     wss1.handleUpgrade(request, socket, head, function done(ws) {
       wss1.emit("connection", ws, request);
     });
