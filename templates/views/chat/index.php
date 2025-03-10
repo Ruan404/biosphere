@@ -1,15 +1,18 @@
 <?php
+use App\Auth\AuthService;
 use App\Helpers\Text;
 use App\User\UserService;
 $style = "chat";
 $topics = $data['topics'] ?? [];
 $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 
-if (session_status() == 1) {
-	session_start();
-}
+$user = AuthService::getUserSession();
 
-$user = new UserService()->getUserById($_SESSION['auth']);
+if($user == null){
+	header('Location: /login');
+	exit();
+ }
+
 
 ?>
 
