@@ -68,7 +68,6 @@ $user = new UserService()->getUserById($_SESSION['auth']);
 	const messageCtn = document.querySelector(".messages")
 	const msgsDisplayCtn = document.querySelector(".msgs-display")
 
-
 	const topic = "<?= $currentTopic ?>";
 
 	if (topic) {
@@ -101,6 +100,9 @@ $user = new UserService()->getUserById($_SESSION['auth']);
 			
 		`
 				msgsDisplayCtn.appendChild(msgCtn)
+
+				msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: 'smooth' });
+
 			}
 		};
 

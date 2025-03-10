@@ -86,7 +86,7 @@ class AuthService
 
     public static function getUserSession(): ?User
     {
-        
+
         /**
          * 0 ----> PHP_SESSION_DISABLED if sessions are disabled.
          * 1 ----> PHP_SESSION_NONE if sessions are enabled, but none exists.
@@ -97,7 +97,7 @@ class AuthService
             session_start();
         }
 
-        elseif(empty($_SESSION['auth'])){
+        if (empty($_SESSION['auth'])) {
             return null;
         }
 
