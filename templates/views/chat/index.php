@@ -1,17 +1,16 @@
 <?php
 use App\Auth\AuthService;
 use App\Helpers\Text;
-use App\User\UserService;
 $style = "chat";
 $topics = $data['topics'] ?? [];
 $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 
 $user = AuthService::getUserSession();
 
-if($user == null){
+if ($user == null) {
 	header('Location: /login');
 	exit();
- }
+}
 
 
 ?>
@@ -32,26 +31,18 @@ if($user == null){
 		</button>
 		<div class="topics-list">
 			<?php foreach ($topics as $topic): ?>
-				<?php if (!empty($currentTopic) && $topic->name == $currentTopic): ?>
-					<a class='topic-link current'
-						href="<?= '/chat/' . $topic->name ?>"><?= Text::removeUnderscore($topic->name) ?></a>
-				<?php else: ?>
-					<a class='topic-link' href="<?= '/chat/' . $topic->name ?>"><?= Text::removeUnderscore($topic->name) ?></a>
-				<?php endif ?>
+				<a class='topic-link' onclick="viewChat(event, '<?= $topic->name ?>')"
+					href="#"><?= Text::removeUnderscore($topic->name) ?></a>
 			<?php endforeach ?>
 		</div>
 	</div>
 	<div class="messages">
-		<?php if (!empty($currentTopic)): ?>
-			<div class="msgs-display">
-			</div>
-			<form class="send-msg-form">
-				<textarea name="message" required autocomplete="off" placeholder="Entrez votre message"></textarea>
-				<input class="primary-btn" type="submit" name="valider" value="envoyer">
-			</form>
-		<?php else: ?>
-			<div class="no-topic">aucun topic sélectionné</div>
-		<?php endif ?>
+		<div class="msgs-display">
+		</div>
+		<form class="send-msg-form">
+			<textarea name="message" required autocomplete="off" placeholder="Entrez votre message"></textarea>
+			<input class="primary-btn" type="submit" name="valider" value="envoyer">
+		</form>
 	</div>
 </div>
 <script>
@@ -70,10 +61,36 @@ if($user == null){
 <script>
 	const messageCtn = document.querySelector(".messages")
 	const msgsDisplayCtn = document.querySelector(".msgs-display")
+	const form = document.querySelector(".send-msg-form")
+	var currentTopic = "<?= $currentTopic ?>";
+	var prevTopic = ""
 
-	const topic = "<?= $currentTopic ?>";
+	function viewChat(ev, chatTopic) {
+		ev.preventDefault();
+		if (chatTopic != prevTopic) {
+			history.pushState({ chatTopic }, `chat ${chatTopic}`, `/chat/${chatTopic}`)
+			prevTopic = chatTopic
+			webSocket(chatTopic)
+		}
+	}
 
-	if (topic) {
+	// This event listener will capture when the user navigates forward or backward
+	window.addEventListener('popstate', function (event) {
+		if (event.state) {
+			const chatTopic = event.state.chatTopic
+			console.log('Current state:', chatTopic);
+			if (chatTopic != prevTopic) {
+				history.pushState({ chatTopic }, `chat ${chatTopic}`, `/chat/${chatTopic}`)
+				prevTopic = chatTopic
+				webSocket(chatTopic)
+			}
+		} else {
+			console.log('No state associated with this entry');
+		}
+	});
+
+	function webSocket(topic) {
+		msgsDisplayCtn.innerHTML = "" //clear message display container
 		// Create a WebSocket connection to the server
 		const socket = new WebSocket(`ws://localhost:8000/chat/${topic}`);
 
@@ -109,8 +126,6 @@ if($user == null){
 			}
 		};
 
-		const form = document.querySelector(".send-msg-form")
-
 		form.addEventListener("submit", (ev) => {
 			ev.preventDefault();
 			const formData = new FormData(form)
@@ -123,5 +138,10 @@ if($user == null){
 
 			socket.send(JSON.stringify(formObject));
 		})
+	}
+
+	//page refresh or user manually enter the toopic in the search bar
+	if (currentTopic) {
+		webSocket(currentTopic)
 	}
 </script>
