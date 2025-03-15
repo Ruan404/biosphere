@@ -71,20 +71,7 @@ class ChatController
                 header('Location: /chat');
                 exit();
             }
-            $topicId = $topic->id;
-
-
-            // récupère l'id du dernier message affiché
-            $lastMessageId = $_GET['lastMessageId'] ?? 0;
-            $messages = new ChatService()->getChatMessages($topicId, $lastMessageId);
-
-            if ($messages == null) {
-                header('Location: /chat');
-                exit();
-            }
-
-            return Page::print(view: '/chat/index', infos: ['topics' => $this->topics, 'currentTopic' => $topic->name, 'messages' => $messages]);
-
+            return Page::print(view: '/chat/topic', infos: ['topics' => $this->topics, 'currentTopic' => $topic->name]);
         }
     }
 
@@ -105,9 +92,10 @@ class ChatController
             $chat->message = $_POST['message'];
             $chat->pseudo = $this->authService->getUserSession()->pseudo;
             $chat->topic_id = $topicId;
+            $chat->date = date('Y-m-d H:i:s');
         
             $result = new chatService()->addMessage($chat);
-            print_r($result);
+            print_r(json_encode($chat));
         
         }
     }
