@@ -31,7 +31,7 @@ if ($user == null) {
 		</button>
 		<div class="topics-list">
 			<?php foreach ($topics as $topic): ?>
-				<a class='topic-link' onclick="viewChat(event, '<?= $topic->name ?>')"
+				<a class='topic-link' data-slug="<?= $topic->name ?>" onclick="viewChat(event, '<?= $topic->name ?>')"
 					href="#"><?= Text::removeUnderscore($topic->name) ?></a>
 			<?php endforeach ?>
 		</div>
@@ -65,9 +65,15 @@ if ($user == null) {
 	var currentTopic = "<?= $currentTopic ?>";
 	var prevTopic = ""
 
+	document.querySelector(`[data-slug=${currentTopic}]`).classList.add("current")
+	
+
 	function viewChat(ev, chatTopic) {
 		ev.preventDefault();
 		if (chatTopic != prevTopic) {
+			document.querySelector(".topic-link.current").classList.remove("current")
+			
+			ev.target.classList.add("current")
 			history.pushState({ chatTopic }, `chat ${chatTopic}`, `/chat/${chatTopic}`)
 			prevTopic = chatTopic
 			webSocket(chatTopic)
@@ -83,6 +89,8 @@ if ($user == null) {
 				history.pushState({ chatTopic }, `chat ${chatTopic}`, `/chat/${chatTopic}`)
 				prevTopic = chatTopic
 				webSocket(chatTopic)
+				document.querySelector(".topic-link.current").classList.remove("current")
+				document.querySelector(`[data-slug=${chatTopic}]`).classList.add("current")
 			}
 		} else {
 			console.log('No state associated with this entry');
