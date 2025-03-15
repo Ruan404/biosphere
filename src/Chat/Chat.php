@@ -8,7 +8,7 @@ namespace App\Chat;
  */
 class Chat
 {
-    public int $topic_id {
+    public int $topic_id = 0 {
         get => $this->topic_id;
 
         set(int $topic_id) {

@@ -1,24 +1,23 @@
 const http = require("http");
 const WebSocketServer = require("ws").Server;
 
-const chat = require("./models/Chat.js");
-
 const server = http.createServer();
 const wss1 = new WebSocketServer({ noServer: true });
 const wss2 = new WebSocketServer({ noServer: true });
-const Chat = new chat();
 
 //chat
 wss1.on("connection", function connection(ws, req) {
   ws.on("error", console.error);
   console.log("chat websocket");
-  var topic = req.url.substring(req.url.lastIndexOf("/") + 1);
-
-  //send messages chat
-  Chat.getChat(topic, ws);
 
   ws.on("message", (data) => {
-    Chat.newChat(JSON.parse(data), wss1)
+    wss1.clients.forEach((client) => {
+      if (client !== ws && client.readyState === WebSocket.OPEN) {
+        client.send(
+          JSON.stringify(JSON.parse(data))
+        );
+      }
+    });
   });
 });
 

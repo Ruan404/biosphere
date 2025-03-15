@@ -57,26 +57,28 @@ if ($user == null) {
 		document.body.classList.remove('black-mask')
 	}
 </script>
-
 <script>
 	const messageCtn = document.querySelector(".messages")
 	const msgsDisplayCtn = document.querySelector(".msgs-display")
 	const form = document.querySelector(".send-msg-form")
 	var currentTopic = "<?= $currentTopic ?>";
-	var prevTopic = ""
 
 	document.querySelector(`[data-slug=${currentTopic}]`).classList.add("current")
-	
+
+	const socket = new WebSocket(`ws://localhost:8000/chat/${currentTopic}`);
+
 
 	function viewChat(ev, chatTopic) {
 		ev.preventDefault();
-		if (chatTopic != prevTopic) {
+		if (chatTopic != currentTopic) {
 			document.querySelector(".topic-link.current").classList.remove("current")
-			
+
 			ev.target.classList.add("current")
 			history.pushState({ chatTopic }, `chat ${chatTopic}`, `/chat/${chatTopic}`)
-			prevTopic = chatTopic
-			webSocket(chatTopic)
+
+			fetchdata(chatTopic)
+
+			currentTopic = chatTopic
 		}
 	}
 
@@ -84,72 +86,98 @@ if ($user == null) {
 	window.addEventListener('popstate', function (event) {
 		if (event.state) {
 			const chatTopic = event.state.chatTopic
-			console.log('Current state:', chatTopic);
-			if (chatTopic != prevTopic) {
+
+			if (chatTopic != currentTopic) {
 				history.pushState({ chatTopic }, `chat ${chatTopic}`, `/chat/${chatTopic}`)
-				prevTopic = chatTopic
-				webSocket(chatTopic)
+
+				fetchdata(chatTopic)
+
+				currentTopic = chatTopic
+				console.log(currentTopic)
+				
 				document.querySelector(".topic-link.current").classList.remove("current")
-				document.querySelector(`[data-slug=${chatTopic}]`).classList.add("current")
+				document.querySelector(`[data-slug=${currentTopic}]`).classList.add("current")
 			}
 		} else {
 			console.log('No state associated with this entry');
 		}
 	});
 
-	function webSocket(topic) {
-		msgsDisplayCtn.innerHTML = "" //clear message display container
-		// Create a WebSocket connection to the server
-		const socket = new WebSocket(`ws://localhost:8000/chat/${topic}`);
+	form.addEventListener("submit", (ev) => {
+		ev.preventDefault();
+		const formData = new FormData(form)
 
-		// When WebSocket connection is open
-		socket.onopen = function () {
-			console.log("Connected to WebSocket server");
-		};
+		fetch(`/chat/${currentTopic}`, {
+			method: 'POST',  // Send a POST request
+			body: formData   // Attach the form data
+		})
+			.then(response => response.json())  // Assuming the response is in JSON format
+			.then(data => {
+				if (data) {
+					console.log(data);
+					socket.send(JSON.stringify(data))
+					//add the new message
+				}
+			})
+			.catch(error => {
+				console.error("Error submitting the form:", error);
+				// Handle any error that occurs during the fetch
+			});
+	})
 
-		// When a message is received from the WebSocket server
-		socket.onmessage = function (event) {
-			const data = JSON.parse(event.data);
-			// Display message if it's a chat message
-			if (data.message) {
-				const msgCtn = document.createElement("div")
-				msgCtn.classList.add("msg-ctn")
-				msgCtn.innerHTML = `
-			
-				<div class="msg-img">
-				</div>
-				<div class="msg-info-ctn">
-					<div class="msg-pseudo-date-ctn">
-						<p class="msg-pseudo">${data.pseudo}</p>
-						<p class="msg-date">${data.date}</p>
+	// When a message is received from the WebSocket server
+	socket.onmessage = function (event) {
+		const data = JSON.parse(event.data);
+		// Display message if it's a chat message
+		if (data.message) {
+			msgsDisplayCtn.innerHTML += `
+				<div class='msg-ctn'>
+					<div class="msg-img">
 					</div>
-					<p>${data.message}</p>
+					<div class="msg-info-ctn">
+						<div class="msg-pseudo-date-ctn">
+							<p class="msg-pseudo">${data.pseudo}</p>
+							<p class="msg-date">${data.date}</p>
+						</div>
+						<p>${data.message}</p>
+					</div>
 				</div>
 			
 		`
-				msgsDisplayCtn.appendChild(msgCtn)
-
-				msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: 'smooth' });
-
-			}
-		};
-
-		form.addEventListener("submit", (ev) => {
-			ev.preventDefault();
-			const formData = new FormData(form)
-
-			const formObject = {
-				pseudo: "<?= $user->pseudo ?>",
-				topic: `<?= $currentTopic ?>`,
-				message: formData.get("message")
-			}
-
-			socket.send(JSON.stringify(formObject));
-		})
+			msgsDisplayCtn.appendChild(msgCtn)
+			msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: 'smooth' });
+		}
 	}
 
-	//page refresh or user manually enter the toopic in the search bar
-	if (currentTopic) {
-		webSocket(currentTopic)
+	function fetchdata(topic) {
+		fetch(`/chat/api/${topic}`)
+			.then((response) => {
+				if (!response.ok) {
+					throw new Error(`HTTP error: ${response.status}`);
+				}
+				return response.json();
+			})
+			.then((data) => {
+				msgsDisplayCtn.innerHTML = "";			
+				data.messages.map(chat => {
+					msgsDisplayCtn.innerHTML += `
+						<div class='msg-ctn'>
+							<div class="msg-img">
+							</div>
+							<div class="msg-info-ctn">
+								<div class="msg-pseudo-date-ctn">
+									<p class="msg-pseudo">${chat.pseudo}</p>
+									<p class="msg-date">${chat.date}</p>
+								</div>
+								<p>${chat.message}</p>
+							</div>
+						</div>
+					`;
+				});
+
+				currentTopic = topic;
+			})
+			.catch((err) => console.error(`Fetch problem: ${err.message}`));
 	}
+
 </script>
