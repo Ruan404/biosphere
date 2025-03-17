@@ -26,3 +26,16 @@ $topics = $data['topics'] ?? [];
 		<div class="no-topic">aucun topic sélectionné</div>
 	</div>
 </div>
+<script>
+	//faire appaître la barre de navigation à gauche sur les petits écrans
+	var topics = document.querySelector('.topics')
+
+	function showTab() {
+		topics.classList.add('show');
+		document.body.classList.add('black-mask')
+	}
+	function hideTab() {
+		topics.classList.remove('show')
+		document.body.classList.remove('black-mask')
+	}
+</script>

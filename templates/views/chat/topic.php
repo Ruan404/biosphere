@@ -115,6 +115,10 @@ if ($user == null) {
 			.then(response => response.json())  // Assuming the response is in JSON format
 			.then(data => {
 				if (data.message) {
+					socket.send(JSON.stringify(data))
+
+					//add the new message
+					
 					msgsDisplayCtn.innerHTML += `
 							<div class='msg-ctn'>
 								<div class="msg-img">
@@ -130,9 +134,6 @@ if ($user == null) {
 						
 					`
 					msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: 'smooth' });
-					socket.send(JSON.stringify(data))
-
-					//add the new message
 				}
 			})
 			.catch(error => {
