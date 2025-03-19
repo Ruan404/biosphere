@@ -18,10 +18,10 @@ class Chat
 
 
     public string $pseudo {
-        get => htmlspecialchars($this->pseudo);
+        get => $this->pseudo;
 
         set(string $pseudo) {
-            $this->pseudo = $pseudo;
+            $this->pseudo = htmlspecialchars($pseudo);
         }
     }
 
@@ -36,10 +36,10 @@ class Chat
          * 3. remove spaces
          * 4. nl2br permet à l'utilisateur de sauter des lignes
          */
-        get => nl2br(rtrim(strip_tags(htmlspecialchars_decode($this->message))));
+        get => nl2br(rtrim(strip_tags(htmlspecialchars_decode(trim($this->message)))));
 
         set(string $message) {
-            $this->message = trim($message);
+            $this->message = nl2br(rtrim(strip_tags(htmlspecialchars_decode(trim($message)))));
         }
     }
 }

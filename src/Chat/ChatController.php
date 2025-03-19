@@ -99,4 +99,27 @@ class ChatController
         
         }
     }
+
+
+    #[Route("DELETE", "/[*:slug]")]
+    public function deleteMyMessages($params)
+    {
+        if ($_SERVER['REQUEST_METHOD'] === "DELETE" && isset($params['slug'])) {
+            $rawData = file_get_contents('php://input'); //Be aware that the stream can only be read once
+            
+            parse_str($rawData, $data);
+            
+            $user = $this->authService::getUserSession();
+        
+            if($user){
+                $topic = new TopicService()->getTopicByName($params["slug"]);
+
+                if($topic){
+                    return new ChatService()->deleteMyMessages($user->pseudo, $topic->id, [$data["messages"]]);
+                }
+            }
+            
+            return false;
+        }
+    }
 }
