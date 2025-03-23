@@ -10,3 +10,6 @@ vendor
 
 #rest
 .rest
+
+#stream feature
+VideoStream

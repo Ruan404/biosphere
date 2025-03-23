@@ -12,16 +12,16 @@ class Film
     public string $cover {
         get => htmlspecialchars($this->cover);
 
-        set(string $cover){
-            return $this->cover = htmlspecialchars($cover);
+        set(string $cover) {
+            $this->cover = htmlspecialchars($cover);
         }
     }
 
     public string $video {
         get => htmlspecialchars($this->video);
 
-        set(string $video){
-            return $this->video = htmlspecialchars($video);
+        set(string $video) {
+            $this->video = htmlspecialchars($video);
         }
     }
 
@@ -33,14 +33,14 @@ class Film
         get => htmlspecialchars($this->title);
 
         set(string $title) {
-            return $this->title = htmlspecialchars($title);
+            $this->title = htmlspecialchars($title);
         }
     }
     public string $description {
         get => htmlspecialchars($this->description);
-        
+
         set(string $description) {
-            return $this->description = htmlspecialchars($description);
+            $this->description = htmlspecialchars($description);
         }
     }
 

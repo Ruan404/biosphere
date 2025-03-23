@@ -2,7 +2,7 @@
 namespace App\Film;
 
 use App\Attributes\Route;
-use App\Helpers\Page;
+use function App\Helpers\view;
 use App\Film\FilmService;
 
 
@@ -19,7 +19,7 @@ class FilmController
     #[Route("GET", "")]
     public function index()
     {
-        return Page::print(view: '/film/index', infos: ['films' => $this->films]);
+        return view(view: '/film/index', data: ['films' => $this->films]);
     }
 
 
@@ -47,7 +47,7 @@ class FilmController
 
             $filmDetails = $film->getFilmByTitle($params['slug']);
 
-            return Page::print(view: '/film/show', infos: ['films' => $filmDetails]);
+            return view(view: '/film/show', data: ['films' => $filmDetails]);
         }
     }
 }

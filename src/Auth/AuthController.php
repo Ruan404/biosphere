@@ -3,13 +3,11 @@ namespace App\Auth;
 
 use App\Entities\Layout;
 use \App\User\{
-    User,
-    UserService
+    User
 };
 
-use App\Helpers\Page;
-
 use App\Attributes\Route;
+use function App\Helpers\view;
 
 class AuthController
 {
@@ -25,7 +23,7 @@ class AuthController
     #[Route(method: "GET", path: "/login")]
     public function loginPage()
     {
-        return Page::print(view: 'auth/login', layout: $this->layout);
+        return view(view: 'auth/login', layout: $this->layout);
     }
 
     #[Route(method: "POST", path: "/login")]
@@ -46,13 +44,13 @@ class AuthController
             }
         }
 
-        return Page::print(view: 'auth/login', layout: $this->layout, infos: ['error' => true]);
+        return view(view: 'auth/login', layout: $this->layout, data: ['error' => true]);
     }
 
     #[Route(method: "GET", path: "/signup")]
     public function signupPage()
     {
-        return Page::print(view: 'auth/signup', layout: $this->layout);
+        return view(view: 'auth/signup', layout: $this->layout);
     }
 
     #[Route(method: "POST", path: "/signup")]
@@ -73,7 +71,7 @@ class AuthController
                 exit();
             }
 
-            return Page::print(view: 'auth/signup', layout: $this->layout, infos: ['error' => true]);
+            return view(view: 'auth/signup', layout: $this->layout, data: ['error' => true]);
         }
     }
 

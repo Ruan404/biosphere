@@ -1,10 +1,13 @@
 <?php
 namespace App\Chat;
 
+
+use App\Attributes\Roles;
 use App\Attributes\Route;
 use App\Auth\AuthService;
-use App\Helpers\Page;
+use App\Entities\Role;
 use App\Topic\TopicService;
+use function App\Helpers\view;
 
 
 #[Route("GET", "/chat")]
@@ -20,9 +23,10 @@ class ChatController
     }
 
     #[Route("GET", "")]
+    #[Roles(array(Role::Admin))]
     public function index()
     {
-        return Page::print(view: '/chat/index', infos: ['topics' => $this->topics]);
+        return view(view: '/chat/index', data: ['topics' => $this->topics]);
     }
 
     #[Route("GET", "/api/[*:slug]")]
@@ -53,6 +57,7 @@ class ChatController
             }
 
             print_r(json_encode(["messages" => $messages]));
+            exit();
         }
     }
 
@@ -71,7 +76,7 @@ class ChatController
                 header('Location: /chat');
                 exit();
             }
-            return Page::print(view: '/chat/topic', infos: ['topics' => $this->topics, 'currentTopic' => $topic->name]);
+            return view(view: '/chat/topic', data: ['topics' => $this->topics, 'currentTopic' => $topic->name]);
         }
     }
 
@@ -96,7 +101,7 @@ class ChatController
         
             $result = new chatService()->addMessage($chat);
             print_r(json_encode($chat));
-        
+            exit();
         }
     }
 
