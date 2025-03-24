@@ -13,3 +13,6 @@ vendor
 
 #stream feature
 VideoStream
+
+#uploads
+uploads

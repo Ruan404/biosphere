@@ -15,7 +15,7 @@ function fetchdata(title) {
                     <div class='film-info'>
                         <div class='film-info-ctn'>
                             <p class='film-title'>${data.title}</p>
-                            <a class='primary-btn' href='/films/${data.title}'>regarder le film</a>
+                            <a class='primary-btn' href='/films/watch/${data.id}'>regarder le film</a>
                         </div>
                         <div class='film-info-ctn'>
                             <b>Description</b>
