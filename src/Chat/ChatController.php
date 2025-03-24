@@ -23,7 +23,6 @@ class ChatController
     }
 
     #[Route("GET", "")]
-    #[Roles(array(Role::Admin))]
     public function index()
     {
         return view(view: '/chat/index', data: ['topics' => $this->topics]);
@@ -55,9 +54,8 @@ class ChatController
                 header('Location: /chat');
                 exit();
             }
-
-            print_r(json_encode(["messages" => $messages]));
-            exit();
+            header('Content-Type: application/json');
+            echo json_encode(["messages" => $messages]);
         }
     }
 
@@ -91,14 +89,14 @@ class ChatController
                 return $this->index();
             }
             $topicId = $topic->id;
-        
+
             //create a new chat
             $chat = new Chat();
             $chat->message = $_POST['message'];
             $chat->pseudo = $this->authService->getUserSession()->pseudo;
             $chat->topic_id = $topicId;
             $chat->date = date('Y-m-d H:i:s');
-        
+
             $result = new chatService()->addMessage($chat);
             print_r(json_encode($chat));
             exit();
@@ -111,19 +109,19 @@ class ChatController
     {
         if ($_SERVER['REQUEST_METHOD'] === "DELETE" && isset($params['slug'])) {
             $rawData = file_get_contents('php://input'); //Be aware that the stream can only be read once
-            
+
             parse_str($rawData, $data);
-            
+
             $user = $this->authService::getUserSession();
-        
-            if($user){
+
+            if ($user) {
                 $topic = new TopicService()->getTopicByName($params["slug"]);
 
-                if($topic){
+                if ($topic) {
                     return new ChatService()->deleteMyMessages($user->pseudo, $topic->id, [$data["messages"]]);
                 }
             }
-            
+
             return false;
         }
     }

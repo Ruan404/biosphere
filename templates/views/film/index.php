@@ -1,5 +1,4 @@
 <?php
-use App\Film\FilmService;
 
 $style = "film";
 
@@ -11,7 +10,7 @@ $films = $data['films'] ?? [];
     <?php foreach ($films as $film): ?>
         <div class="film-card">
             <div class="film-cover">
-                <img src=<?= '/assets/images/' . $film->cover ?> />
+                <img src=<?= '/uploads/images/' . $film->cover ?> />
             </div>
             <button class="pop-film-details-btn" onclick='fetchdata("<?= $film->title ?>")'><?= $film->title ?></button>
         </div>
