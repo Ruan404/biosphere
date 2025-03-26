@@ -24,9 +24,9 @@ class User
                 }
         }
 
-        public Role $role = Role::Admin {
-                get => $this->role;
-        }
+        // public Role $role = Role::Admin {
+        //         get => $this->role;
+        // }
 
         public string $role {
                 get => $this->role;

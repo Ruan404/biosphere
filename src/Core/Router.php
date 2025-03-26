@@ -2,6 +2,7 @@
 namespace App\Core;
 
 use AltoRouter;
+use App\Entities\Role;
 use ReflectionClass;
 use App\Attributes\{
     Route,
@@ -84,13 +85,14 @@ class Router
                 header("Location: /login");
                 exit;
             }
-
-            if (in_array($user->role, $roles)) {
+          
+            if (in_array(Role::tryFrom($user->role), $roles)) {
 
                 $this->handle($target, $match);
             }
             else{
-
+                header("Location: /");
+                exit;
             }
         } elseif (empty($roles)) {
             $this->handle($target, $match);

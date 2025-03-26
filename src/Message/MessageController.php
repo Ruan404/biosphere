@@ -10,6 +10,6 @@ Class MessageController{
 
     #[Route("GET", "")]
     public function index(){
-        return Page::print("/message/index");
+        return view("/message/index");
     }
 }

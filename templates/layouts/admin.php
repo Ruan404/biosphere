@@ -41,13 +41,7 @@
                     </div>
                     <a href="/">Biosphère</a>
                 </div>
-                <div class="nav-links">
-                    <a href="#">Messagerie</a>
-                    <a href="/chat">Forum</a>
-                    <a href="/films">Films</a>
-                    <a href="/podcast">Podcast</a>
-                    <a href="/sensors">Capteurs</a>
-                </div>
+                
                 <div class="user-profile">
                     <span class="user-pofile-frame"><?= $profile ?></span>
                     <a class="primary-btn" href="/logout">se déconnecter</a>

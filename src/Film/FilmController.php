@@ -30,8 +30,7 @@ class FilmController
     #[Route("GET", "")]
     public function listFilms()
     {
-        $films = $this->filmService->getAllVideos();
-        return view(view: "/film/list", data: $films);
+        return view(view: "/film/list", data: $this->films);
     }
 
     #[Route("GET", "/upload")]
@@ -52,26 +51,6 @@ class FilmController
 
             header('Content-Type: application/json');
             print_r(json_encode($video));
-        }
-    }
-
-    // Route for handling the video upload and HLS conversion
-    #[Route("POST", "/upload")]
-    #[Roles(array(Role::Admin))]
-    public function uploadVideo()
-    {
-        if ($_SERVER["REQUEST_METHOD"] !== "POST" || !isset($_FILES["video"]) || !isset($_FILES["cover"])) {
-            die("Invalid request.");
-        }
-
-        $videoFile = $_FILES["video"];
-        $coverFile = $_FILES["cover"];
-
-        try {
-            $videoToken = $this->filmService->handleVideoUpload($videoFile, $coverFile);
-            echo "Video uploaded. <a href='/films/watch/$videoToken'>Watch here</a>";
-        } catch (\Exception $e) {
-            die("Upload failed: " . $e->getMessage());
         }
     }
     

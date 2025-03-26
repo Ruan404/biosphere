@@ -147,7 +147,7 @@ $films = $data['films'] ?? [];
                     <?php endforeach ?>
                 </tbody>
             </table>
-            <button class="primary-btn" onclick="window.location.href='admin/Set_Admin.php?action=add_film'">Ajouter un film</button>
+            <a class="primary-btn" href="/admin/film/upload">Ajouter un film</a>
         </div>
     </div>
 </div>

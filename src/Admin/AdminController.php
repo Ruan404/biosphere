@@ -2,32 +2,67 @@
 
 namespace App\Admin;
 
+use App\Attributes\Roles;
 use App\Attributes\Route;
-use App\Helpers\Page;
 use App\Admin\AdminService;
+use App\Entities\Layout;
+use App\Entities\Role;
 use App\Film\FilmService;
 use App\Topic\TopicService;
 use App\User\UserService;
+use function App\Helpers\view;
 
 #[Route("GET", "/admin")]
 class AdminController {
     private $adminService;
+    private $filmService;
 
     public function __construct() {
         $this->adminService = new AdminService();
+        $this->filmService = new FilmService();
     }
 
     #[Route("GET", "")]
+    #[Roles(array(Role::Admin))]
     public function index() {
         $users = new UserService()->getUsers();
         $topics = new TopicService()->getAllTopics();
         $films = new FilmService()->getAllFilms();
 
-        return Page::print(view: "/admin/index", infos: ['users'=> $users, 'topics'=> $topics, 'films'=> $films]);
+        return view(view: "/admin/index", data:['users'=> $users, 'topics'=> $topics, 'films'=> $films], layout:Layout::Admin);
     }
+
+    #[Route("GET", "/film/upload")]
+    #[Roles(array(Role::Admin))]
+    public function upload()
+    {
+        return view(view: '/film/upload', layout:Layout::Admin);
+    }
+
+    // Route for handling the video upload and HLS conversion
+    #[Route("POST", "/film/upload")]
+    #[Roles(array(Role::Admin))]
+    public function uploadVideo()
+    {
+        if ($_SERVER["REQUEST_METHOD"] !== "POST" || !isset($_FILES["video"]) || !isset($_FILES["cover"])) {
+            die("Invalid request.");
+        }
+
+        $videoFile = $_FILES["video"];
+        $coverFile = $_FILES["cover"];
+
+        try {
+            $videoToken = $this->filmService->handleVideoUpload($videoFile, $coverFile);
+            echo "Video uploaded. <a href='/films/watch/$videoToken'>Watch here</a>";
+        } catch (\Exception $e) {
+            die("Upload failed: " . $e->getMessage());
+        }
+    }
+    
 
 
     #[Route("POST", "/action")]
+    #[Roles(array(Role::Admin))]
     public function handleActions() {
         if (isset($_POST['action'])) {
             $action = $_POST['action'];

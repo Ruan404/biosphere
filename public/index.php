@@ -6,9 +6,9 @@ use App\Chat\ChatController;
 use App\Film\FilmController;
 use App\Core\Router;
 use App\Home\HomeController;
-use App\Message\MessageController;
 use App\Podcast\PodcastController;
 use App\Admin\AdminController;
+use App\Sensor\SensorController;
 
 
 $whoops = new \Whoops\Run;
@@ -19,12 +19,11 @@ define('DEBUG_TIME', microtime(true));
 
 $router = new Router();
 
-$router->registerController(HomeController::class);
-$router->registerController(AuthController::class);
-$router->registerController(ChatController::class);
-$router->registerController(FilmController::class);
-$router->registerController(PodcastController::class);
-$router->registerController(MessageController::class);
-$router->registerController(AdminController::class);
-
-$router->run();
+$router ->registerController(HomeController::class)
+        ->registerController(AuthController::class)
+        ->registerController(ChatController::class)
+        ->registerController(FilmController::class)
+        ->registerController(PodcastController::class)
+        ->registerController(AdminController::class)
+        ->registerController(SensorController::class)
+        ->run();
