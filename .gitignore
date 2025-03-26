@@ -7,3 +7,9 @@
 
 #vendor
 vendor
+
+uploads
+
+node_modules
+
+.rest
