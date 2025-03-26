@@ -4,6 +4,7 @@ namespace App\Film;
 use App\Core\Database;
 use PDO;
 use Exception;
+use Dotenv\Dotenv;
 
 class FilmService
 {
@@ -12,14 +13,19 @@ class FilmService
 
     public function __construct(string $hlsDirectory)
     {
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/../../');
+        $dotenv->load();
+
         $this->hlsDirectory = $hlsDirectory;
     }
 
-    public function generateUniqueToken() {
+    public function generateUniqueToken()
+    {
         return bin2hex(random_bytes(16));
     }
 
-    public function processHLS($inputFile, $outputFolder) {
+    public function processHLS($inputFile, $outputFolder)
+    {
         if (!file_exists($outputFolder)) {
             mkdir($outputFolder, 0777, true);
         }
@@ -59,19 +65,59 @@ class FilmService
         return null;
     }
 
-    public function insertVideo($title, $filePath, $playlistPath, $token) {
-        $stmt = Database::getPDO()->prepare("INSERT INTO videos (title, file_path, playlist_path, token) VALUES (?, ?, ?, ?)");
-        return $stmt->execute([$title, $filePath, $playlistPath, $token]);
+    private function validateFile(array $file, array $allowedTypes, string $type)
+    {
+        $ext = strtolower(pathinfo($file["name"], PATHINFO_EXTENSION));
+        if (!in_array($ext, $allowedTypes)) {
+            throw new Exception("Invalid $type file type.");
+        }
     }
 
-    public function getVideoByToken($token) {
-        $stmt = Database::getPDO()->prepare("SELECT * FROM videos WHERE token = ?");
+    public function handleVideoUpload(array $videoFile, array $coverFile): string
+    {
+        // Validate files
+        $this->validateFile($videoFile, ["mp4", "mov", "avi"], "video");
+        $this->validateFile($coverFile, ["jpg", "jpeg", "png"], "cover");
+
+        // Generate unique token
+        $uniqueToken = $this->generateUniqueToken();
+
+        // Define file paths
+        $videoPath = $_ENV['UPLOAD_DIR'] . $uniqueToken . "." . pathinfo($videoFile["name"], PATHINFO_EXTENSION);
+        $coverPath = $_ENV['COVER_DIR'] . $uniqueToken . "." . pathinfo($coverFile["name"], PATHINFO_EXTENSION);
+        $hlsFolder = $_ENV['HLS_DIR'] . $uniqueToken;
+
+        // Move files
+        move_uploaded_file($videoFile["tmp_name"], $_ENV['BASE_URL'] . $videoPath);
+        move_uploaded_file($coverFile["tmp_name"], $_ENV['BASE_URL'] . $coverPath);
+
+        // Process HLS
+        $playlistPath = $this->processHLS($_ENV['BASE_URL'] . $videoPath, $_ENV['BASE_URL'] . $hlsFolder);
+        $playlistPath = str_replace($_ENV['BASE_URL'], '', $playlistPath); // Store relative path
+
+        // Store in database
+        $title = strtolower(pathinfo($videoFile["name"], PATHINFO_FILENAME));
+        $this->insertVideo($title, $videoPath, $playlistPath, $coverPath, $uniqueToken);
+
+        return $uniqueToken;
+    }
+
+    public function insertVideo($title, $filePath, $playlistPath, $coverPath, $token)
+    {
+        $stmt = Database::getPDO()->prepare("INSERT INTO videos (title, file_path, playlist_path, cover_image, token) VALUES (?, ?, ?, ?, ?)");
+        return $stmt->execute([$title, $filePath, $playlistPath, $coverPath, $token]);
+    }
+
+    public function getVideoByToken($token)
+    {
+        $stmt = Database::getPDO()->prepare("SELECT cover_image, token, title, playlist_path FROM videos WHERE token = ?");
         $stmt->execute([$token["token"]]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function getAllVideos(){
-        $stmt = Database::getPDO()->prepare("SELECT * FROM videos");
+    public function getAllVideos()
+    {
+        $stmt = Database::getPDO()->prepare("SELECT cover_image, token, title FROM videos");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

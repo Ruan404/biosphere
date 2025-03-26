@@ -41,16 +41,17 @@ class FilmController
         return view(view: '/film/upload');
     }
  
-    #[Route("GET", "/details/[*:slug]")]
-    public function details($params)
+    #[Route("GET", "/details/[a:token]")]
+    public function details($token)
     {
-        if (isset($params['slug'])) {
-            $filmDetails = $this->filmService->getFilmByTitle($params['slug']);
-
-            $filmJson = $filmJson = json_encode($filmDetails);
+        if (isset($token['token'])) {
+            $video = $this->filmService->getVideoByToken($token);
+            if (!$video) {
+                die("Video not found.");
+            }
 
             header('Content-Type: application/json');
-            echo $filmJson;
+            print_r(json_encode($video));
         }
     }
 
@@ -59,36 +60,31 @@ class FilmController
     #[Roles(array(Role::Admin))]
     public function uploadVideo()
     {
-        if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES["video"])) {
-            $videoFile = $_FILES["video"];
-            $ext = pathinfo($videoFile["name"], PATHINFO_EXTENSION);
+        if ($_SERVER["REQUEST_METHOD"] !== "POST" || !isset($_FILES["video"]) || !isset($_FILES["cover"])) {
+            die("Invalid request.");
+        }
 
-            if (!in_array(strtolower($ext), ["mp4", "mov", "avi"])) {
-                die("Invalid file type.");
-            }
+        $videoFile = $_FILES["video"];
+        $coverFile = $_FILES["cover"];
 
-            $uniqueToken = $this->filmService->generateUniqueToken();
-            $filePath = $this->base_url.$_ENV['UPLOAD_DIR'] . $uniqueToken . "." . $ext;
-            move_uploaded_file($videoFile["tmp_name"], $filePath);
-
-            $hlsFolder = $this->base_url.$_ENV['HLS_DIR'] . $uniqueToken;
-            $playlistPath = $this->filmService->processHLS($filePath, $hlsFolder);
-
-            $this->filmService->insertVideo($videoFile["name"], $filePath, $playlistPath, $uniqueToken);
-            
-            echo "Video uploaded. <a href='/films/watch/$uniqueToken'>Watch here</a>";
+        try {
+            $videoToken = $this->filmService->handleVideoUpload($videoFile, $coverFile);
+            echo "Video uploaded. <a href='/films/watch/$videoToken'>Watch here</a>";
+        } catch (\Exception $e) {
+            die("Upload failed: " . $e->getMessage());
         }
     }
-
-
+    
     #[Route("GET", "/watch/[a:token]")]
     public function watchVideo($token)
     {
+       if(isset($token["token"])){
         $video = $this->filmService->getVideoByToken($token);
         if (!$video) {
             die("Video not found.");
         }
 
         return view(view: "/film/watch", data: $video);
+       }
     }
 }

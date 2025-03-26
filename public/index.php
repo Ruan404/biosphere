@@ -7,6 +7,7 @@ use App\Film\FilmController;
 use App\Core\Router;
 use App\Home\HomeController;
 use App\Podcast\PodcastController;
+use App\Sensor\SensorController;
 
 
 $whoops = new \Whoops\Run;
@@ -22,4 +23,5 @@ $router ->registerController(HomeController::class)
         ->registerController(ChatController::class)
         ->registerController(FilmController::class)
         ->registerController(PodcastController::class)
+        ->registerController(SensorController::class)
         ->run();
