@@ -27,4 +27,12 @@ class TopicService extends Topic
 
         return $topics;
     }
+
+    public function deleteTopic($topicId)
+    {
+        $query = Database::getPDO()->prepare('DELETE FROM topic WHERE id = ?');
+        $result = $query->execute([$topicId]);
+
+        return $result;
+    }
 }

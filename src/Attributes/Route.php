@@ -13,12 +13,10 @@ class Route
         $this->method = $method;
     }
 
-    public string $path{
-        get => $this->path;
-    }
+    public string $path;
+    
 
-    public string $method{
-        get => $this->method;
-    }
+    public string $method;
+    
 
 }

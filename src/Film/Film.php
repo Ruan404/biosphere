@@ -20,6 +20,9 @@ class Film
     public int $genre_id{
         get => $this -> genre_id;
     }
+    public int $id = 0{
+        get => $this->id;
+    }
 
     public string $title{
         get => htmlspecialchars($this -> title);

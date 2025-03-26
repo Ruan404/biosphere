@@ -15,4 +15,8 @@ class User
         public string $mdp {
                 get => $this->mdp;
         }
+
+        public string $role {
+                get => $this->role;
+        }
 }

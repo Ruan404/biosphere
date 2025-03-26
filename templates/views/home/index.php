@@ -1,5 +1,11 @@
 <?php
 $style = 'home';
+// Vérifier si l'utilisateur est connecté et s'il est administrateur
+if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
+    // Rediriger l'administrateur vers son espace d'administration
+    header('Location: /admin'); // Redirige vers l'espace admin (adapte l'URL selon ta structure)
+    exit();
+}
 ?>
 
 <div class="about-ctn">
