@@ -4,19 +4,15 @@ use App\Attributes\{
     Route
 };
 
-use App\Auth\AuthService;
+use function App\Helpers\view;
 
-use App\Helpers\{
-    Text,
-    Page
-};
 
 class HomeController
 {
     #[Route(method: "GET", path: "/")]
     public function index()
     {
-        return Page::print(view: 'home/index');
+        return view(view: 'home/index');
 
     }
 }

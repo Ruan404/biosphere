@@ -1,7 +1,6 @@
 <?php
     use App\Auth\AuthService;
     use App\Helpers\Text;
-    
     $user = AuthService::getUserSession();
 
     //l'utilisiteur n'est pas connecté
@@ -47,6 +46,7 @@
                     <a href="/chat">Forum</a>
                     <a href="/films">Films</a>
                     <a href="/podcast">Podcast</a>
+                    <a href="/sensors">Capteurs</a>
                 </div>
                 <div class="user-profile">
                     <span class="user-pofile-frame"><?= $profile ?></span>

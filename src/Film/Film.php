@@ -9,26 +9,42 @@ namespace App\Film;
  */
 class Film
 {
-    public string $cover{
-        get => htmlspecialchars($this -> cover);
-    }
-    
-    public string $video{
-        get => htmlspecialchars($this -> video);
+    public string $cover {
+        get => htmlspecialchars($this->cover);
+
+        set(string $cover) {
+            $this->cover = htmlspecialchars($cover);
+        }
     }
 
-    public int $genre_id{
-        get => $this -> genre_id;
+    public string $video {
+        get => htmlspecialchars($this->video);
+
+        set(string $video) {
+            $this->video = htmlspecialchars($video);
+        }
     }
     public int $id = 0{
         get => $this->id;
     }
 
-    public string $title{
-        get => htmlspecialchars($this -> title);
+    public int $genre_id {
+        get => $this->genre_id;
     }
-    public string $description{
-        get => htmlspecialchars($this -> description);
+
+    public string $title {
+        get => htmlspecialchars($this->title);
+
+        set(string $title) {
+            $this->title = htmlspecialchars($title);
+        }
+    }
+    public string $description {
+        get => htmlspecialchars($this->description);
+
+        set(string $description) {
+            $this->description = htmlspecialchars($description);
+        }
     }
 
 }

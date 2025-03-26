@@ -1,12 +1,46 @@
 <?php
 
 namespace App\Film;
-
 use App\Core\Database;
 use PDO;
+use Exception;
+use Dotenv\Dotenv;
 
 class FilmService
 {
+
+    private $hlsDirectory;
+
+    public function __construct(string $hlsDirectory = "")
+    {
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/../../');
+        $dotenv->load();
+
+        $this->hlsDirectory = $hlsDirectory;
+    }
+
+    public function generateUniqueToken()
+    {
+        return bin2hex(random_bytes(16));
+    }
+
+    public function processHLS($inputFile, $outputFolder)
+    {
+        if (!file_exists($outputFolder)) {
+            mkdir($outputFolder, 0777, true);
+        }
+
+        $playlistPath = $outputFolder . "/playlist.m3u8";
+
+        $command = escapeshellcmd("ffmpeg -i $inputFile -c:v h264 -c:a aac -b:v 1500k -f hls -hls_time 5 -hls_playlist_type vod $playlistPath");
+        exec($command, $output, $returnCode);
+
+        if ($returnCode !== 0) {
+            throw new Exception("Error generating HLS files.");
+        }
+
+        return $playlistPath;
+    }
 
     public function getAllFilms(): ?array
     {
@@ -19,7 +53,7 @@ class FilmService
 
     public function getFilmByTitle($title): ?array
     {
-        $query = Database::getPDO()->prepare('SELECT * FROM film JOIN genre ON film.genre_id = genre.id WHERE film.title = :title');
+        $query = Database::getPDO()->prepare('SELECT film.title, film.cover, film.video, film.description, genre.name FROM film JOIN genre ON film.genre_id = genre.id WHERE film.title = :title');
         $query->bindParam(':title', $title, PDO::PARAM_STR);
         $query->execute();
         $film = $query->fetch(PDO::FETCH_ASSOC);
@@ -29,6 +63,72 @@ class FilmService
         }
 
         return null;
+    }
+
+    private function validateFile(array $file, array $allowedTypes, string $type)
+    {
+        $ext = strtolower(pathinfo($file["name"], PATHINFO_EXTENSION));
+        if (!in_array($ext, $allowedTypes)) {
+            throw new Exception("Invalid $type file type.");
+        }
+    }
+
+    public function handleVideoUpload(array $videoFile, array $coverFile): string
+    {
+        // Validate files
+        $this->validateFile($videoFile, ["mp4", "mov", "avi"], "video");
+        $this->validateFile($coverFile, ["jpg", "jpeg", "png"], "cover");
+
+        // Generate unique token
+        $uniqueToken = $this->generateUniqueToken();
+
+        // Define file paths
+        $videoPath = $_ENV['UPLOAD_DIR'] . $uniqueToken . "." . pathinfo($videoFile["name"], PATHINFO_EXTENSION);
+        $coverPath = $_ENV['COVER_DIR'] . $uniqueToken . "." . pathinfo($coverFile["name"], PATHINFO_EXTENSION);
+        $hlsFolder = $_ENV['HLS_DIR'] . $uniqueToken;
+
+        // Move files
+        move_uploaded_file($videoFile["tmp_name"], $_ENV['BASE_URL'] . $videoPath);
+        move_uploaded_file($coverFile["tmp_name"], $_ENV['BASE_URL'] . $coverPath);
+
+        // Process HLS
+        $playlistPath = $this->processHLS($_ENV['BASE_URL'] . $videoPath, $_ENV['BASE_URL'] . $hlsFolder);
+        $playlistPath = str_replace($_ENV['BASE_URL'], '', $playlistPath); // Store relative path
+
+        // Store in database
+        $title = strtolower(pathinfo($videoFile["name"], PATHINFO_FILENAME));
+        $this->insertVideo($title, $videoPath, $playlistPath, $coverPath, $uniqueToken);
+
+        return $uniqueToken;
+    }
+
+    public function insertVideo($title, $filePath, $playlistPath, $coverPath, $token)
+    {
+        $stmt = Database::getPDO()->prepare("INSERT INTO videos (title, file_path, playlist_path, cover_image, token) VALUES (?, ?, ?, ?, ?)");
+        return $stmt->execute([$title, $filePath, $playlistPath, $coverPath, $token]);
+    }
+
+    public function getVideoByToken($token)
+    {
+        $stmt = Database::getPDO()->prepare("SELECT cover_image, token, title, playlist_path FROM videos WHERE token = ?");
+        $stmt->execute([$token["token"]]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function getAllVideos()
+    {
+        $stmt = Database::getPDO()->prepare("SELECT cover_image, token, title FROM videos");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getAllFilms(): ?array
+    {
+        $query = Database::getPDO()->query('SELECT cover, title FROM film JOIN genre ON film.genre_id = genre.id');
+
+        $films = $query->fetchAll(PDO::FETCH_CLASS, Film::class);
+
+        return $films;
     }
 
     public function deleteFilm($filmId)

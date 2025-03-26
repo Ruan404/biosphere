@@ -2,7 +2,7 @@
 namespace App\Podcast;
 
 use App\Attributes\Route;
-use App\Helpers\Page;
+use function App\Helpers\view;
 
 #[Route('GET','/podcast')]
 Class PodcastController{
@@ -10,6 +10,6 @@ Class PodcastController{
     #[Route('GET','')]
     public function index(){
 
-        return Page::print("/podcast/index");
+        return view("/podcast/index");
     }
 }

@@ -8,8 +8,11 @@
 #vendor
 vendor
 
-uploads
-
-node_modules
-
+#rest
 .rest
+
+#stream feature
+VideoStream
+
+#uploads
+uploads

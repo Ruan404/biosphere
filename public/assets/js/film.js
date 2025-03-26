@@ -1,8 +1,8 @@
 const details = document.querySelector(".film-details");
 const detailsCtn = document.querySelector(".details-ctn");
 
-function fetchdata(title) {
-  fetch(`/films/details/${title}`)
+function fetchdata(videoId) {
+  fetch(`/films/details/${videoId}`)
     .then((response) => {
       if (!response.ok) {
         throw new Error(`HTTP error: ${response.status}`);
@@ -11,11 +11,11 @@ function fetchdata(title) {
     })
     .then((data) => {
       detailsCtn.innerHTML = `
-                <img src='/assets/images/${data.cover}' />
+                <img src='/${data.cover_image}' />
                     <div class='film-info'>
                         <div class='film-info-ctn'>
                             <p class='film-title'>${data.title}</p>
-                            <a class='primary-btn' href='/films/${data.title}'>regarder le film</a>
+                            <a class='primary-btn' href='/films/watch/${data.token}'>regarder le film</a>
                         </div>
                         <div class='film-info-ctn'>
                             <b>Description</b>
