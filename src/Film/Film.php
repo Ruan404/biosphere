@@ -39,6 +39,14 @@ class Film
             $this->title = htmlspecialchars($title);
         }
     }
+
+    public string $token{
+        get => htmlspecialchars($this->token);
+
+        set(string $token) {
+            $this->token = htmlspecialchars($token);
+        }
+    }
     public string $description {
         get => htmlspecialchars($this->description);
 

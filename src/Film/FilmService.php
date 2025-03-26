@@ -44,7 +44,7 @@ class FilmService
 
     public function getAllFilms(): ?array
     {
-        $query = Database::getPDO()->query('SELECT cover, title FROM film JOIN genre ON film.genre_id = genre.id');
+        $query = Database::getPDO()->query('SELECT cover_image,token, title FROM film JOIN genre ON film.genre_id = genre.id');
 
         $films = $query->fetchAll(PDO::FETCH_CLASS, Film::class);
 
@@ -104,32 +104,17 @@ class FilmService
 
     public function insertVideo($title, $filePath, $playlistPath, $coverPath, $token)
     {
-        $stmt = Database::getPDO()->prepare("INSERT INTO videos (title, file_path, playlist_path, cover_image, token) VALUES (?, ?, ?, ?, ?)");
+        $stmt = Database::getPDO()->prepare("INSERT INTO film (title, file_path, playlist_path, cover_image, token) VALUES (?, ?, ?, ?, ?)");
         return $stmt->execute([$title, $filePath, $playlistPath, $coverPath, $token]);
     }
 
     public function getVideoByToken($token)
     {
-        $stmt = Database::getPDO()->prepare("SELECT cover_image, token, title, playlist_path FROM videos WHERE token = ?");
+        $stmt = Database::getPDO()->prepare("SELECT cover_image,description, token, title, playlist_path FROM film WHERE token = ?");
         $stmt->execute([$token["token"]]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
-
-    public function getAllVideos()
-    {
-        $stmt = Database::getPDO()->prepare("SELECT cover_image, token, title FROM videos");
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public function getAllFilms(): ?array
-    {
-        $query = Database::getPDO()->query('SELECT cover, title FROM film JOIN genre ON film.genre_id = genre.id');
-
-        $films = $query->fetchAll(PDO::FETCH_CLASS, Film::class);
-
-        return $films;
-    }
+    
 
     public function deleteFilm($filmId)
     {
