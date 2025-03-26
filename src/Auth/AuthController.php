@@ -39,7 +39,16 @@ class AuthController
             $user = $this->authService->login($loginUser);
 
             if ($user) {
-                header('Location: /'); //le homeController prend le relais
+                $_SESSION['user_id'] = $user->id;
+                $_SESSION['role'] = $user->role; // Suppose que 'role' est bien stocké dans l'objet $user
+                
+                var_dump($_POST); 
+                
+                if ($user->role === 'admin') {
+                    header('Location: /admin'); // Redirige vers l'espace admin
+                } else {
+                    header('Location: /'); // Redirige vers l'accueil normal
+                }
                 exit();
             }
         }

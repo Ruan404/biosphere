@@ -11,7 +11,7 @@ class FilmService
 
     private $hlsDirectory;
 
-    public function __construct(string $hlsDirectory)
+    public function __construct(string $hlsDirectory = "")
     {
         $dotenv = Dotenv::createImmutable(__DIR__ . '/../../');
         $dotenv->load();
@@ -120,5 +120,22 @@ class FilmService
         $stmt = Database::getPDO()->prepare("SELECT cover_image, token, title FROM videos");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getAllFilms(): ?array
+    {
+        $query = Database::getPDO()->query('SELECT cover, title FROM film JOIN genre ON film.genre_id = genre.id');
+
+        $films = $query->fetchAll(PDO::FETCH_CLASS, Film::class);
+
+        return $films;
+    }
+
+    public function deleteFilm($filmId)
+    {
+        $query = Database::getPDO()->prepare('DELETE FROM film WHERE id = ?');
+        $result = $query->execute([$filmId]);
+
+        return $result;
     }
 }
