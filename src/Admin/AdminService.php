@@ -53,9 +53,7 @@ class AdminService {
     }
 
     public function deleteFilm($filmTitle) {
-        $film = $this->filmService->getFilmByTitle($filmTitle);
-        if ($film) {
-            $this->filmService->deleteFilm($film->id);
-        }
+        $this->filmService->deleteFilm($filmTitle);
+
     }
 }

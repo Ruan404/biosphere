@@ -18,22 +18,17 @@
             console.log(message)
             document.querySelector(".sensor-ctn").innerHTML += `
                 <div class="sensor-info">
-                    <p>${new Date(message["received_time"]).toLocaleString()}</p>
+                    <p>${message["end_device_id"]}</p>
                 </div>
                 <div class="sensor-data"></div>
             `
 
             if (message.payload) {
-                var payload = JSON.parse(message.payload)
-
-                for (var key in payload) {
-                    document.querySelector(".sensor-data").innerHTML += `
+                document.querySelector(".sensor-data").innerHTML += `
                     <div class="sensor">
-                        <p class="sensor-key">${key}</p>
-                        <p class="sensor-value">${payload[key]}</p>
+                        <p class="sensor-key">${message.payload}</p>
                     </div>
                 `
-                }
             }
         }
 

@@ -42,7 +42,7 @@ class AdminController {
     // Route for handling the video upload and HLS conversion
     #[Route("POST", "/film/upload")]
     #[Roles(array(Role::Admin))]
-    public function uploadVideo()
+    public function uploadFilm()
     {
         if ($_SERVER["REQUEST_METHOD"] !== "POST" || !isset($_FILES["video"]) || !isset($_FILES["cover"])) {
             die("Invalid request.");
@@ -52,7 +52,7 @@ class AdminController {
         $coverFile = $_FILES["cover"];
 
         try {
-            $videoToken = $this->filmService->handleVideoUpload($videoFile, $coverFile);
+            $videoToken = $this->filmService->handleFilmUpload($videoFile, $coverFile);
             echo "Video uploaded. <a href='/films/watch/$videoToken'>Watch here</a>";
         } catch (\Exception $e) {
             die("Upload failed: " . $e->getMessage());
@@ -102,7 +102,7 @@ class AdminController {
                     
                 case 'delete_film':
                     if ($film) {
-                        $this->adminService->deleteFilm($film);
+                        $this->filmService->deleteFilm($film);
                         // Redirect or show confirmation
                     }
                     break;

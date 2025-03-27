@@ -139,7 +139,7 @@ $films = $data['films'] ?? [];
                                 <!-- Delete Film Form -->
                                 <form action = "admin/action" method="POST" style="display:inline;">
                                     <input type="hidden" name="action" value="delete_film">
-                                    <input type="hidden" name="film" value="<?= $film->title ?>"> <!-- Assuming title can be used for action -->
+                                    <input type="hidden" name="film" value="<?= $film->token ?>"> <!-- Assuming title can be used for action -->
                                     <button type="submit" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce film ?')">Supprimer</button>
                                 </form>
                             </td>

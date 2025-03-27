@@ -8,15 +8,10 @@ use Dotenv\Dotenv;
 
 class FilmService
 {
-
-    private $hlsDirectory;
-
-    public function __construct(string $hlsDirectory = "")
+    public function __construct()
     {
         $dotenv = Dotenv::createImmutable(__DIR__ . '/../../');
         $dotenv->load();
-
-        $this->hlsDirectory = $hlsDirectory;
     }
 
     public function generateUniqueToken()
@@ -45,18 +40,16 @@ class FilmService
     public function getAllFilms(): ?array
     {
         $query = Database::getPDO()->query('SELECT cover_image,token, title FROM film JOIN genre ON film.genre_id = genre.id');
-
         $films = $query->fetchAll(PDO::FETCH_CLASS, Film::class);
-
         return $films;
     }
 
     public function getFilmByTitle($title): ?array
     {
-        $query = Database::getPDO()->prepare('SELECT film.title, film.cover, film.video, film.description, genre.name FROM film JOIN genre ON film.genre_id = genre.id WHERE film.title = :title');
+        $query = Database::getPDO()->prepare('SELECT cover_image,description, token, title, playlist_path FROM film WHERE film.title = :title');
         $query->bindParam(':title', $title, PDO::PARAM_STR);
         $query->execute();
-        $film = $query->fetch(PDO::FETCH_ASSOC);
+        $film = $query->fetchAll(PDO::FETCH_CLASS, Film::class);
 
         if ($film) {
             return $film;
@@ -73,7 +66,7 @@ class FilmService
         }
     }
 
-    public function handleVideoUpload(array $videoFile, array $coverFile): string
+    public function handleFilmUpload(array $videoFile, array $coverFile): string
     {
         // Validate files
         $this->validateFile($videoFile, ["mp4", "mov", "avi"], "video");
@@ -97,30 +90,62 @@ class FilmService
 
         // Store in database
         $title = strtolower(pathinfo($videoFile["name"], PATHINFO_FILENAME));
-        $this->insertVideo($title, $videoPath, $playlistPath, $coverPath, $uniqueToken);
+        $this->addFilm($title, $videoPath, $playlistPath, $coverPath, $uniqueToken);
 
         return $uniqueToken;
     }
 
-    public function insertVideo($title, $filePath, $playlistPath, $coverPath, $token)
+    public function addFilm($title, $filePath, $playlistPath, $coverPath, $token)
     {
         $stmt = Database::getPDO()->prepare("INSERT INTO film (title, file_path, playlist_path, cover_image, token) VALUES (?, ?, ?, ?, ?)");
         return $stmt->execute([$title, $filePath, $playlistPath, $coverPath, $token]);
     }
 
-    public function getVideoByToken($token)
+    public function getFilmByToken($token)
     {
-        $stmt = Database::getPDO()->prepare("SELECT cover_image,description, token, title, playlist_path FROM film WHERE token = ?");
-        $stmt->execute([$token["token"]]);
+        $stmt = Database::getPDO()->prepare("SELECT cover_image,description, token, title,file_path, playlist_path FROM film WHERE token = ?");
+        $stmt->execute([$token]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+
+    public function deleteFilm($token)
+    {
+        // Get video details from DB
+        $video = $this->getFilmByToken($token);
+    
+        if (!$video) {
+            throw new Exception("Film not found.");
+        }
+    
+        // Remove the video file
+        $videoFilePath = realpath($video['file_path']);
+        
+        if (file_exists($videoFilePath)) {
+            unlink($videoFilePath);
+        }
+    
+        // Remove the cover image
+        $coverFilePath = realpath($video['cover_image']);
+        if (!empty($video['cover_image']) && file_exists($coverFilePath)) {
+            unlink($coverFilePath);
+        }
+    
+        // Remove the HLS folder and all its contents
+        $hlsFolder = $_ENV['HLS_DIR'] . $token;
+        if (is_dir($hlsFolder)) {
+            foreach (glob("$hlsFolder/*") as $file) {
+                unlink($file);
+            }
+            rmdir($hlsFolder);
+        }
+    
+        // Delete database entry
+        $stmt = Database::getPDO()->prepare("DELETE FROM film WHERE token = ?");
+        $stmt->execute([$token]);
+    
+        return true;
     }
     
 
-    public function deleteFilm($filmId)
-    {
-        $query = Database::getPDO()->prepare('DELETE FROM film WHERE id = ?');
-        $result = $query->execute([$filmId]);
-
-        return $result;
-    }
 }

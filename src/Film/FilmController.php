@@ -32,19 +32,12 @@ class FilmController
     {
         return view(view: "/film/list", data: $this->films);
     }
-
-    #[Route("GET", "/upload")]
-    #[Roles(array(Role::Admin))]
-    public function upload()
-    {
-        return view(view: '/film/upload');
-    }
  
     #[Route("GET", "/details/[a:token]")]
     public function details($token)
     {
         if (isset($token['token'])) {
-            $video = $this->filmService->getVideoByToken($token);
+            $video = $this->filmService->getFilmByToken($token['token']);
             if (!$video) {
                 die("Video not found.");
             }
@@ -58,7 +51,7 @@ class FilmController
     public function watchVideo($token)
     {
        if(isset($token["token"])){
-        $video = $this->filmService->getVideoByToken($token);
+        $video = $this->filmService->getFilmByToken($token["token"]);
         if (!$video) {
             die("Video not found.");
         }

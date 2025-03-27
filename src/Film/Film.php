@@ -9,11 +9,11 @@ namespace App\Film;
  */
 class Film
 {
-    public string $cover {
-        get => htmlspecialchars($this->cover);
+    public string $cover_image {
+        get => htmlspecialchars($this->cover_image);
 
-        set(string $cover) {
-            $this->cover = htmlspecialchars($cover);
+        set(string $cover_image) {
+            $this->cover_image = htmlspecialchars($cover_image);
         }
     }
 
@@ -55,4 +55,10 @@ class Film
         }
     }
 
+    public string $file_path {
+        get => $this->file_path;
+    }
+    public string $playlist_path {
+        get => $this->playlist_path;
+    }
 }
