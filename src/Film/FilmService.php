@@ -5,6 +5,7 @@ use App\Core\Database;
 use PDO;
 use Exception;
 use Dotenv\Dotenv;
+ini_set('max_execution_time', 300);
 
 class FilmService
 {
@@ -113,13 +114,14 @@ class FilmService
     {
         // Get video details from DB
         $video = $this->getFilmByToken($token);
-    
+
         if (!$video) {
             throw new Exception("Film not found.");
         }
     
         // Remove the video file
         $videoFilePath = realpath($video['file_path']);
+       
         
         if (file_exists($videoFilePath)) {
             unlink($videoFilePath);

@@ -11,6 +11,7 @@ use App\Film\FilmService;
 use App\Topic\TopicService;
 use App\User\UserService;
 use function App\Helpers\view;
+ini_set('max_execution_time', 300);
 
 #[Route("GET", "/admin")]
 class AdminController {
@@ -102,7 +103,7 @@ class AdminController {
                     
                 case 'delete_film':
                     if ($film) {
-                        $this->filmService->deleteFilm($film);
+                        $this->adminService->deleteFilm($film);
                         // Redirect or show confirmation
                     }
                     break;

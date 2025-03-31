@@ -1,6 +1,7 @@
 <?php
 namespace App\Admin;
 
+use App\Chat\ChatService;
 use App\Topic\TopicService;
 use App\User\UserService;
 use App\Film\FilmService;
@@ -12,36 +13,50 @@ class AdminService {
     private $filmService;
     private $podcastService;
     private $topicService;
+    private $chatService;
 
     public function __construct(){
         $this->userService = new UserService();
         $this->topicService = new TopicService();
+        $this->chatService = new ChatService();
         $this->filmService = new FilmService();
         $this->podcastService = new PodcastService();
     }
 
-    public function deleteUser($pseudo) {
-        // Assuming you have a method to find a user by pseudo
+    public function deleteUser($pseudo): bool {
         $user = $this->userService->getUserByPseudo($pseudo);
         if ($user) {
-            $this->userService->deleteUser($user->id);
-            // Add further logic or notifications after deletion
+            return $this->userService->deleteUser($user->id);
         }
+        return false;
     }
 
-    public function promoteUser($pseudo) {
+    public function promoteUser($pseudo): bool {
         $user = $this->userService->getUserByPseudo($pseudo);
         if ($user) {
-            $this->userService->promoteToAdmin($user->id);
-            // Add further logic for user promotion
+            return $this->userService->promoteToAdmin($user->id);
         }
+        return false;
     }
+    
+    /**
+     * Delete chat messages related to a topic and the topic itself
+     * @param string $topic
+     * @return bool
+     */
+    public function deleteTopic(string $topic): bool
+    {
+        $topicId = $this->topicService->getTopicByName($topic)->id;
 
-    public function deleteTopic($topicName) {
-        $topic = $this->topicService->getTopicByName($topicName);
-        if ($topic) {
-            $this->topicService->deleteTopic($topic->id);
+        if ($topicId) {
+            $deleteChat = $this->chatService->deleteChat($topicId);
+
+            if($deleteChat){
+                return $this->topicService->deleteTopic($topicId);
+            }
         }
+
+        return false;
     }
 
     public function deletePodcast($podcastTitle) {
@@ -52,8 +67,7 @@ class AdminService {
         }
     }
 
-    public function deleteFilm($filmTitle) {
-        $this->filmService->deleteFilm($filmTitle);
-
+    public function deleteFilm($token) {
+        return $this->filmService->deleteFilm(token: $token);
     }
 }

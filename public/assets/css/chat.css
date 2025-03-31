@@ -118,6 +118,7 @@ main {
   gap: 0.5rem;
   font-size: 0.875rem;
   height: fit-content;
+  position: relative;
 }
 
 .msg-img {
@@ -168,6 +169,39 @@ main {
   background: #00000080;
   z-index: 99;
   display: none;
+}
+
+/*===options===*/
+
+.options-ctn{
+  width: fit-content;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.options{
+  display: none;
+  position: absolute;
+  padding: 1rem;
+  bottom: 3.5rem;
+  right: 0;
+  background: rgb(var(--bg-2));
+  border-radius: 0.5rem;
+}
+
+.options.show{
+  display: grid;
+  row-gap:0.5rem;
+}
+.options-btn svg{
+  pointer-events: none;
+}
+
+.option-btn{
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  background: rgb(var(--bg-1));
 }
 
 /*===responsiveness===*/

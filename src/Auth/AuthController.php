@@ -73,7 +73,7 @@ class AuthController
             //essayer d'inscrire l'utilisateur
             $result = $this->authService->signup($signupUser);
 
-            if ($result == true) {
+            if ($result === true) {
                 header('Location: /login');
                 exit();
             }

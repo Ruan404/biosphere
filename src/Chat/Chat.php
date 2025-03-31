@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Chat;
+
+use App\Auth\AuthService;
 //voir les messages par rapport à un topic
 /**
  * récupérer le topic
@@ -8,6 +10,13 @@ namespace App\Chat;
  */
 class Chat
 {
+    public function __construct()
+    {
+        if (session_status() === 1) {
+            session_start();
+        }
+        $this->options = $this->getOptions($this->pseudo === $_SESSION['username']);
+    }
     public int $topic_id = 0 {
         get => $this->topic_id;
 
@@ -17,7 +26,7 @@ class Chat
     }
 
 
-    public string $pseudo {
+    public string $pseudo = "" {
         get => $this->pseudo;
 
         set(string $pseudo) {
@@ -42,4 +51,31 @@ class Chat
             $this->message = nl2br(rtrim(strip_tags(htmlspecialchars_decode(trim($message)))));
         }
     }
+
+    public string $options {
+        get => $this->options;
+    }
+
+    private function getOptions(bool $canDelete): string
+    {
+        if ($canDelete) {
+            return "
+            <div class='options-ctn'>
+                <div class='options'>
+                    <button class='option-btn' onclick='deleteMessage(\"{$this->date}\")'>supprimer</button>
+                </div>
+                <button class='options-btn'>
+                    <svg width='24' height='24' viewBox='0 0 24 24' fill='currentColor' xmlns='http://www.w3.org/2000/svg'>
+                        <rect x='11' y='5' width='2' height='2' rx='1'/>
+                        <rect x='11' y='11' width='2' height='2' rx='1'/>
+                        <rect x='11' y='17' width='2' height='2' rx='1'/>
+                    </svg>
+                </button>
+            </div>
+        ";
+        }
+
+        return ""; //future reply function
+    }
+
 }

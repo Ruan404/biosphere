@@ -2,10 +2,16 @@
 
 namespace App\Chat;
 use App\Core\Database;
+use App\Topic\TopicService;
 use PDO;
 
 class ChatService extends Chat
 {
+    private $topicService;
+
+    public function __construct(){
+        $this->topicService = new TopicService();
+    }
     public function addMessage(Chat $chat): bool
     {
         if (strlen($chat->message) != 0) {
@@ -38,16 +44,33 @@ class ChatService extends Chat
     {
         $in_array = explode(',', $dates[0]);
 
-        $in  = str_repeat('?,', count($in_array) - 1) . '?';
+        $in = str_repeat('?,', count($in_array) - 1) . '?';
 
         $query = Database::getPDO()->prepare("DELETE FROM chat WHERE pseudo=? AND topic_id=? AND date IN ($in)");
 
-        $query->execute(array_merge([$pseudo, $topicId],array_merge($in_array)));
+        $query->execute(array_merge([$pseudo, $topicId], array_merge($in_array)));
 
         $response = $query->fetch();
 
         if ($response === true) {
             return true;
+        }
+
+        return false;
+    }
+
+    public function deleteChat($topicId): bool
+    {
+        if ($topicId) {
+            $query = Database::getPDO()->prepare('DELETE FROM chat WHERE topic_id = ?');
+            $query->execute([$topicId]);
+
+            if ($query->rowCount() > 0) {
+                $result = $this->topicService->deleteTopic($topicId);
+
+                return $result;
+            }
+            return false;
         }
 
         return false;

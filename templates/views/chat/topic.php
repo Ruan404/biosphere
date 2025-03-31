@@ -11,8 +11,6 @@ if ($user == null) {
 	header('Location: /login');
 	exit();
 }
-
-
 ?>
 
 <div class="container">
@@ -38,6 +36,7 @@ if ($user == null) {
 	</div>
 	<div class="messages">
 		<div class="msgs-display">
+			<div></div>
 		</div>
 		<form class="send-msg-form">
 			<textarea name="message" required autocomplete="off" placeholder="Entrez votre message"></textarea>
@@ -93,7 +92,6 @@ if ($user == null) {
 				fetchdata(chatTopic)
 
 				currentTopic = chatTopic
-				console.log(currentTopic)
 
 				document.querySelector(".current-topic").innerText = currentTopic
 				document.querySelector(".topic-link.current").classList.remove("current")
@@ -118,7 +116,7 @@ if ($user == null) {
 					socket.send(JSON.stringify(data))
 
 					//add the new message
-					
+
 					msgsDisplayCtn.innerHTML += `
 							<div class='msg-ctn'>
 								<div class="msg-img">
@@ -189,14 +187,59 @@ if ($user == null) {
 								</div>
 								<p>${chat.message}</p>
 							</div>
+							${chat.options}
 						</div>
 					`;
 				});
 				msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: 'smooth' });
 				currentTopic = topic;
 				document.querySelector(".current-topic").innerText = currentTopic
+
+				// const optionsCtn = document.getElementsByClassName("options-ctn")
+				// Array.from(optionsCtn).forEach(el => {
+				// 	el.parentNode.addEventListener("mouseover", () => {
+				// 		el.classList.add("show")
+				// 	})
+
+				// 	el.parentNode.addEventListener("mouseout", () => {
+				// 		el.classList.remove("show")
+				// 	})
+
+
+				// });
+
+				const optionTab = document.getElementsByClassName("options-btn")
+				Array.from(optionTab).forEach(el => {
+					el.addEventListener("click", () => {
+						const options = el.parentNode.children[0];
+						options.classList.toggle("show")
+
+						window.addEventListener("click", (ev) => {
+							if (ev.target !== options && ev.target !== el && options.classList.contains("show")) {
+								options.classList.remove("show")
+							}
+
+						})
+					})
+				});
 			})
 			.catch((err) => console.error(`Fetch problem: ${err.message}`));
 	}
 
+	function deleteMessage(message){
+		fetch(`/chat/${currentTopic}`, {
+			method: 'DELETE',  // Send a DELETE request
+			body: JSON.stringify({"messages" : message})
+		})
+			.then(response => response.json())  // Assuming the response is in JSON format
+			.then(data => {
+				console.log(JSON.parse(data))
+			})
+			.catch(error => {
+				console.error("Error submitting the form:", error);
+				// Handle any error that occurs during the fetch
+			}).finally(() => {
+				form.reset()
+			});
+	}
 </script>
