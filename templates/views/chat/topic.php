@@ -60,38 +60,42 @@ if ($user == null) {
 	const msgsDisplayCtn = document.querySelector(".msgs-display")
 	const form = document.querySelector(".send-msg-form")
 	var currentTopic = "<?= $currentTopic ?>";
-
-	document.querySelector(`[data-slug=${currentTopic}]`).classList.add("current")
-
 	const socket = new WebSocket(`ws://localhost:8000/chat/${currentTopic}`);
 
-	fetchdata(currentTopic)
 
-	function viewChat(ev, chatTopic) {
+	//au chargement de la page
+	window.addEventListener("load", () => {
+		if (currentTopic) {
+			document.querySelector(`[data-slug=${currentTopic}]`).classList.add("current")
+			fetchData(currentTopic)
+		}
+	})
+
+	function viewChat(ev, topic) {
 		ev.preventDefault();
-		if (chatTopic != currentTopic) {
+		if (topic != currentTopic) {
 			document.querySelector(".topic-link.current").classList.remove("current")
 
 			ev.target.classList.add("current")
-			history.pushState({ chatTopic }, `chat ${chatTopic}`, `/chat/${chatTopic}`)
+			history.pushState({ topic }, `chat ${topic}`, `/chat/${topic}`)
 
-			fetchdata(chatTopic)
+			fetchData(topic)
 
-			currentTopic = chatTopic
+			currentTopic = topic
 		}
 	}
 
 	// This event listener will capture when the user navigates forward or backward
 	window.addEventListener('popstate', function (event) {
 		if (event.state) {
-			const chatTopic = event.state.chatTopic
+			const topic = event.state.topic
 
-			if (chatTopic != currentTopic) {
-				history.pushState({ chatTopic }, `chat ${chatTopic}`, `/chat/${chatTopic}`)
+			if (topic != currentTopic) {
+				history.pushState({ topic }, `chat ${topic}`, `/chat/${topic}`)
 
-				fetchdata(chatTopic)
+				fetchData(topic)
 
-				currentTopic = chatTopic
+				currentTopic = topic
 
 				document.querySelector(".current-topic").innerText = currentTopic
 				document.querySelector(".topic-link.current").classList.remove("current")
@@ -107,36 +111,20 @@ if ($user == null) {
 		const formData = new FormData(form)
 
 		fetch(`/chat/${currentTopic}`, {
-			method: 'POST',  // Send a POST request
-			body: formData   // Attach the form data
+			method: 'POST',
+			body: formData
 		})
-			.then(response => response.json())  // Assuming the response is in JSON format
+			.then(response => response.json())
 			.then(data => {
 				if (data.message) {
 					socket.send(JSON.stringify(data))
-
-					//add the new message
-
-					msgsDisplayCtn.innerHTML += `
-							<div class='msg-ctn'>
-								<div class="msg-img">
-								</div>
-								<div class="msg-info-ctn">
-									<div class="msg-pseudo-date-ctn">
-										<p class="msg-pseudo">${data.pseudo}</p>
-										<p class="msg-date">${data.date}</p>
-									</div>
-									<p>${data.message}</p>
-								</div>
-							</div>
-						
-					`
+					displayMessages(data)
 					msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: 'smooth' });
+					optionsEvent();
 				}
 			})
 			.catch(error => {
 				console.error("Error submitting the form:", error);
-				// Handle any error that occurs during the fetch
 			}).finally(() => {
 				form.reset()
 			});
@@ -145,27 +133,24 @@ if ($user == null) {
 	// When a message is received from the WebSocket server
 	socket.onmessage = function (event) {
 		const data = JSON.parse(event.data);
-		// Display message if it's a chat message
-		if (data.message) {
-			msgsDisplayCtn.innerHTML += `
-				<div class='msg-ctn'>
-					<div class="msg-img">
-					</div>
-					<div class="msg-info-ctn">
-						<div class="msg-pseudo-date-ctn">
-							<p class="msg-pseudo">${data.pseudo}</p>
-							<p class="msg-date">${data.date}</p>
-						</div>
-						<p>${data.message}</p>
-					</div>
-				</div>
-			
-		`
+		if (data.messages) {
+			msgsDisplayCtn.innerHTML = "";
+			data.messages.map(chat => {
+				displayMessages(chat);
+			});
 			msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: 'smooth' });
+			optionsEvent();
+		}
+
+		// New chat event
+		if (data.message) {
+			displayMessages(data, false)
+			msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: 'smooth' });
+			optionsEvent();
 		}
 	}
 
-	function fetchdata(topic) {
+	function fetchData(topic) {
 		fetch(`/chat/api/${topic}`)
 			.then((response) => {
 				if (!response.ok) {
@@ -176,70 +161,61 @@ if ($user == null) {
 			.then((data) => {
 				msgsDisplayCtn.innerHTML = "";
 				data.messages.map(chat => {
-					msgsDisplayCtn.innerHTML += `
-						<div class='msg-ctn'>
-							<div class="msg-img">
-							</div>
-							<div class="msg-info-ctn">
-								<div class="msg-pseudo-date-ctn">
-									<p class="msg-pseudo">${chat.pseudo}</p>
-									<p class="msg-date">${chat.date}</p>
-								</div>
-								<p>${chat.message}</p>
-							</div>
-							${chat.options}
-						</div>
-					`;
+					displayMessages(chat)
 				});
 				msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: 'smooth' });
 				currentTopic = topic;
 				document.querySelector(".current-topic").innerText = currentTopic
-
-				// const optionsCtn = document.getElementsByClassName("options-ctn")
-				// Array.from(optionsCtn).forEach(el => {
-				// 	el.parentNode.addEventListener("mouseover", () => {
-				// 		el.classList.add("show")
-				// 	})
-
-				// 	el.parentNode.addEventListener("mouseout", () => {
-				// 		el.classList.remove("show")
-				// 	})
-
-
-				// });
-
-				const optionTab = document.getElementsByClassName("options-btn")
-				Array.from(optionTab).forEach(el => {
-					el.addEventListener("click", () => {
-						const options = el.parentNode.children[0];
-						options.classList.toggle("show")
-
-						window.addEventListener("click", (ev) => {
-							if (ev.target !== options && ev.target !== el && options.classList.contains("show")) {
-								options.classList.remove("show")
-							}
-
-						})
-					})
-				});
+				optionsEvent();
 			})
 			.catch((err) => console.error(`Fetch problem: ${err.message}`));
 	}
 
-	function deleteMessage(message){
+	function deleteMessage(message) {
 		fetch(`/chat/${currentTopic}`, {
-			method: 'DELETE',  // Send a DELETE request
-			body: JSON.stringify({"messages" : message})
+			method: 'DELETE',
+			body: JSON.stringify({ "messages": message })
 		})
-			.then(response => response.json())  // Assuming the response is in JSON format
+			.then(response => response.text())
 			.then(data => {
-				console.log(JSON.parse(data))
+				socket.send(JSON.stringify({ "action": "new", data }))
 			})
 			.catch(error => {
 				console.error("Error submitting the form:", error);
-				// Handle any error that occurs during the fetch
-			}).finally(() => {
-				form.reset()
 			});
 	}
+
+	function displayMessages(chat, show = true) {
+		return (
+			msgsDisplayCtn.innerHTML += `<div class='msg-ctn'>
+				<div class="msg-img">
+				</div>
+				<div class="msg-info-ctn">
+					<div class="msg-pseudo-date-ctn">
+						<p class="msg-pseudo">${chat.pseudo}</p>
+						<p class="msg-date">${chat.date}</p>
+					</div>
+					<p>${chat.message}</p>
+				</div>
+				${show ? chat.options : ""}
+			</div>`
+		)
+	}
+	function optionsEvent() {
+		const optionTab = document.getElementsByClassName("options-btn")
+		Array.from(optionTab).forEach(el => {
+			el.addEventListener("click", () => {
+				const options = el.parentNode.children[0];
+				options.classList.toggle("show")
+
+				window.addEventListener("click", (ev) => {
+					if (ev.target !== options && ev.target !== el && options.classList.contains("show")) {
+						options.classList.remove("show")
+					}
+
+				})
+			})
+		});
+	}
+
 </script>

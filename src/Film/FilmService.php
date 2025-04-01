@@ -146,7 +146,7 @@ class FilmService
         $stmt = Database::getPDO()->prepare("DELETE FROM film WHERE token = ?");
         $stmt->execute([$token]);
     
-        return true;
+        return $stmt->rowCount() > 0;
     }
     
 

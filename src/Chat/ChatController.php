@@ -7,6 +7,8 @@ use App\Attributes\Route;
 use App\Auth\AuthService;
 use App\Entities\Role;
 use App\Topic\TopicService;
+use DateTime;
+use DateTimeZone;
 use function App\Helpers\view;
 
 
@@ -78,12 +80,40 @@ class ChatController
         }
     }
 
+    #[Route("DELETE", "/[*:slug]")]
+    public function deleteMyMessages($params)
+    {
+
+        if ($_SERVER['REQUEST_METHOD'] === "DELETE" && isset($params['slug'])) {
+            $data = json_decode(file_get_contents('php://input'), true); //Be aware that the stream can only be read once
+
+            if (session_status() === 1) {
+                session_start();
+            }
+            $user = $_SESSION["username"];
+
+            if ($user) {
+                $topic = new TopicService()->getTopicByName($params["slug"]);
+
+                if ($topic) {
+                    $response = new ChatService()->deleteMyMessages($user, $topic->id, [$data["messages"]]);
+                    if ($response) {
+                        $lastMessageId = $_GET['lastMessageId'] ?? 0;
+                        $messages = new ChatService()->getChatMessages($topic->id, $lastMessageId);
+
+                        header('Content-Type: application/json');
+                        echo json_encode(["messages" => $messages]);
+                    }
+                }
+            }
+
+
+        }
+    }
 
     #[Route("POST", "/[*:slug]")]
     public function addMessage($params)
     {
-
-
         if (!empty($_POST) && isset($params['slug'])) {
             $topic = new TopicService()->getTopicByName(htmlspecialchars($params['slug']));
             //topic does not exists
@@ -93,53 +123,24 @@ class ChatController
             $topicId = $topic->id;
 
             //create a new chat
-            $chat = new Chat();
-            $chat->message = $_POST['message'];
-            $chat->pseudo = $this->authService->getUserSession()->pseudo;
-            $chat->topic_id = $topicId;
-            $chat->date = date('Y-m-d H:i:s');
-
-            $result = new chatService()->addMessage($chat);
-            print_r(json_encode($chat));
-            exit();
-        }
-    }
-
-
-    #[Route("DELETE", "/[*:slug]")]
-    public function deleteMyMessages($params)
-    {
-
-        if ($_SERVER['REQUEST_METHOD'] === "DELETE" && isset($params['slug'])) {
-            $data = json_decode(file_get_contents('php://input'), true); //Be aware that the stream can only be read once
-
-            // parse_str($rawData, $data);
-
             if (session_status() === 1) {
                 session_start();
             }
+            $timezone = new DateTimeZone('Europe/Paris');
+            $date = new DateTime("now", $timezone)->format('Y-m-d H:i:s');
 
-            $user = $_SESSION["username"];
+            $chat = new Chat($_SESSION["username"], $date);
+            $chat->message = $_POST['message'];
 
+            $result = new chatService()->addMessage($chat, $topicId);
 
-
-            if ($user) {
-                $topic = new TopicService()->getTopicByName($params["slug"]);
-
-                if ($topic) {
-                    $response = new ChatService()->deleteMyMessages($user, $topic->id, [$data["messages"]]);
-
-                    if($response){
-                        $lastMessageId = $_GET['lastMessageId'] ?? 0;
-                        $messages = new ChatService()->getChatMessages($topic->id, $lastMessageId);
-                       
-                        header('Content-Type: application/json');
-                        echo json_encode(["messages" => $messages]);
-                    }
-                }
+            if ($result) {
+                header('Content-Type: application/json');
+                print_r(json_encode($chat));
+                exit();
             }
 
-         
         }
     }
+
 }

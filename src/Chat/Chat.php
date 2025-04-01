@@ -10,14 +10,23 @@ use App\Auth\AuthService;
  */
 class Chat
 {
-    public function __construct()
+    private $timezone;
+
+    public function __construct(string $pseudo = "", string $date = "")
     {
+        // $date = new DateTime("now", $timezone )->format('Y-m-d H:i:s');
+        if($pseudo){
+            $this->pseudo = $pseudo;
+        }
+        if($date){
+            $this->date = $date;
+        }
         if (session_status() === 1) {
             session_start();
         }
         $this->options = $this->getOptions($this->pseudo === $_SESSION['username']);
     }
-    public int $topic_id = 0 {
+    public int $topic_id = 0{
         get => $this->topic_id;
 
         set(int $topic_id) {
@@ -34,7 +43,7 @@ class Chat
         }
     }
 
-    public string $date {
+    public string $date = "" {
         get => $this->date;
     }
 

@@ -12,13 +12,13 @@ class ChatService extends Chat
     public function __construct(){
         $this->topicService = new TopicService();
     }
-    public function addMessage(Chat $chat): bool
+    public function addMessage(Chat $chat, int $topicId): bool
     {
         if (strlen($chat->message) != 0) {
             $query = Database::getPDO()->prepare('INSERT INTO chat(pseudo, message, topic_id) VALUES(?,?,?)');
-            $result = $query->execute([$chat->pseudo, $chat->message, $chat->topic_id]);
+            $query->execute([$chat->pseudo, $chat->message, $topicId]);
 
-            return $result;
+            return $query->rowCount() > 0;
         }
 
         return false;
@@ -50,13 +50,7 @@ class ChatService extends Chat
 
         $query->execute(array_merge([$pseudo, $topicId], array_merge($in_array)));
 
-        $response = $query->fetch();
-
-        if ($response === true) {
-            return true;
-        }
-
-        return false;
+        return $query->rowCount() > 0;
     }
 
     public function deleteChat($topicId): bool
@@ -66,9 +60,7 @@ class ChatService extends Chat
             $query->execute([$topicId]);
 
             if ($query->rowCount() > 0) {
-                $result = $this->topicService->deleteTopic($topicId);
-
-                return $result;
+                return $this->topicService->deleteTopic($topicId);
             }
             return false;
         }

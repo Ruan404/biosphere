@@ -11,9 +11,13 @@ wss1.on("connection", function connection(ws, req) {
   console.log("chat websocket");
 
   ws.on("message", (data) => {
-
-    if(data.action){
-      console.log(data)
+    const datas = JSON.parse(data)
+    if(datas.action === "new"){
+      wss1.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(datas.data);
+        }
+      });
     }
     wss1.clients.forEach((client) => {
       if (client !== ws && client.readyState === WebSocket.OPEN) {

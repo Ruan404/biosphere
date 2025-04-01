@@ -34,6 +34,6 @@ class TopicService extends Topic
         $query->execute([$topicId]);
 
     
-        return false;
+        return $query->rowCount() > 0;
     }
 }
