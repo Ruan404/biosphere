@@ -27,6 +27,9 @@ class Film
     public int $id = 0{
         get => $this->id;
     }
+    public int $id = 0{
+        get => $this->id;
+    }
 
     public int $genre_id {
         get => $this->genre_id;

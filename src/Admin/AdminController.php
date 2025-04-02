@@ -60,8 +60,7 @@ class AdminController {
         }
     }
     
-
-
+    
     #[Route("POST", "/action")]
     #[Roles(array(Role::Admin))]
     public function handleActions() {
@@ -99,8 +98,13 @@ class AdminController {
                         $this->adminService->deletePodcast($podcast);
                         // Redirect or show confirmation
                     }
-                    break;
-                    
+                    break;     
+                case 'add_topic':
+                    if ($topic) {
+                        $message = $this->adminService->addTopic($topic);  // Appeler la méthode addTopic
+                        // Redirect or show confirmation
+                    }
+                    break;  
                 case 'delete_film':
                     if ($film) {
                         $this->adminService->deleteFilm($film);

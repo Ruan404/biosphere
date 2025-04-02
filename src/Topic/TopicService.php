@@ -33,7 +33,21 @@ class TopicService extends Topic
         $query = Database::getPDO()->prepare('DELETE FROM topic WHERE id = ?');
         $query->execute([$topicId]);
 
-    
+
         return $query->rowCount() > 0;
+    }
+
+    public function addTopic($name): bool
+    {
+        // On vérifie si le topic existe déjà
+        if ($this->getTopicByName($name)) {
+            return false; // Si le topic existe, on ne l'ajoute pas
+        }
+
+        // On insère le nouveau topic
+        $query = Database::getPDO()->prepare('INSERT INTO topic (name) VALUES (?)');
+        $result = $query->execute([$name]);
+
+        return $result;
     }
 }

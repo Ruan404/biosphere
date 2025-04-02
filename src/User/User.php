@@ -31,4 +31,8 @@ class User
         public string $role {
                 get => $this->role;
         }
+
+        public string $role {
+                get => $this->role;
+        }
 }

@@ -6,10 +6,10 @@ use App\Chat\ChatController;
 use App\Film\FilmController;
 use App\Core\Router;
 use App\Home\HomeController;
+use App\Message\MessageController;
 use App\Podcast\PodcastController;
 use App\Admin\AdminController;
 use App\Sensor\SensorController;
-
 
 $whoops = new \Whoops\Run;
 $whoops->pushHandler(new \Whoops\Handler\PrettyPageHandler);
