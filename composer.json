@@ -13,7 +13,7 @@
         "php-mqtt/client": "^2.2"
     },
     "require-dev": {
-        "filp/whoops": "^2.17",
+        "filp/whoops": "^2.18",
         "symfony/var-dumper": "^7.2"
     }
 }
