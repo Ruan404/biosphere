@@ -52,10 +52,10 @@ class ChatController
             $lastMessageId = $_GET['lastMessageId'] ?? 0;
             $messages = new ChatService()->getChatMessages($topicId, $lastMessageId);
 
-            if ($messages == null) {
-                header('Location: /chat');
-                exit();
-            }
+            // if ($messages == null) {
+            //     header('Location: /chat');
+            //     exit();
+            // }
             header('Content-Type: application/json');
             echo json_encode(["messages" => $messages]);
         }
