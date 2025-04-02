@@ -7,3 +7,12 @@
 
 #vendor
 vendor
+
+#rest
+.rest
+
+#stream feature
+VideoStream
+
+#uploads
+uploads

@@ -1,0 +1,135 @@
+.films {
+  display: flex;
+  flex-wrap: wrap;
+  --nombre-imgs : 4; /*nombre d'images maximum par ligne souhaité*/
+  gap: 1rem;
+  width: 100%;
+}
+
+video {
+  width: 100%;
+  height: auto;
+  border-radius: 1rem;
+  max-width: 600px;
+}
+
+.film-ctn {
+  display: flex;
+  justify-content: center;
+}
+
+.film-card {
+  display: flex;
+  flex-direction: column;
+  row-gap: 0.5rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  max-width: calc((1280px / var(--nombre-imgs)) - ((16px*var(--nombre-imgs)) / var(--nombre-imgs)));
+  min-width: 250px;
+  flex: 1;
+}
+
+.film-cover {
+  width: 100%;
+  aspect-ratio: 16/9;
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+.film-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/*==film details ==*/
+.film-details {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: #00000080;
+  z-index: 1000;
+  display: none;
+  justify-content: center;
+  align-items: center;
+}
+
+.film-details.show {
+  display: flex;
+}
+
+.film-info {
+  display: flex;
+  flex-direction: column;
+  row-gap: 1rem;
+  padding: 1.5rem;
+}
+.film-info-ctn {
+  display: flex;
+  flex-direction: column;
+  row-gap: 0.75rem;
+}
+
+.details-ctn {
+  width: 100%;
+  max-width: 480px;
+  overflow: hidden;
+  border-radius: 1rem;
+  background: rgb(var(--bg-1));
+  transform: translateY(1000px);
+  transition: transform 300ms ease-out;
+  position: relative;
+}
+
+.details-ctn.show {
+  transform: translateY(0px);
+  transition: transform 300ms ease-out;
+}
+
+.details-ctn img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+}
+
+.film-card-close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  border-radius: 10rem;
+  padding: 0.5rem;
+  color: rgb(var(--fg-1));
+  background: rgb(var(--bg-1));
+}
+
+.film-card-close-btn:hover {
+  background: rgb(var(--bg-3));
+  color: rgb(var(--fg-2));
+}
+
+.pop-film-details-btn{
+  background: transparent;
+  text-align: left;
+}
+
+.pop-film-details-btn,.film-title{
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: bold;
+}
+
+@media (max-width : 780px){
+  .film-card{
+    max-width: 100%;
+  }
+}
+
+@media (max-width : 480px){
+  .details-ctn{
+    max-width: calc(100% - 2rem);
+  }
+}
