@@ -4,7 +4,7 @@ const server = http.createServer();
 
 server.on("upgrade", function upgrade(request, socket, head) {
   const { pathname } = new URL(request.url, "ws://localhost");
-  if (request.headers.origin == 'http://localhost:8080') {
+  if (request.headers.origin == 'http://localhost:8000') {
     if (pathname.match(/^\/chat\/[a-z]+(?:_[a-z]+)*$/g)) {
       wss1.handleUpgrade(request, socket, head, function done(ws) {
         wss1.emit("connection", ws, request);
@@ -22,4 +22,4 @@ server.on("upgrade", function upgrade(request, socket, head) {
   }
 });
 
-server.listen(8000);
+server.listen(3000);
