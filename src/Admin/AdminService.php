@@ -51,9 +51,7 @@ class AdminService {
         if ($topicId) {
             $deleteChat = $this->chatService->deleteChat($topicId);
 
-            if($deleteChat){
-                return $this->topicService->deleteTopic($topicId);
-            }
+            return $this->topicService->deleteTopic($topicId);
         }
 
         return false;
@@ -69,5 +67,16 @@ class AdminService {
 
     public function deleteFilm($token) {
         return $this->filmService->deleteFilm(token: $token);
+    }
+
+    public function addTopic($name) {
+        $existingTopic = $this->topicService->getTopicByName($name);
+        
+        if ($existingTopic) {
+            return "Le topic existe déjà.";
+        } else {
+            $success = $this->topicService->addTopic($name);
+            return $success ? "Le topic a été ajouté avec succès." : "Erreur lors de l'ajout du topic.";
+        }
     }
 }

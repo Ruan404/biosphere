@@ -1,6 +1,5 @@
 <?php
 use App\Helpers\Text;
-use App\Admin\Set_Admin;
 
 
 $style = "admin";
@@ -11,56 +10,74 @@ $films = $data['films'] ?? [];
 ?>
 
 <div class="container">
-    <div class="tabs">
-        <button class="tab-btn" onclick="showTab('users')">Utilisateurs</button>
-        <button class="tab-btn" onclick="showTab('topics')">Topics</button>
-        <button class="tab-btn" onclick="showTab('podcasts')">Podcasts</button>
-        <button class="tab-btn" onclick="showTab('films')">Films</button>
+    <div class="tab-admin">
+        <button class="tab-btn shadow-btn" onclick="showTabNav()">Actions</button>
     </div>
-
+    <div class="tabs">
+        <button class="close-btn icon-btn" onclick="hideTabNav()">close</button>
+      <div class="tabs-list">
+        <button class="tab-btn" onclick="showTab('users')">Gestion des utilisateurs</button>
+        <button class="tab-btn" onclick="showTab('topics')">Gestion des topics</button>
+        <button class="tab-btn" onclick="showTab('podcasts')">Gestion des podcasts</button>
+        <button class="tab-btn" onclick="showTab('films')">Gestion des films</button>
+      </div>
+    </div>
+    
     <!-- Gestion des utilisateurs -->
     <div class="tab-content" id="users">
-        <h3>Gestion des utilisateurs</h3>
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>topic</th>
-                        <th>Rôle</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($users as $user): ?>
-                        <tr>
-                            <td><?= htmlspecialchars($user->pseudo) ?></td>
-                            <td><?= htmlspecialchars($user->role) ?></td>
-                            <td>
-                                <!-- Delete User Form -->
-                                <form action = "admin/action" method="POST" style="display:inline;">
-                                    <input type="hidden" name="action" value="delete_user">
-                                    <input type="hidden" name="pseudo" value="<?= $user->pseudo ?>">
-                                    <button type="submit" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')">Supprimer</button>
-                                </form> |
-                                
-                                <!-- Promote User Form -->
-                                <form action = "admin/action" method="POST" style="display:inline;">
-                                    <input type="hidden" name="action" value="promote_user">
-                                    <input type="hidden" name="pseudo" value="<?= $user->pseudo ?>">
-                                    <button type="submit">Promouvoir</button>
-                                </form>
-                            </td>
-                        </tr>
-                    <?php endforeach ?>
-                </tbody>
-            </table>
-            <button class="primary-btn" onclick="window.location.href='Set_Admin'">Ajouter un utilisateur</button>
-        </div>
-    </div>
+        <div class="tab-content-head"> <h3>Utilisateurs</h3></div>
+         <div class="table-container">
+             <table>
+                 <thead>
+                     <tr>
+                         <th>Utilisateur</th>
+                         <th>Rôle</th>
+                         <th colspan="2">Actions</th>
+                     </tr>
+                 </thead>
+                 <tbody>
+                     <?php foreach ($users as $user): ?>
+                         <tr>
+                             <td><?= htmlspecialchars($user->pseudo) ?></td>
+                             <td><?= htmlspecialchars($user->role) ?></td>
+                             <td>
+                                 <form action="admin/action" method="POST">
+                                     <input type="hidden" name="action" value="delete_user">
+                                     <input type="hidden" name="pseudo" value="<?= $user->pseudo ?>">
+                                     <button type="submit" class="delete-btn" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')">Supprimer</button>
+                                 </form>
+                             </td>
+                             <td>
+                                 <form action="admin/action" method="POST">
+                                     <input type="hidden" name="action" value="promote_user">
+                                     <input type="hidden" name="pseudo" value="<?= $user->pseudo ?>">
+                                     <button type="submit" class="promote-btn">Promouvoir</button>
+                                 </form>
+                             </td>
+                         </tr>
+                     <?php endforeach ?>
+                 </tbody>
+             </table>
+         </div>
+     </div>
+
 
     <!-- Gestion des topics -->
     <div class="tab-content" id="topics">
-        <h3>Gestion des topics</h3>
+        <div class="tab-content-head">
+            <h3>Topics</h3>
+            <!-- Bouton qui va afficher le formulaire d'ajout de topic -->
+            <button type="button" class="primary-btn" id="addTopicBtn" onclick="showAddTopicForm()">Ajouter un topic</button>
+            
+            <!-- Formulaire d'ajout de topic caché au départ -->
+            <div id="addTopicForm" style="display:none; margin-top: 10px;">
+                <form action="admin/action" method="POST" style="display:inline;">
+                    <input type="hidden" name="action" value="add_topic">
+                    <input type="text" name="topic" placeholder="Nom du topic" required>
+                    <button type="submit" class="primary-btn">Ajouter</button>
+                </form>
+            </div>
+        </div>
         <div class="table-container">
             <table>
                 <thead>
@@ -78,20 +95,20 @@ $films = $data['films'] ?? [];
                                 <form action = "admin/action" method="POST" style="display:inline;">
                                     <input type="hidden" name="action" value="delete_topic">
                                     <input type="hidden" name="topic" value="<?= $topic->name ?>"> <!-- Assuming topic name can be used for action -->
-                                    <button type="submit" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce topic ?')">Supprimer</button>
+                                    <button type="submit" class="delete-btn" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce topic ?')">Supprimer</button>
                                 </form>
                             </td>
                         </tr>
                     <?php endforeach ?>
                 </tbody>
             </table>
-            <button class="primary-btn" onclick="window.location.href='admin/Set_Admin.php?action=add_topic'">Ajouter un topic</button>
         </div>
     </div>
 
     <!-- Gestion des podcasts -->
     <div class="tab-content" id="podcasts">
-        <h3>Gestion des podcasts</h3>
+        <div class="tab-content-head"> <h3>Gestion des podcasts</h3> <button class="primary-btn" onclick="window.location.href='admin/Set_Admin.php?action=add_podcast'">Ajouter un podcast</button>
+        </div>
         <div class="table-container">
             <table>
                 <thead>
@@ -109,20 +126,20 @@ $films = $data['films'] ?? [];
                                 <form action = "admin/action" method="POST" style="display:inline;">
                                     <input type="hidden" name="action" value="delete_podcast">
                                     <input type="hidden" name="podcast" value="<?= $podcast->title ?>"> <!-- Assuming title can be used for action -->
-                                    <button type="submit" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce podcast ?')">Supprimer</button>
+                                    <button type="submit" class="delete-btn" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce podcast ?')">Supprimer</button>
                                 </form>
                             </td>
                         </tr>
                     <?php endforeach ?>
                 </tbody>
             </table>
-            <button class="primary-btn" onclick="window.location.href='admin/Set_Admin.php?action=add_podcast'">Ajouter un podcast</button>
         </div>
     </div>
 
     <!-- Gestion des films -->
     <div class="tab-content" id="films">
-        <h3>Gestion des films</h3>
+        <div class="tab-content-head"><h3>Gestion des films</h3>             <button class="primary-btn" onclick="window.location.href='admin/Set_Admin.php?action=add_film'">Ajouter un film</button>
+        </div>
         <div class="table-container">
             <table>
                 <thead>
@@ -139,15 +156,14 @@ $films = $data['films'] ?? [];
                                 <!-- Delete Film Form -->
                                 <form action = "admin/action" method="POST" style="display:inline;">
                                     <input type="hidden" name="action" value="delete_film">
-                                    <input type="hidden" name="film" value="<?= $film->token ?>"> <!-- Assuming title can be used for action -->
-                                    <button type="submit" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce film ?')">Supprimer</button>
+                                    <input type="hidden" name="film" value="<?= $film->title ?>"> <!-- Assuming title can be used for action -->
+                                    <button type="submit" class="delete-btn" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce film ?')">Supprimer</button>
                                 </form>
                             </td>
                         </tr>
                     <?php endforeach ?>
                 </tbody>
             </table>
-            <a class="primary-btn" href="/admin/film/upload">Ajouter un film</a>
         </div>
     </div>
 </div>
@@ -155,11 +171,47 @@ $films = $data['films'] ?? [];
 <script>
     // Fonction pour afficher les différents onglets
     function showTab(tabName) {
-        const tabs = document.querySelectorAll('.tab-content');
-        tabs.forEach(tab => tab.style.display = 'none');
-        document.getElementById(tabName).style.display = 'block';
+        // Supprime la classe active de tous les contenus
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        // Ajoute la classe active à l'onglet sélectionné
+        document.getElementById(tabName).classList.add('active');
+    
+        // Met à jour les boutons de tabs
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('current'));
+        document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('current');
     }
+    
+    // Afficher l'onglet des utilisateurs par défaut au chargement
+    document.addEventListener("DOMContentLoaded", function () {
+        showTab('users');
+    });
+    
 
     // Afficher l'onglet des utilisateurs par défaut au chargement
     showTab('users');
+
+	var tabs = document.querySelector('.tabs')
+
+	function showTabNav() {
+		tabs.classList.add('show');
+		document.body.classList.add('black-mask')
+	}
+	function hideTabNav() {
+		tabs.classList.remove('show')
+
+		document.body.classList.remove('black-mask')
+	}
+
+    // Fonction pour afficher le formulaire d'ajout de topic
+    function showAddTopicForm() {
+        var form = document.getElementById("addTopicForm");
+        var button = document.getElementById("addTopicBtn");
+        
+        // Afficher le formulaire
+        form.style.display = "block";
+        
+        // Cacher le bouton
+        button.style.display = "none";
+    }
+
 </script>

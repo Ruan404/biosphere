@@ -1,63 +1,25 @@
-
-
-/* Conteneur principal */
-.container {
-  max-width: 1200px;
-  margin: 20px auto;
-  padding: 20px;
-  /* background-color: #ffffff; */
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-/* Barre de navigation des onglets */
-.tabs {
-  display: flex;
-  justify-content: space-around;
-  background-color: rgb(var(--bg-4));
-  padding: 12px;
-  border-radius: 8px;
-}
-
-.tab-btn {
-  background: none;
-  color: white;
-  border: none;
-  padding: 12px 20px;
-  cursor: pointer;
-  font-size: 16px;
-  border-radius: 6px;
-  transition: all 0.3s ease;
-}
-
-.tab-btn:hover, .tab-btn.active {
-  /* background-color: rgb(var(--bg-3)); */
-  transform: translateY(-2px);
-}
-
 /* Gestion du contenu des onglets */
 .tab-content {
   display: none;
-  padding: 20px;
+  padding: 1rem;
+  flex-grow: 1;
+  font-size: 0.875rem;
 }
 
 .tab-content.active {
   display: block;
 }
 
-.tab-content h3 {
-  font-size: 22px;
-  color: rgb(var(--fg-1));
-  margin-bottom: 15px;
-}
-
 /* Table container */
 .table-container {
-  margin-top: 15px;
   overflow-x: auto;
+}
+
+.tab-content-head{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
 }
 
 table {
@@ -75,13 +37,9 @@ th, td {
 
 th {
   background-color: rgb(var(--bg-4));
-  /* color: white; */
   font-weight: bold;
+  color: rgb(var(--fg-2));
 }
-
-/* tr:nth-child(even) {
-  background-color: rgb(var(--bg-1));
-} */
 
 /* tr:hover {
   background-color: rgb(var(--bg-2));
@@ -95,22 +53,6 @@ th {
   margin-top: 20px;
 }
 
-.admin-buttons button {
-  background-color: rgb(var(--bg-3));
-  /* color: white; */
-  padding: 12px 20px;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-  border-radius: 6px;
-  transition: all 0.3s ease;
-}
-
-.admin-buttons button:hover {
-  background-color: rgb(var(--bg-2));
-  transform: translateY(-2px);
-}
-
 /* Ajustement des tableaux */
 .table-container table tr:nth-child(even) {
   background-color: rgb(var(--bg-1));
@@ -120,24 +62,127 @@ th {
   background-color: rgb(var(--bg-3));
 } */
 
-/* Titres des sections */
-.tab-content h3 {
-  font-size: 22px;
-  color: rgb(var(--fg-1));
+
+main, .container{
+  overflow-y: hidden;
 }
 
-/* Ajustement responsive */
+/*===main ===*/
+main {
+  margin-inline: 0;
+  display: grid;
+  width: 100%;
+  justify-self: center;
+}
+
+/* flex box */
+.container {
+  display: flex;
+  width: 100%;
+  row-gap: 1rem;
+}
+
+.tabs-list,
+.tabs {
+  display: flex;
+  flex-direction: column;
+}
+
+
+/* tabs display style */
+.tabs {
+  row-gap: 1rem;
+  padding: 1.5rem 1rem;
+  max-width: 360px;
+  background: rgb(var(--bg-2));
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tabs-list {
+  row-gap: 0.875rem;
+  font-size: 0.875rem;
+  font-weight: bold;
+}
+
+.tabs.show {
+  transform: translateX(0);
+}
+
+.tab-btn {
+  padding: 0.625rem 1rem;
+  border-radius: 10rem;
+}
+
+.tab-btn::first-letter{
+  text-transform: capitalize;
+}
+
+.tab-btn:hover {
+  background: rgb(var(--bg-4), 0.14);
+}
+
+.tab-btn.current {
+  background: rgb(var(--bg-3));
+  pointer-events: none;
+  color: rgb(var(--fg-2));
+}
+
+.tab-admin{
+  margin-left: 1rem;
+  row-gap: 0.5rem;
+  display: none;
+}
+
+.current-tab::first-letter{
+  text-transform: capitalize;
+}
+
+.tab-btn {
+  width: fit-content;
+}
+
+.close-btn {
+  display: none;
+  place-self: end;
+}
+
+/*===backgound noir derrière la tab topic===*/
+.black-mask::after {
+  content: "";
+  width: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: #00000080;
+  z-index: 99;
+  display: none;
+}
+
+
+/*===responsiveness===*/
+
 @media (max-width: 768px) {
   .tabs {
-    flex-direction: column;
-    align-items: center;
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform: translateX(-100%);
+    z-index: 100;
+    width: calc(100% - 2.5rem);
+    height: 100%;
   }
-  .tab-btn {
-    width: 100%;
-    text-align: center;
-  }
-  .admin-buttons {
+  .container {
     flex-direction: column;
-    gap: 10px;
+  }
+  .close-btn {
+    display: inline-block;
+  }
+
+  .tab-admin{
+    display: grid;
+  }
+  .black-mask::after{
+    display: inline-block;
   }
 }
