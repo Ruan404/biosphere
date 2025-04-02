@@ -46,7 +46,7 @@ class ChatService extends Chat
 
         $in = str_repeat('?,', count($in_array) - 1) . '?';
 
-        $query = Database::getPDO()->prepare("DELETE FROM chat WHERE pseudo=? AND topic_id=? AND date IN ($in)");
+        $query = Database::getPDO()->prepare("UPDATE chat SET pseudo='supprimé',message='message supprimé' WHERE pseudo=? AND topic_id=? AND date IN ($in)");
 
         $query->execute(array_merge([$pseudo, $topicId], array_merge($in_array)));
 
