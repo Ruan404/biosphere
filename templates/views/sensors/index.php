@@ -5,7 +5,7 @@
 
 
 <script>
-    const socket = new WebSocket(`ws://localhost:8000/bar`);
+    const socket = new WebSocket(`ws://localhost:3000/bar`);
 
     // When a message is received from the WebSocket server
     socket.onmessage = function (event) {
