@@ -54,7 +54,7 @@ class AdminController
 
         $videoFile = $_FILES["video"];
         $coverFile = $_FILES["cover"];
-
+    
         try {
             $videoToken = $this->filmService->handleFilmUpload($videoFile, $coverFile);
             echo "Video uploaded. <a href='/films/watch/$videoToken'>Watch here</a>";

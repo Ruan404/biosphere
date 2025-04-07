@@ -77,35 +77,45 @@ class ChatController
     }
 
     #[Route("DELETE", "/[*:slug]")]
-    public function deleteMyMessages($params)
-    {
+public function deleteMyMessages($params)
+{
+    if ($_SERVER['REQUEST_METHOD'] === "DELETE" && isset($params['slug'])) {
+        $data = json_decode(file_get_contents('php://input'), true); // lecture du JSON envoyé
 
-        if ($_SERVER['REQUEST_METHOD'] === "DELETE" && isset($params['slug'])) {
-            $data = json_decode(file_get_contents('php://input'), true); //Be aware that the stream can only be read once
+        if (session_status() === 1) {
+            session_start();
+        }
 
-            if (session_status() === 1) {
-                session_start();
-            }
-            $user = $_SESSION["username"];
+        $user = $_SESSION["username"] ?? null;
+        $role = $_SESSION["role"] ?? "user";
 
-            if ($user) {
-                $topic = new TopicService()->getTopicByName($params["slug"]);
+        if ($user) {
+            $topic = (new TopicService())->getTopicByName($params["slug"]);
 
-                if ($topic) {
-                    $response = new ChatService()->deleteMyMessages($user, $topic->id, [$data["messages"]]);
-                    if ($response) {
-                        $lastMessageId = $_GET['lastMessageId'] ?? 0;
-                        $messages = new ChatService()->getChatMessages($topic->id, $lastMessageId);
+            if ($topic) {
+                $chatService = new ChatService();
 
-                        header('Content-Type: application/json');
-                        echo json_encode(["messages" => $messages]);
-                    }
+                // 🔐 Si admin, supprime sans vérifier l’auteur
+                if ($role === "admin") {
+                    $response = $chatService->deleteMessagesAsAdmin($topic->id, [$data["messages"]]);
+                } else {
+                    // 🔒 Sinon, ne supprime que ses propres messages
+                    $response = $chatService->deleteMyMessages($user, $topic->id, [$data["messages"]]);
+                }
+
+                if ($response) {
+                    $lastMessageId = $_GET['lastMessageId'] ?? 0;
+                    $messages = $chatService->getChatMessages($topic->id, $lastMessageId);
+
+                    header('Content-Type: application/json');
+                    echo json_encode(["messages" => $messages]);
+                    exit();
                 }
             }
-
-
         }
     }
+}
+
 
     #[Route("POST", "/[*:slug]")]
     public function addMessage($params)

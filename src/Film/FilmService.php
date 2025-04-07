@@ -75,7 +75,7 @@ class FilmService
 
         // Generate unique token
         $uniqueToken = $this->generateUniqueToken();
-
+      
         // Define file paths
         $videoPath = $_ENV['UPLOAD_DIR'] . $uniqueToken . "." . pathinfo($videoFile["name"], PATHINFO_EXTENSION);
         $coverPath = $_ENV['COVER_DIR'] . $uniqueToken . "." . pathinfo($coverFile["name"], PATHINFO_EXTENSION);

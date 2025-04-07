@@ -60,7 +60,7 @@ if ($user == null) {
 	const msgsDisplayCtn = document.querySelector(".msgs-display")
 	const form = document.querySelector(".send-msg-form")
 	var currentTopic = "<?= $currentTopic ?>";
-	const socket = new WebSocket(`ws://localhost:8000/chat/${currentTopic}`);
+	const socket = new WebSocket(`ws://localhost:3000/chat/${currentTopic}`);
 
 
 	//au chargement de la page
