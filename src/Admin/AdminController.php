@@ -13,7 +13,7 @@ use App\User\UserService;
 use function App\Helpers\view;
 ini_set('max_execution_time', 300);
 
-#[Route("GET", "/admin")]
+
 class AdminController
 {
     private $adminService;
@@ -25,7 +25,7 @@ class AdminController
         $this->filmService = new FilmService();
     }
 
-    #[Route("GET", "")]
+    #[Route("GET", "/admin")]
     #[Roles(array(Role::Admin))]
     public function index()
     {
@@ -36,7 +36,7 @@ class AdminController
         return view(view: "/admin/index", data: ['users' => $users, 'topics' => $topics, 'films' => $films], layout: Layout::Admin);
     }
 
-    #[Route("GET", "/film/upload")]
+    #[Route("GET", "/admin/film/upload")]
     #[Roles(array(Role::Admin))]
     public function upload()
     {
@@ -48,24 +48,45 @@ class AdminController
     #[Roles(array(Role::Admin))]
     public function uploadFilm()
     {
-        if ($_SERVER["REQUEST_METHOD"] !== "POST" || !isset($_FILES["video"]) || !isset($_FILES["cover"])) {
+        if ($_SERVER["REQUEST_METHOD"] !== "POST") {
             die("Invalid request.");
         }
 
-        $videoFile = $_FILES["video"];
-        $coverFile = $_FILES["cover"];
+        
+        // Check the file type (either 'video' or 'cover')
+        $type = isset($_POST['type']) ? $_POST['type'] : null;
+        if ($type === 'video') {
+            // Handle the video chunk upload
+            if (isset($_FILES['file'])) {
+                $videoFile = $_FILES['file'];
+                $chunkNumber = isset($_POST['chunkNumber']) ? (int) $_POST['chunkNumber'] : 0;
+                $totalChunks = isset($_POST['totalChunks']) ? (int) $_POST['totalChunks'] : 0;
 
-        try {
-            $videoToken = $this->filmService->handleFilmUpload($videoFile, $coverFile);
-            echo "Video uploaded. <a href='/films/watch/$videoToken'>Watch here</a>";
-        } catch (\Exception $e) {
-            die("Upload failed: " . $e->getMessage());
+                try {
+                    $uniqueToken = $this->filmService->handleChunkedUpload($videoFile, $chunkNumber, $totalChunks);
+                    echo "Chunk uploaded successfully. Token: " . $uniqueToken;
+                } catch (\Exception $e) {
+                    die("Upload failed: " . $e->getMessage());
+                }
+            }
+        } elseif ($type === 'cover') {
+            // Handle the cover image upload
+            if (isset($_FILES['file'])) {
+                $coverFile = $_FILES['file'];
+                try {
+                    $coverPath = $this->filmService->handleCoverImageUpload($coverFile);
+                    echo "Cover image uploaded successfully.";
+                } catch (\Exception $e) {
+                    die("Upload failed: " . $e->getMessage());
+                }
+            }
+        } else {
+            die("Invalid file type.");
         }
     }
 
 
-
-    #[Route("POST", "/action")]
+    #[Route("POST", "/admin/action")]
     #[Roles(array(Role::Admin))]
     public function handleActions()
     {
