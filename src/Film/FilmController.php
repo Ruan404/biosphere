@@ -1,9 +1,7 @@
 <?php
 namespace App\Film;
 
-use App\Attributes\Roles;
 use App\Attributes\Route;
-use App\Entities\Role;
 use function App\Helpers\view;
 use App\Film\FilmService;
 use Dotenv\Dotenv;
@@ -21,7 +19,7 @@ class FilmController
         $dotenv = Dotenv::createImmutable(__DIR__ . '/../../');
         $dotenv->load();
         //instancier la classe FilmService
-        $this->filmService = new FilmService($_ENV["HLS_DIR"]);
+        $this->filmService = new FilmService();
 
         $this->films = $this->filmService->getAllFilms();
         $this->base_url = __DIR__."/../../";

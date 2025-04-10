@@ -5,7 +5,7 @@ use App\Core\Database;
 use PDO;
 use Exception;
 use Dotenv\Dotenv;
-ini_set('max_execution_time', 300);
+
 
 class FilmService
 {
@@ -18,24 +18,6 @@ class FilmService
     public function generateUniqueToken()
     {
         return bin2hex(random_bytes(16));
-    }
-
-    public function processHLS($inputFile, $outputFolder)
-    {
-        if (!file_exists($outputFolder)) {
-            mkdir($outputFolder, 0777, true);
-        }
-
-        $playlistPath = $outputFolder . "/playlist.m3u8";
-
-        $command = escapeshellcmd("ffmpeg -i $inputFile -c:v h264 -c:a aac -b:v 1500k -f hls -hls_time 5 -hls_playlist_type vod $playlistPath");
-        exec($command, $output, $returnCode);
-
-        if ($returnCode !== 0) {
-            throw new Exception("Error generating HLS files.");
-        }
-
-        return $playlistPath;
     }
 
     public function getAllFilms(): ?array
@@ -79,19 +61,14 @@ class FilmService
         // Define file paths
         $videoPath = $_ENV['UPLOAD_DIR'] . $uniqueToken . "." . pathinfo($videoFile["name"], PATHINFO_EXTENSION);
         $coverPath = $_ENV['COVER_DIR'] . $uniqueToken . "." . pathinfo($coverFile["name"], PATHINFO_EXTENSION);
-        $hlsFolder = $_ENV['HLS_DIR'] . $uniqueToken;
 
         // Move files
         move_uploaded_file($videoFile["tmp_name"], $_ENV['BASE_URL'] . $videoPath);
         move_uploaded_file($coverFile["tmp_name"], $_ENV['BASE_URL'] . $coverPath);
 
-        // Process HLS
-        $playlistPath = $this->processHLS($_ENV['BASE_URL'] . $videoPath, $_ENV['BASE_URL'] . $hlsFolder);
-        $playlistPath = str_replace($_ENV['BASE_URL'], '', $playlistPath); // Store relative path
-
         // Store in database
         $title = strtolower(pathinfo($videoFile["name"], PATHINFO_FILENAME));
-        $this->addFilm($title, $videoPath, $playlistPath, $coverPath, $uniqueToken);
+        $this->addFilm($title, $videoPath, "playlistPath", $coverPath, $uniqueToken);
 
         return $uniqueToken;
     }
@@ -133,21 +110,10 @@ class FilmService
             unlink($coverFilePath);
         }
     
-        // Remove the HLS folder and all its contents
-        $hlsFolder = $_ENV['HLS_DIR'] . $token;
-        if (is_dir($hlsFolder)) {
-            foreach (glob("$hlsFolder/*") as $file) {
-                unlink($file);
-            }
-            rmdir($hlsFolder);
-        }
-    
         // Delete database entry
         $stmt = Database::getPDO()->prepare("DELETE FROM film WHERE token = ?");
         $stmt->execute([$token]);
     
         return $stmt->rowCount() > 0;
     }
-    
-
 }

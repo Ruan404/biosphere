@@ -9,6 +9,7 @@ use App\Home\HomeController;
 use App\Podcast\PodcastController;
 use App\Admin\AdminController;
 use App\Sensor\SensorController;
+use App\VideoStream\VideoStreamController;
 
 
 $whoops = new \Whoops\Run;
@@ -26,4 +27,5 @@ $router ->registerController(HomeController::class)
         ->registerController(PodcastController::class)
         ->registerController(AdminController::class)
         ->registerController(SensorController::class)
+        ->registerController(VideoStreamController::class)
         ->run();

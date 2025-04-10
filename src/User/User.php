@@ -1,8 +1,6 @@
 <?php
 namespace App\User;
 
-use App\Entities\Role;
-
 class User
 {
 
@@ -23,10 +21,6 @@ class User
                         $this->mdp = htmlspecialchars($mdp);
                 }
         }
-
-        // public Role $role = Role::Admin {
-        //         get => $this->role;
-        // }
 
         public string $role {
                 get => $this->role;
