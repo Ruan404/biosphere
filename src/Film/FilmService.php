@@ -70,7 +70,7 @@ class FilmService
 
         // Create directory for storing chunks if it does not exist
         if (!file_exists($tempDir)) {
-            mkdir($tempDir, 0777, true);
+            mkdir($tempDir, 0755, true);
         }
 
         try {
