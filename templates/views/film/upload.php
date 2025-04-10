@@ -8,7 +8,7 @@ echo "file_uploads: " . ini_get('file_uploads') . "<br>";
 $description = "ajouter une vidéo dans le biosphère";
 $title = "ajouter une vidéo";
 $style = "film"
-?>
+    ?>
 
 <div>
     <h2>Ajouter une vidéo</h2>
@@ -24,66 +24,53 @@ $style = "film"
 </div>
 
 <script>
-    document.getElementById('uploadForm').addEventListener('submit', function(event) {
-        event.preventDefault(); // Prevent default form submission
-        
-        var videoFile = document.getElementById('video').files[0];
-        var coverFile = document.getElementById('cover').files[0];
+    document.getElementById('uploadForm').addEventListener('submit', function (event) {
+        event.preventDefault(); // Stop default form submission
 
-        var chunkSize = 1024 * 1024 * 5; // 5MB per chunk
-        var totalChunks = Math.ceil(videoFile.size / chunkSize);
+        const videoFile = document.getElementById('video').files[0];
+        const coverFile = document.getElementById('cover').files[0];
+        const chunkSize = 1024 * 1024 * 5; // 5MB
+        const totalChunks = Math.ceil(videoFile.size / chunkSize);
 
-        // Function to upload both video and cover image in one go
-        function uploadFiles(chunk, chunkNumber) {
-            var formData = new FormData();
+        const token = generateToken(); // Token generated client-side
+
+        function uploadChunk(chunk, chunkNumber) {
+            const formData = new FormData();
             formData.append('file', chunk);
             formData.append('chunkNumber', chunkNumber);
             formData.append('totalChunks', totalChunks);
-            formData.append('type', 'video'); // Indicating it's a video file
+            formData.append('type', 'video');
+            formData.append('filename', videoFile.name);
+            formData.append('token', token);
+            formData.append('cover', coverFile);
+            // Only append cover image on the last chunk
             
-            var xhr = new XMLHttpRequest();
+
+            const xhr = new XMLHttpRequest();
             xhr.open('POST', '/film/upload', true);
 
             xhr.onload = function () {
                 if (xhr.status === 200) {
-                    console.log('Chunk ' + chunkNumber + ' uploaded successfully');
-                    if (chunkNumber === totalChunks - 1) {
-                        // After all chunks are uploaded, upload the cover image
-                        uploadCoverImage();
-                    }
+                    console.log(`Chunk ${chunkNumber} uploaded`);
                 } else {
-                    console.error('Failed to upload chunk ' + chunkNumber);
+                    console.error(`Chunk ${chunkNumber} failed: `, xhr.responseText);
                 }
             };
 
             xhr.send(formData);
         }
 
-        // Function to upload the cover image after video is uploaded
-        function uploadCoverImage() {
-            var formData = new FormData();
-            formData.append('file', coverFile);
-            formData.append('type', 'cover'); // Indicating it's a cover image
-
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', '/film/upload', true);
-            xhr.onload = function () {
-                if (xhr.status === 200) {
-                    console.log('Cover image uploaded successfully');
-                } else {
-                    console.error('Failed to upload cover image');
-                }
-            };
-
-            xhr.send(formData);
+        for (let i = 0; i < totalChunks; i++) {
+            const start = i * chunkSize;
+            const end = Math.min(start + chunkSize, videoFile.size);
+            const chunk = videoFile.slice(start, end);
+            uploadChunk(chunk, i);
         }
 
-        // Start uploading the video file in chunks
-        for (var i = 0; i < totalChunks; i++) {
-            var start = i * chunkSize;
-            var end = Math.min(start + chunkSize, videoFile.size);
-            var chunk = videoFile.slice(start, end);
-            uploadFiles(chunk, i);
+        function generateToken() {
+            const array = new Uint8Array(16);
+            crypto.getRandomValues(array);
+            return Array.from(array, b => b.toString(16).padStart(2, '0')).join('');
         }
     });
 </script>

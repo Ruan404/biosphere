@@ -52,39 +52,35 @@ class AdminController
             die("Invalid request.");
         }
 
-        
-        // Check the file type (either 'video' or 'cover')
-        $type = isset($_POST['type']) ? $_POST['type'] : null;
-        if ($type === 'video') {
-            // Handle the video chunk upload
-            if (isset($_FILES['file'])) {
-                $videoFile = $_FILES['file'];
-                $chunkNumber = isset($_POST['chunkNumber']) ? (int) $_POST['chunkNumber'] : 0;
-                $totalChunks = isset($_POST['totalChunks']) ? (int) $_POST['totalChunks'] : 0;
+        $type = $_POST['type'] ?? null;
+        $token = $_POST['token'] ?? null;
 
-                try {
-                    $uniqueToken = $this->filmService->handleChunkedUpload($videoFile, $chunkNumber, $totalChunks);
-                    echo "Chunk uploaded successfully. Token: " . $uniqueToken;
-                } catch (\Exception $e) {
-                    die("Upload failed: " . $e->getMessage());
-                }
-            }
-        } elseif ($type === 'cover') {
-            // Handle the cover image upload
-            if (isset($_FILES['file'])) {
-                $coverFile = $_FILES['file'];
-                try {
-                    $coverPath = $this->filmService->handleCoverImageUpload($coverFile);
-                    echo "Cover image uploaded successfully.";
-                } catch (\Exception $e) {
-                    die("Upload failed: " . $e->getMessage());
-                }
+        if (!$token || $type !== 'video') {
+            http_response_code(400);
+            die("Invalid upload data.");
+        }
+
+        if (isset($_FILES['file'])) {
+            $videoFile = $_FILES['file'];
+            $chunkNumber = (int) ($_POST['chunkNumber'] ?? 0);
+            $totalChunks = (int) ($_POST['totalChunks'] ?? 0);
+            $filename = $_POST['filename'] ?? 'video.mp4';
+
+            // Handle optional cover upload with final chunk
+            $coverFile = $_FILES['cover'] ?? null;
+
+            try {
+                $this->filmService->handleChunkedUpload($videoFile, $chunkNumber, $totalChunks, $filename, $token, $coverFile);
+                echo "Chunk $chunkNumber uploaded successfully.";
+            } catch (\Exception $e) {
+                http_response_code(500);
+                die("Upload failed: " . $e->getMessage());
             }
         } else {
-            die("Invalid file type.");
+            http_response_code(400);
+            die("Missing video file.");
         }
     }
-
 
     #[Route("POST", "/admin/action")]
     #[Roles(array(Role::Admin))]
