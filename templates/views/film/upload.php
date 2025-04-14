@@ -9,15 +9,22 @@ $description = "ajouter une vidéo dans le biosphère";
 $title = "ajouter une vidéo";
 $style = "film"
     ?>
-
-<div>
+    <div>
     <h2>Ajouter une vidéo</h2>
-    <form id="uploadForm" method="POST" enctype="multipart/form-data">
+    <form id="uploadForm" enctype="multipart/form-data">
         <label for="video">Select Video:</label>
         <input type="file" name="video" id="video" accept="video/mp4,video/mov,video/avi" required><br><br>
 
         <label for="cover">Select Cover Image:</label>
         <input type="file" name="cover" id="cover" accept="image/jpeg,image/png" required><br><br>
+
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" required><br><br>
+
+        <label for="description">Description:</label>
+        <textarea id="description" name="description" required></textarea><br><br>
+
+        <progress id="uploadProgress" value="0" max="100" style="width: 100%;"></progress><br><br>
 
         <button class="primary-btn" type="submit">Upload</button>
     </form>
@@ -25,52 +32,78 @@ $style = "film"
 
 <script>
     document.getElementById('uploadForm').addEventListener('submit', function (event) {
-        event.preventDefault(); // Stop default form submission
+        event.preventDefault();
 
+         
         const videoFile = document.getElementById('video').files[0];
         const coverFile = document.getElementById('cover').files[0];
-        const chunkSize = 1024 * 1024 * 5; // 5MB
-        const totalChunks = Math.ceil(videoFile.size / chunkSize);
+        console.log(coverFile);
+        const title = document.getElementById('title').value;
+        const description = document.getElementById('description').value;
+        const progressBar = document.getElementById('uploadProgress');
 
-        const token = generateToken(); // Token generated client-side
+        if (!videoFile || !coverFile || !title || !description) {
+            alert('Please fill in all fields.');
+            return;
+        }
+
+        const token = crypto.randomUUID(); // or custom generator
+        const chunkSize = 5 * 1024 * 1024; // 5MB
+        const totalChunks = Math.ceil(videoFile.size / chunkSize);
 
         function uploadChunk(chunk, chunkNumber) {
             const formData = new FormData();
             formData.append('file', chunk);
             formData.append('chunkNumber', chunkNumber);
             formData.append('totalChunks', totalChunks);
-            formData.append('type', 'video');
             formData.append('filename', videoFile.name);
             formData.append('token', token);
-            formData.append('cover', coverFile);
-            // Only append cover image on the last chunk
-            
+
+            // Include metadata and cover only on the last chunk
+            if (chunkNumber === totalChunks - 1) {
+                formData.append('title', title);
+                formData.append('description', description);
+                formData.append('cover', coverFile);
+            }
 
             const xhr = new XMLHttpRequest();
             xhr.open('POST', '/film/upload', true);
 
+            xhr.upload.onprogress = function (e) {
+                if (e.lengthComputable) {
+                    const totalUploaded = chunkNumber * chunkSize + e.loaded;
+                    const percentComplete = Math.min((totalUploaded / videoFile.size) * 100, 100);
+                    progressBar.value = percentComplete;
+                }
+            };
+
             xhr.onload = function () {
                 if (xhr.status === 200) {
                     console.log(`Chunk ${chunkNumber} uploaded`);
+                    if (chunkNumber + 1 < totalChunks) {
+                        sendNextChunk(chunkNumber + 1);
+                    } else {
+                        alert('Upload complete!');
+                    }
                 } else {
-                    console.error(`Chunk ${chunkNumber} failed: `, xhr.responseText);
+                    alert(`Upload failed on chunk ${chunkNumber}`);
                 }
+            };
+
+            xhr.onerror = function () {
+                alert('An error occurred during upload.');
             };
 
             xhr.send(formData);
         }
 
-        for (let i = 0; i < totalChunks; i++) {
-            const start = i * chunkSize;
+        function sendNextChunk(chunkNumber) {
+            const start = chunkNumber * chunkSize;
             const end = Math.min(start + chunkSize, videoFile.size);
             const chunk = videoFile.slice(start, end);
-            uploadChunk(chunk, i);
+            uploadChunk(chunk, chunkNumber);
         }
 
-        function generateToken() {
-            const array = new Uint8Array(16);
-            crypto.getRandomValues(array);
-            return Array.from(array, b => b.toString(16).padStart(2, '0')).join('');
-        }
+        sendNextChunk(0); // Start upload
     });
 </script>

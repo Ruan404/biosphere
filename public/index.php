@@ -1,5 +1,5 @@
 <?php
-require '../vendor/autoload.php'; 
+require '../vendor/autoload.php';
 
 use App\Auth\AuthController;
 use App\Chat\ChatController;
@@ -18,9 +18,22 @@ $whoops->register();
 
 define('DEBUG_TIME', microtime(true));
 
+// Redirect if URL has a trailing slash (but is not just "/")
+if ($_SERVER['REQUEST_URI'] !== '/' && str_ends_with($_SERVER['REQUEST_URI'], '/')) {
+        // Keep query string intact
+        $uri = rtrim($_SERVER['REQUEST_URI'], '/');
+        if (!empty($_SERVER['QUERY_STRING'])) {
+                $uri .= '?' . $_SERVER['QUERY_STRING'];
+        }
+
+        header("Location: $uri", true, 301);
+        exit;
+}
+
+
 $router = new Router();
 
-$router ->registerController(HomeController::class)
+$router->registerController(HomeController::class)
         ->registerController(AuthController::class)
         ->registerController(ChatController::class)
         ->registerController(FilmController::class)

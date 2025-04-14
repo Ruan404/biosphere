@@ -26,8 +26,9 @@ class FilmController
     }
 
     #[Route("GET", "")]
-    public function listFilms()
+    public function index()
     {
+        
         return view(view: "/film/list", data: $this->films);
     }
  
@@ -45,7 +46,7 @@ class FilmController
         }
     }
     
-    #[Route("GET", "/watch/[a:token]")]
+    #[Route("GET", "/watch/[*:token]")]
     public function watchVideo($token)
     {
        if(isset($token["token"])){

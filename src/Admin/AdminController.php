@@ -49,29 +49,50 @@ class AdminController
     public function uploadFilm()
     {
         if ($_SERVER["REQUEST_METHOD"] !== "POST") {
-            die("Invalid request.");
+            header('Content-Type: application/json');
+            echo "Invalid request.";
+            exit();
         }
+        $token = $_POST['token'];
 
-        $type = $_POST['type'] ?? null;
-        $token = $_POST['token'] ?? null;
-
-        if (!$token || $type !== 'video') {
+        if (!$token) {
             http_response_code(400);
-            die("Invalid upload data.");
+            header('Content-Type: application/json');
+            echo "Invalid upload data.";
+            exit();
         }
+
 
         if (isset($_FILES['file'])) {
-            $videoFile = $_FILES['file'];
-            $chunkNumber = (int) ($_POST['chunkNumber'] ?? 0);
-            $totalChunks = (int) ($_POST['totalChunks'] ?? 0);
-            $filename = $_POST['filename'] ?? 'video.mp4';
+            try {
+                $videoFile = $_FILES['file'];
+                $chunkNumber = (int) ($_POST['chunkNumber']);
+                $totalChunks = (int) ($_POST['totalChunks']);
+                $filename = $_POST['filename'];
+            } catch (\Exception) {
+                http_response_code(400);
+                header('Content-Type: application/json');
+                echo "Invalid upload data.";
+                exit();
+            }
 
-            // Handle optional cover upload with final chunk
-            $coverFile = $_FILES['cover'] ?? null;
 
             try {
-                $this->filmService->handleChunkedUpload($videoFile, $chunkNumber, $totalChunks, $filename, $token, $coverFile);
+                $result = $this->filmService->handleChunkedUpload($videoFile, $chunkNumber, $totalChunks, $filename, $token);
                 echo "Chunk $chunkNumber uploaded successfully.";
+
+                if ($chunkNumber === $totalChunks - 1) {
+                    $title = $_POST['title'];
+                    $description = $_POST['description'];
+                    
+                    $coverFile = $_FILES['cover'];
+                
+                    $cover = $this->filmService->handleCoverImageUpload($coverFile, $result["token"]);
+
+                    if ($cover) {
+                        $this->filmService->addFilm($title, $description, $result["path"], 'playlistPath', $cover, $result["token"]);
+                    }
+                }
             } catch (\Exception $e) {
                 http_response_code(500);
                 die("Upload failed: " . $e->getMessage());

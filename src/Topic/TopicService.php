@@ -46,8 +46,11 @@ class TopicService extends Topic
 
         // On insère le nouveau topic
         $query = Database::getPDO()->prepare('INSERT INTO topic (name) VALUES (?)');
-        $result = $query->execute([$name]);
+        $query->execute([$name]);
 
-        return $result;
+        if (Database::getPDO()->lastInsertId()) {
+            return true;
+        }
+        return false;
     }
 }

@@ -5,6 +5,7 @@ use App\Core\Database;
 use PDO;
 use Exception;
 use Dotenv\Dotenv;
+use function App\Helpers\generateRandomString;
 
 class FilmService
 {
@@ -47,7 +48,7 @@ class FilmService
         }
     }
 
-    public function handleChunkedUpload(array $videoFile, int $chunkNumber, int $totalChunks, string $filename, string $token, array $coverFile): string
+    public function handleChunkedUpload(array $videoFile, int $chunkNumber, int $totalChunks, string $filename, string $token)
     {
         $this->validateFile(["name" => $filename], ["mp4", "mov", "avi"], "video");
 
@@ -64,14 +65,9 @@ class FilmService
         // Check if all chunks are uploaded
         $uploadedChunks = glob($tempDir . '/chunk_*');
         if (count($uploadedChunks) === $totalChunks) {
-            $finalPath = $this->assembleFile($tempDir, $token);
-
-            if ($finalPath) {
-                $coverPath = $this->handleCoverImageUpload($coverFile, $token);
-                // Add to DB (can skip or delay until cover is uploaded)
-                $title = strtolower(pathinfo($filename, PATHINFO_FILENAME));
-                $this->addFilm($title, $finalPath, 'playlistPath', $coverPath, $token);
-            }
+            $newToken = generateRandomString();
+            $finalPath = $this->assembleFile($tempDir, $newToken);
+            return ["token"=>$newToken, "path"=>$finalPath];
         }
 
         return $token;
@@ -117,10 +113,12 @@ class FilmService
         }
     }
 
-    public function addFilm($title, $filePath, $playlistPath, $coverPath, $token)
+    public function addFilm(string $title, string $description, string $filePath, string $playlistPath, string $coverPath, string $token): bool
     {
-        $stmt = Database::getPDO()->prepare("INSERT INTO film (title, file_path, playlist_path, cover_image, token) VALUES (?, ?, ?, ?, ?)");
-        return $stmt->execute([$title, $filePath, $playlistPath, $coverPath, $token]);
+        $stmt = Database::getPDO()->prepare("INSERT INTO film (title, description, file_path, playlist_path, cover_image, token) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$title,$description, $filePath, $playlistPath, $coverPath, $token]);
+
+        return $stmt->rowCount() > 0;
     }
 
     public function getFilmByToken($token)

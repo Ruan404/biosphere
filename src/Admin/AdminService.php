@@ -51,7 +51,10 @@ class AdminService {
         if ($topicId) {
             $deleteChat = $this->chatService->deleteChat($topicId);
 
-            return $this->topicService->deleteTopic($topicId);
+            if($deleteChat){
+                return $this->topicService->deleteTopic($topicId);
+            }
+            return false;
         }
 
         return false;

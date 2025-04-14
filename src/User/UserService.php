@@ -17,7 +17,7 @@ class UserService
 
         if ($getUser === false) {
             $req = Database::getPDO()->prepare('INSERT INTO users(pseudo, mdp)VALUES(?, ?)');
-            $result = $req->execute([htmlspecialchars($user->pseudo), sha1($user->mdp)]);
+            $req->execute([htmlspecialchars($user->pseudo), sha1($user->mdp)]);
 
             if (Database::getPDO()->lastInsertId()) {
                 return true;
