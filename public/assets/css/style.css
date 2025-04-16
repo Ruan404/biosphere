@@ -76,6 +76,7 @@ svg {
   text-align: center;
   font-size: 0.875rem;
   height: fit-content;
+  font-weight: 500;
 }
 
 .primary-btn {
