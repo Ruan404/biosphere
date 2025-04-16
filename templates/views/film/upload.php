@@ -9,7 +9,7 @@ $description = "ajouter une vidéo dans le biosphère";
 $title = "ajouter une vidéo";
 $style = "film"
     ?>
-    <div>
+<div>
     <h2>Ajouter une vidéo</h2>
     <form id="uploadForm" enctype="multipart/form-data">
         <label for="video">Select Video:</label>
@@ -19,91 +19,105 @@ $style = "film"
         <input type="file" name="cover" id="cover" accept="image/jpeg,image/png" required><br><br>
 
         <label for="title">Title:</label>
-        <input type="text" id="title" name="title" required><br><br>
+        <input type="text" id="title" name="title" value="Default Title" required><br><br>
 
         <label for="description">Description:</label>
-        <textarea id="description" name="description" required></textarea><br><br>
+        <textarea id="description" name="description" required>Default description here...</textarea><br><br>
 
         <progress id="uploadProgress" value="0" max="100" style="width: 100%;"></progress><br><br>
-
+        <div id="uploadStatus" style="margin-bottom: 10px; background: #f4f4f4; padding: 16px"></div>
         <button class="primary-btn" type="submit">Upload</button>
     </form>
 </div>
-
 <script>
-    document.getElementById('uploadForm').addEventListener('submit', function (event) {
-        event.preventDefault();
+    document.getElementById('uploadForm').addEventListener('submit', fileUpload);
 
-         
+
+    async function fileUpload(ev) {
+        ev.preventDefault();
+
         const videoFile = document.getElementById('video').files[0];
         const coverFile = document.getElementById('cover').files[0];
-        console.log(coverFile);
         const title = document.getElementById('title').value;
         const description = document.getElementById('description').value;
         const progressBar = document.getElementById('uploadProgress');
+        const statusBox = document.getElementById('uploadStatus');
 
-        if (!videoFile || !coverFile || !title || !description) {
-            alert('Please fill in all fields.');
-            return;
-        }
-
-        const token = crypto.randomUUID(); // or custom generator
+        const token = crypto.randomUUID();
         const chunkSize = 5 * 1024 * 1024; // 5MB
         const totalChunks = Math.ceil(videoFile.size / chunkSize);
 
-        function uploadChunk(chunk, chunkNumber) {
-            const formData = new FormData();
-            formData.append('file', chunk);
-            formData.append('chunkNumber', chunkNumber);
-            formData.append('totalChunks', totalChunks);
-            formData.append('filename', videoFile.name);
-            formData.append('token', token);
+        let start = 0;
+        let step = 0;
 
-            // Include metadata and cover only on the last chunk
-            if (chunkNumber === totalChunks - 1) {
-                formData.append('title', title);
-                formData.append('description', description);
-                formData.append('cover', coverFile);
+        statusBox.innerHTML = ''; // Clear previous messages
+
+        while (start < videoFile.size) {
+            const chunk = videoFile.slice(start, start + chunkSize);
+            try {
+                const isLastChunk = (step === totalChunks - 1);
+                const res = await uploadChunk(chunk, videoFile.name, token, step, totalChunks, title, description, coverFile, isLastChunk);
+
+                if (res.message) {
+                    statusBox.innerHTML = res.message;
+                } else if (res.error) {
+                    statusBox.innerHTML = `❌ ${res.error}`;
+                    return;
+                }
+            } catch (err) {
+                statusBox.innerHTML = `❌ Upload failed on chunk #${step}: ${err.message}`;
+                return;
             }
 
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', '/film/upload', true);
+            const percentComplete = Math.round(((step + 1) / totalChunks) * 100);
+            progressBar.value = percentComplete;
 
-            xhr.upload.onprogress = function (e) {
-                if (e.lengthComputable) {
-                    const totalUploaded = chunkNumber * chunkSize + e.loaded;
-                    const percentComplete = Math.min((totalUploaded / videoFile.size) * 100, 100);
-                    progressBar.value = percentComplete;
-                }
-            };
-
-            xhr.onload = function () {
-                if (xhr.status === 200) {
-                    console.log(`Chunk ${chunkNumber} uploaded`);
-                    if (chunkNumber + 1 < totalChunks) {
-                        sendNextChunk(chunkNumber + 1);
-                    } else {
-                        alert('Upload complete!');
-                    }
-                } else {
-                    alert(`Upload failed on chunk ${chunkNumber}`);
-                }
-            };
-
-            xhr.onerror = function () {
-                alert('An error occurred during upload.');
-            };
-
-            xhr.send(formData);
+            start += chunkSize;
+            step += 1;
         }
 
-        function sendNextChunk(chunkNumber) {
-            const start = chunkNumber * chunkSize;
-            const end = Math.min(start + chunkSize, videoFile.size);
-            const chunk = videoFile.slice(start, end);
-            uploadChunk(chunk, chunkNumber);
+        // Reset form and progress only after final chunk, assuming success
+        document.getElementById('uploadForm').reset();
+        progressBar.value = 0;
+    }
+
+
+    async function uploadChunk(chunk, filename, token, step, totalChunks, title, description, coverFile, isLastChunk, retries = 3) {
+        const formData = new FormData();
+        formData.append('file', chunk);
+        formData.append('filename', filename);
+        formData.append('token', token);
+        formData.append('step', step);
+        formData.append('totalChunks', totalChunks);
+
+        if (isLastChunk) {
+            formData.append('title', title);
+            formData.append('description', description);
+            formData.append('cover', coverFile);
         }
 
-        sendNextChunk(0); // Start upload
-    });
+        try {
+            const response = await fetch('/film/upload', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const text = await response.text();
+            const jsonStart = text.indexOf('{');
+            const data = JSON.parse(text.slice(jsonStart));
+
+            if (!response.ok) {
+                throw new Error(data.message || `HTTP ${response.status}`);
+            }
+
+            return data;
+        } catch (error) {
+            if (retries > 0) {
+                return uploadChunk(chunk, filename, token, step, totalChunks, title, description, coverFile, isLastChunk, retries - 1);
+            } else {
+                throw error;
+            }
+        }
+    }
+
 </script>

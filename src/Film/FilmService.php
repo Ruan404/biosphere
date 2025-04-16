@@ -2,9 +2,11 @@
 namespace App\Film;
 
 use App\Core\Database;
+use App\Exceptions\BadRequestException;
 use PDO;
 use Exception;
 use Dotenv\Dotenv;
+use PDOException;
 use function App\Helpers\generateRandomString;
 
 class FilmService
@@ -17,83 +19,102 @@ class FilmService
 
     public function getAllFilms(): ?array
     {
-        $query = Database::getPDO()->query('SELECT cover_image, token, title FROM film JOIN genre ON film.genre_id = genre.id');
-        return $query->fetchAll(PDO::FETCH_CLASS, Film::class);
+        try {
+            $query = Database::getPDO()->query('SELECT cover_image, token, title FROM film JOIN genre ON film.genre_id = genre.id');
+
+            return $query->fetchAll(PDO::FETCH_CLASS, Film::class);
+
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong");
+        }
     }
 
-    public function getFilmByTitle($title): ?array
+    public function uploadImage(array $coverFile, string $token)
     {
-        $query = Database::getPDO()->prepare('SELECT cover_image, description, token, title, playlist_path FROM film WHERE film.title = :title');
-        $query->bindParam(':title', $title, PDO::PARAM_STR);
-        $query->execute();
-        return $query->fetchAll(PDO::FETCH_CLASS, Film::class) ?: null;
-    }
+        try {
+            $this->validateFile($coverFile, ["jpg", "jpeg", "png"], "cover");
 
-    public function handleCoverImageUpload($coverFile, $token)
-    {
-        $this->validateFile($coverFile, ["jpg", "jpeg", "png"], "cover");
+            $coverPath = $_ENV['COVER_DIR'] . $token . '.' . pathinfo($coverFile['name'], PATHINFO_EXTENSION);
+            move_uploaded_file($coverFile['tmp_name'], $coverPath);
 
-        $coverPath = $_ENV['COVER_DIR'] . $token . '.' . pathinfo($coverFile['name'], PATHINFO_EXTENSION);
+            return $coverPath;
 
-        move_uploaded_file($coverFile['tmp_name'], $coverPath);
-
-        return $coverPath;
+        } catch (Exception $e) {
+            error_log("Upload error: " . $e->getMessage());
+            throw new Exception("cover upload failed");
+        }
     }
 
     private function validateFile(array $file, array $allowedTypes, string $type)
     {
         $ext = strtolower(pathinfo($file["name"], PATHINFO_EXTENSION));
+
         if (!in_array($ext, $allowedTypes)) {
-            throw new Exception("Invalid $type file type.");
+            throw new BadRequestException("Invalid $type file type.");
         }
     }
 
-    public function handleChunkedUpload(array $videoFile, int $chunkNumber, int $totalChunks, string $filename, string $token)
+    public function chunkedUpload(array $videoFile, int $chunkNumber, int $totalChunks, string $filename, string $token): array
     {
-        $this->validateFile(["name" => $filename], ["mp4", "mov", "avi"], "video");
+        try {
+            $this->validateFile(["name" => $filename], ["mp4", "mov", "avi"], "video");
 
-        $tempDir = $_ENV['TEMP_UPLOAD_DIR'] . $token;
+            $tempDir = $_ENV['TEMP_UPLOAD_DIR'] . $token;
 
-        if (!file_exists($tempDir)) {
-            mkdir($tempDir, 0755, true);
+            if (!file_exists($tempDir)) {
+                mkdir($tempDir, 0755, true);
+            }
+
+            $chunkFilePath = $tempDir . '/chunk_' . $chunkNumber;
+
+            move_uploaded_file($videoFile['tmp_name'], $chunkFilePath);
+
+            // Check if all chunks are uploaded
+          
+            $uploadedChunks = glob($tempDir . '/chunk_*');
+
+            if (count($uploadedChunks) === $totalChunks) {
+                $newToken = generateRandomString();
+                $finalPath = $this->assembleFile($tempDir, $newToken);
+                return ["state" => "done", "token" => $newToken, "path" => $finalPath];
+            }
+
+            return ["state" => "in progress"];
+
+        } catch (Exception $e) {
+            $this->cleanChunkFolder($tempDir);
+            error_log("Chunk upload error: " . $e->getMessage());
+            throw new Exception("video upload failed");
         }
-
-        $chunkFilePath = $tempDir . '/chunk_' . $chunkNumber;
-
-        move_uploaded_file($videoFile['tmp_name'], $chunkFilePath);
-
-        // Check if all chunks are uploaded
-        $uploadedChunks = glob($tempDir . '/chunk_*');
-        if (count($uploadedChunks) === $totalChunks) {
-            $newToken = generateRandomString();
-            $finalPath = $this->assembleFile($tempDir, $newToken);
-            return ["token"=>$newToken, "path"=>$finalPath];
-        }
-
-        return $token;
     }
 
     private function assembleFile($tempDir, $token)
     {
-        $finalFilePath = $_ENV['UPLOAD_DIR'] . $token . '.mp4';
-        $finalFile = fopen($finalFilePath, 'wb');
+        try {
+            $finalFilePath = $_ENV['UPLOAD_DIR'] . $token . '.mp4';
+            $finalFile = fopen($finalFilePath, 'wb');
 
-        $chunks = glob($tempDir . '/chunk_*');
-        natsort($chunks);
+            $chunks = glob($tempDir . '/chunk_*');
+            natsort($chunks);
 
-        foreach ($chunks as $chunkFile) {
-            $chunk = fopen($chunkFile, 'rb');
-            while (!feof($chunk)) {
-                fwrite($finalFile, fread($chunk, 1024));
+            foreach ($chunks as $chunkFile) {
+                $chunk = fopen($chunkFile, 'rb');
+                while (!feof($chunk)) {
+                    fwrite($finalFile, fread($chunk, 1024));
+                }
+                fclose($chunk);
+                unlink($chunkFile);
             }
-            fclose($chunk);
-            unlink($chunkFile);
+
+            fclose($finalFile);
+            $this->cleanChunkFolder($tempDir);
+
+            return $finalFilePath;
+        } catch (Exception $e) {
+            error_log("Upload error: " . $e->getMessage());
+            throw new Exception("video upload failed");
         }
-
-        fclose($finalFile);
-        $this->cleanChunkFolder($tempDir);
-
-        return $finalFilePath;
     }
 
     private function cleanChunkFolder($tempDir)
@@ -115,26 +136,40 @@ class FilmService
 
     public function addFilm(string $title, string $description, string $filePath, string $playlistPath, string $coverPath, string $token): bool
     {
-        $stmt = Database::getPDO()->prepare("INSERT INTO film (title, description, file_path, playlist_path, cover_image, token) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$title,$description, $filePath, $playlistPath, $coverPath, $token]);
+        try {
+            $query = Database::getPDO()->prepare("INSERT INTO film (title, description, file_path, playlist_path, cover_image, token) VALUES (?, ?, ?, ?, ?, ?)");
+            $query->execute([$title, $description, $filePath, $playlistPath, $coverPath, $token]);
 
-        return $stmt->rowCount() > 0;
+            return true;
+
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong");
+        }
     }
 
-    public function getFilmByToken($token)
+    public function getFilmByToken($token): ?array
     {
-        $stmt = Database::getPDO()->prepare("SELECT cover_image, description, token, title, file_path, playlist_path FROM film WHERE token = ?");
-        $stmt->execute([$token]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            if (!$token) {
+                throw new BadRequestException("film uri is required");
+            }
+
+            $query = Database::getPDO()->prepare("SELECT cover_image, description, token, title, file_path, playlist_path FROM film WHERE token = ?");
+            $query->execute([$token]);
+            $film = $query->fetch(PDO::FETCH_ASSOC);
+
+            return $film ?: null;
+
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong");
+        }
     }
 
     public function deleteFilm($token)
     {
         $video = $this->getFilmByToken($token);
-
-        if (!$video) {
-            throw new Exception("Film not found.");
-        }
 
         $videoFilePath = realpath($video['file_path']);
         if ($videoFilePath && file_exists($videoFilePath)) {
@@ -146,9 +181,9 @@ class FilmService
             unlink($coverFilePath);
         }
 
-        $stmt = Database::getPDO()->prepare("DELETE FROM film WHERE token = ?");
-        $stmt->execute([$token]);
+        $query = Database::getPDO()->prepare("DELETE FROM film WHERE token = ?");
+        $query->execute([$token]);
 
-        return $stmt->rowCount() > 0;
+        return $query->rowCount() > 0;
     }
 }

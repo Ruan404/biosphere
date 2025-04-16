@@ -4,6 +4,15 @@ namespace App\User;
 class User
 {
 
+        public function __construct(string $pseudo = "", string $mdp = "")
+        {
+                if ($pseudo) {
+                        $this->pseudo = htmlspecialchars($pseudo);
+                }
+                if ($mdp) {
+                        $this->mdp = htmlspecialchars($mdp);
+                }
+        }
         public string $pseudo {
                 get => htmlspecialchars(string: $this->pseudo);
                 set(string $pseudo) {

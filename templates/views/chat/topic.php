@@ -187,7 +187,8 @@ if ($user == null) {
 
 	function displayMessages(chat, show = true) {
 		return (
-			msgsDisplayCtn.innerHTML += `<div class='msg-ctn'>
+			msgsDisplayCtn.innerHTML += `<div class='message'>
+				<div class='msg-ctn'>
 				<div class="msg-img">
 				</div>
 				<div class="msg-info-ctn">
@@ -197,8 +198,10 @@ if ($user == null) {
 					</div>
 					<p>${chat.message}</p>
 				</div>
+			</div>
 				${show ? chat.options : ""}
-			</div>`
+			</div>
+			`
 		)
 	}
 	function optionsEvent() {

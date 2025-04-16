@@ -8,8 +8,10 @@ use App\Admin\AdminService;
 use App\Entities\Layout;
 use App\Entities\Role;
 use App\Film\FilmService;
+use App\Helpers\Response;
 use App\Topic\TopicService;
 use App\User\UserService;
+use Exception;
 use function App\Helpers\view;
 ini_set('max_execution_time', 300);
 
@@ -48,58 +50,41 @@ class AdminController
     #[Roles(array(Role::Admin))]
     public function uploadFilm()
     {
-        if ($_SERVER["REQUEST_METHOD"] !== "POST") {
-            header('Content-Type: application/json');
-            echo "Invalid request.";
-            exit();
-        }
-        $token = $_POST['token'];
-
-        if (!$token) {
-            http_response_code(400);
-            header('Content-Type: application/json');
-            echo "Invalid upload data.";
-            exit();
+        try {
+            $token = $_POST['token'];
+            $videoFile = $_FILES['file'];
+            $chunkNumber = (int) ($_POST['step']);
+            $totalChunks = (int) ($_POST['totalChunks']);
+            $filename = $_POST['filename'];
+        } catch (Exception) {
+            return new Response()->json(["error" => "Invalid upload data."], 400);
         }
 
+        try {
+            $result = $this->filmService->chunkedUpload($videoFile, $chunkNumber, $totalChunks, $filename, $token);
 
-        if (isset($_FILES['file'])) {
-            try {
-                $videoFile = $_FILES['file'];
-                $chunkNumber = (int) ($_POST['chunkNumber']);
-                $totalChunks = (int) ($_POST['totalChunks']);
-                $filename = $_POST['filename'];
-            } catch (\Exception) {
-                http_response_code(400);
-                header('Content-Type: application/json');
-                echo "Invalid upload data.";
-                exit();
-            }
-
-
-            try {
-                $result = $this->filmService->handleChunkedUpload($videoFile, $chunkNumber, $totalChunks, $filename, $token);
-                echo "Chunk $chunkNumber uploaded successfully.";
-
-                if ($chunkNumber === $totalChunks - 1) {
+            if ($result["state"] !== "done") {
+                return new Response()->json(["message" => "Chunk $chunkNumber uploaded successfully."]);
+            } else {
+                try {
                     $title = $_POST['title'];
                     $description = $_POST['description'];
-                    
                     $coverFile = $_FILES['cover'];
-                
-                    $cover = $this->filmService->handleCoverImageUpload($coverFile, $result["token"]);
+
+                    $cover = $this->filmService->uploadImage($coverFile, $result["token"]);
 
                     if ($cover) {
                         $this->filmService->addFilm($title, $description, $result["path"], 'playlistPath', $cover, $result["token"]);
+                        return new Response()->json(["message" => "Upload complete"]);
                     }
+                } catch (Exception $e) {
+                    error_log("Video upload failed: " . $e->getMessage());
+                    return new Response()->json(["error" => "An error occurred during upload."]);
                 }
-            } catch (\Exception $e) {
-                http_response_code(500);
-                die("Upload failed: " . $e->getMessage());
             }
-        } else {
-            http_response_code(400);
-            die("Missing video file.");
+        } catch (Exception $e) {
+            error_log("Chunk upload failed: " . $e->getMessage());
+            return new Response()->json(["error" => "An error occurred during upload."]);
         }
     }
 

@@ -4,12 +4,15 @@
     $user = AuthService::getUserSession();
 
     //l'utilisiteur n'est pas connecté
-    if($user == null){
+    if(session_status() === 1){
+        session_start();
+    }
+    if(!$_SESSION){
        header('Location: /login');
        exit();
     }
 
-    $profile = Text::getFirstStr($user->pseudo);
+    $profile = Text::getFirstStr($_SESSION["username"]);
 ?>
 
 <!DOCTYPE html>

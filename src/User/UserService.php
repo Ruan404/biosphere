@@ -3,60 +3,65 @@
 namespace App\User;
 
 use App\Core\Database;
+use App\Exceptions\BadRequestException;
+use App\Exceptions\NotFoundException;
 use App\User\User;
+use Exception;
 use PDO;
+use PDOException;
 
 class UserService
 {
-    public function createUser(User $user): bool
+    public function createUser(User $newUser): string
     {
-        //verify if the user already exists in the database
-        $query = Database::getPDO()->prepare('SELECT * FROM users WHERE pseudo = ?');
-        $query->execute([htmlspecialchars($user->pseudo)]);
-        $getUser = $query->fetchObject(User::class);
+        try {
+            //verify if the user already exists in the database
+            $user = $this->getUserByPseudo($newUser->pseudo);
 
-        if ($getUser === false) {
-            $req = Database::getPDO()->prepare('INSERT INTO users(pseudo, mdp)VALUES(?, ?)');
-            $req->execute([htmlspecialchars($user->pseudo), sha1($user->mdp)]);
-
-            if (Database::getPDO()->lastInsertId()) {
-                return true;
+            if ($user === null) {
+                $query = Database::getPDO()->prepare('INSERT INTO users(pseudo, mdp)VALUES(?, ?)');
+                $query->execute([htmlspecialchars($newUser->pseudo), sha1($newUser->mdp)]);
+                $response = "your account has been created";
+                return $response;
             }
-            return false;
+            throw new BadRequestException("user already exist");
+
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong");
         }
-        return false;
     }
 
     public function getUserById(int $id): ?User
     {
-        /**
-         * verifier qu'une session existe
-         * renvoyer l'utilisateur à l'aide de l'ID
-         */
-        $query = Database::getPDO()->prepare('SELECT * FROM users WHERE id = ?');
-        $query->execute([$id]);
+        try {
+            $query = Database::getPDO()->prepare('SELECT * FROM users WHERE id = ?');
+            $query->execute([$id]);
 
-        $user = $query->fetchObject(User::class);
+            $user = $query->fetchObject(User::class);
 
-        return $user ?: null;
+            return $user ?: null;
+
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong");
+        }
     }
 
-    /**
-     * Get user using pseudo
-     * @param string $pseudo
-     * @return bool|object|null
-     */
     public function getUserByPseudo(string $pseudo): ?User
     {
-        //get user
-        $query = Database::getPDO()->prepare('SELECT * FROM users WHERE pseudo = ?');
-        $query->execute([htmlspecialchars($pseudo)]);
-        $user = $query->fetchObject(User::class);
-        if ($user == false) {
-            return null;
-        }
+        try {
+            //get user
+            $query = Database::getPDO()->prepare('SELECT * FROM users WHERE pseudo = ?');
+            $query->execute([htmlspecialchars($pseudo)]);
+            $user = $query->fetchObject(User::class);
 
-        return $user;
+            return $user ?: null;
+
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong");
+        }
     }
 
     /**
@@ -64,12 +69,25 @@ class UserService
      * @param int $userId
      * @return bool
      */
-    public function promoteToAdmin(int $userId): bool
+    public function promoteToAdmin(int $userId): string
     {
-        $query = Database::getPDO()->prepare('UPDATE users SET role = ? WHERE id = ?');
-        $query->execute(['admin', $userId]);
+        try {
+            $user = $this->getUserById($userId);
 
-        return $query->rowCount() > 0;
+            if($user===null){
+                throw new NotFoundException("user was not found");
+            }
+
+            $query = Database::getPDO()->prepare('UPDATE users SET role = ? WHERE id = ?');
+            $query->execute(['admin', $user->id]);
+
+            return "user $user->pseudo has been successfully promoted";
+
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong.");
+        }
+
     }
 
 
@@ -78,21 +96,38 @@ class UserService
      * @param int $userId
      * @return bool
      */
-    public function deleteUser(int $userId): bool
+    public function deleteUser(int $userId): string
     {
-        $query = Database::getPDO()->prepare('DELETE FROM users WHERE id = ?');
-        $query->execute([$userId]);
+        try {
+            $user = $this->getUserById($userId);
 
-        return $query->rowCount() > 0;
+            $query = Database::getPDO()->prepare('DELETE FROM users WHERE id = ?');
+            $query->execute([$user->id]);
+            $response = "user $user->pseudo has been successfully deleted";
+
+            return $response;
+
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong.");
+        }
     }
 
-    public function getUsers()
+    public function getUsers(): array
     {
-        if (session_status() == 1) {
-            session_start();
+        try {
+            if (session_status() == 1) {
+                session_start();
+            }
+            $query = Database::getPDO()->prepare('SELECT * FROM users WHERE id!= ?');
+            $query->execute([htmlspecialchars($_SESSION['user_id'])]);
+            $users = $query->fetchAll(PDO::FETCH_CLASS, User::class);
+
+            return $users;
+
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong.");
         }
-        $query = Database::getPDO()->prepare('SELECT * FROM users WHERE id!= ?');
-        $query->execute([htmlspecialchars($_SESSION['user_id'])]);
-        return $query->fetchAll(PDO::FETCH_CLASS, User::class);
     }
 }
