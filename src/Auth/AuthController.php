@@ -3,12 +3,12 @@ namespace App\Auth;
 
 use App\Entities\Layout;
 use App\Exceptions\HttpExceptionInterface;
-use App\Helpers\Response;
 use \App\User\{
     User
 };
 
 use App\Attributes\Route;
+use Exception;
 use function App\Helpers\view;
 
 class AuthController
@@ -47,9 +47,13 @@ class AuthController
                     exit();
                 }
             }
-        }catch(HttpExceptionInterface $e){
-            return new Response()->json([$e->getMessage()], $e->getStatusCode());
-            // return view(view: 'auth/login', layout: $this->layout, data: ['error' => true]);
+        } catch (HttpExceptionInterface $e) {
+            // return new Response()->json([$e->getMessage()], $e->getStatusCode());
+            return view(view: 'auth/login', layout: $this->layout, data: ['error' => true]);
+
+        } catch (Exception $e) {
+            error_log("Something wrong happened: " . $e->getMessage());
+            return view("/errors/500", Layout::Clean);
         }
     }
 
@@ -76,6 +80,9 @@ class AuthController
             }
         } catch (HttpExceptionInterface $e) {
             return view(view: 'auth/signup', layout: $this->layout, data: ['error' => true]);
+        } catch (Exception $e) {
+            error_log("Something wrong happened: " . $e->getMessage());
+            return view("/errors/500", Layout::Clean);
         }
     }
 

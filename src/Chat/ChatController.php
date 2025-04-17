@@ -4,6 +4,7 @@ namespace App\Chat;
 
 use App\Attributes\Route;
 use App\Auth\AuthService;
+use App\Entities\Layout;
 use App\Exceptions\BadRequestException;
 use App\Exceptions\HttpExceptionInterface;
 use App\Helpers\Response;
@@ -54,7 +55,7 @@ class ChatController
             }
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());
-            header("Location /errors/500");
+            return view("/errors/500", Layout::Clean);
         }
     }
 
@@ -74,7 +75,7 @@ class ChatController
             }
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());
-            header("Location /errors/500");
+            return view("/errors/500", Layout::Clean);
         }
     }
 
@@ -96,17 +97,14 @@ class ChatController
                     if ($topic) {
                         $response = new ChatService()->deleteMyMessages($user, $topic->id, [$data["messages"]]);
                         if ($response) {
-                            $lastMessageId = $_GET['lastMessageId'] ?? 0;
-                            $messages = new ChatService()->getChatMessages($topic->id, $lastMessageId);
-
-                            return new Response()->json(["messages" => $messages]);
+                            return new Response()->json(["success" => "deletion succeeded", "action" => "delete",...$data]);
                         }
                     }
                 }
             }
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());
-            header("Location /errors/500");
+            return view("/errors/500", Layout::Clean);
         }
     }
 
@@ -134,7 +132,7 @@ class ChatController
 
                 $result = new chatService()->addMessage($chat, $topicId);
 
-                return new Response()->json(["chat" => $chat]);
+                return new Response()->json($chat);
 
             }
             return new Response()->json(["error" => "enter required fields"], 400);
@@ -143,7 +141,7 @@ class ChatController
 
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());
-            header("Location /errors/500");
+            return view("/errors/500", Layout::Clean);
         }
     }
 

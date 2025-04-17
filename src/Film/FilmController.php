@@ -2,6 +2,7 @@
 namespace App\Film;
 
 use App\Attributes\Route;
+use App\Entities\Layout;
 use App\Helpers\Response;
 use Exception;
 use function App\Helpers\view;
@@ -28,7 +29,7 @@ class FilmController
 
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());
-            header("Location /errors/500");
+            return view("/errors/500", Layout::Clean);
         }
     }
 
@@ -44,7 +45,7 @@ class FilmController
             return new Response()->json($video, 200);
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());
-            header("Location /errors/500");
+            return view("/errors/500", Layout::Clean);
         }
     }
 
@@ -59,7 +60,7 @@ class FilmController
             return view(view: "/film/watch", data: $video);
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());
-            header("Location /errors/500");
+            return view("/errors/500", Layout::Clean);
         }
     }
 }

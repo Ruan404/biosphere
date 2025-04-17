@@ -15,10 +15,10 @@ class Chat
     public function __construct(string $pseudo = "", string $date = "")
     {
         // $date = new DateTime("now", $timezone )->format('Y-m-d H:i:s');
-        if($pseudo){
+        if ($pseudo) {
             $this->pseudo = $pseudo;
         }
-        if($date){
+        if ($date) {
             $this->date = $date;
         }
         if (session_status() === 1) {
@@ -26,7 +26,7 @@ class Chat
         }
         $this->options = $this->getOptions($this->pseudo === $_SESSION['username']);
     }
-    public int $topic_id = 0{
+    public int $topic_id = 0 {
         get => $this->topic_id;
 
         set(int $topic_id) {
@@ -61,30 +61,20 @@ class Chat
         }
     }
 
-    public string $options {
+    public array $options {
         get => $this->options;
     }
 
-    private function getOptions(bool $canDelete): string
+    private function getOptions(bool $canDelete): array
     {
+        $actions = [];
         if ($canDelete) {
-            return "
-            <div class='options-ctn'>
-                <div class='options'>
-                    <button class='option-btn' onclick='deleteMessage(\"{$this->date}\")'>supprimer</button>
-                </div>
-                <button class='options-btn'>
-                    <svg width='24' height='24' viewBox='0 0 24 24' fill='currentColor' xmlns='http://www.w3.org/2000/svg'>
-                        <rect x='11' y='5' width='2' height='2' rx='1'/>
-                        <rect x='11' y='11' width='2' height='2' rx='1'/>
-                        <rect x='11' y='17' width='2' height='2' rx='1'/>
-                    </svg>
-                </button>
-            </div>
-        ";
+            array_push($actions,["label" => "Delete", 'value' => "delete"]);
         }
 
-        return ""; //future reply function
+        //future actions
+        
+        return $actions;
     }
 
 }

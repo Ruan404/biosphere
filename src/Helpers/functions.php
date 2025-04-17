@@ -3,17 +3,25 @@ namespace App\Helpers;
 
 use App\Entities\Layout;
 
-function view($view, Layout $layout = Layout::Preset, array $data = []){
+function view($view, Layout $layout = Layout::Preset, array $data = [])
+{
     $viewPath = dirname(__DIR__) . '../../templates';
-    
-    ob_start();
-    require  $viewPath. DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . $view.'.php';
-    $content = ob_get_clean();
-    
-    require $viewPath . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR .$layout->value. '.php';
+
+    if ($layout !== Layout::Clean) {
+        ob_start();
+        require $viewPath . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . $view . '.php';
+        $content = ob_get_clean();
+
+        require $viewPath . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . $layout->value . '.php';
+    } else {
+        ob_start();
+        require $viewPath . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . $view . '.php';
+        $content = ob_get_clean();
+    }
 }
 
-function generateRandomString($length = 10, $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ') {
+function generateRandomString($length = 10, $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
+{
     $randomString = '';
     for ($i = 0; $i < $length; $i++) {
         $randomString .= $characters[mt_rand(0, strlen($characters) - 1)];

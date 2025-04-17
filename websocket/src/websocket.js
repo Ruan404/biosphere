@@ -11,11 +11,12 @@ wss1.on("connection", function connection(ws, req) {
   console.log("chat websocket");
 
   ws.on("message", (data) => {
-    const datas = JSON.parse(data)
-    if(datas.action === "new"){
+    const received = JSON.parse(data)
+   
+    if(received.action === "delete" && received.messages){
       wss1.clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
-          client.send(datas.data);
+          client.send(JSON.stringify(received));
         }
       });
     }

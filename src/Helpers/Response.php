@@ -4,7 +4,7 @@ namespace App\Helpers;
 
 class Response
 {
-    public function json(array $data, int $statusCode = 200): void
+    public function json( $data, int $statusCode = 200): void
     {
         ob_start();
         $response = $data;

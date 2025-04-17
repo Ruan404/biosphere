@@ -119,7 +119,7 @@ class UserService
             if (session_status() == 1) {
                 session_start();
             }
-            $query = Database::getPDO()->prepare('SELECT * FROM users WHERE id!= ?');
+            $query = Database::getPDO()->prepare('SELECT pseudo, role FROM users WHERE id!= ?');
             $query->execute([htmlspecialchars($_SESSION['user_id'])]);
             $users = $query->fetchAll(PDO::FETCH_CLASS, User::class);
 

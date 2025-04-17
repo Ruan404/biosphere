@@ -15,20 +15,20 @@ body {
   --fg-1: 42, 48, 53;
   --fg-2: 253, 254, 255;
   --fg-3: 4, 107, 190;
-  --accent-blue: 0, 109, 198;
+  --accent-blue: 93, 182, 255;
   --accent-pink: 255, 236, 233;
   --accent-red: 228, 88, 66;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-1: 13, 24, 31;
-    --bg-2: 17, 30, 38;
+    --bg-1: 21, 27, 31;
+    --bg-2: 38, 48, 55;
     --bg-3: 245, 248, 251;
     --fg-1: 253, 254, 255;
     --fg-2: 0, 15, 27;
-    --fg-3: 4, 107, 190;
-    --accent-blue: 93, 182, 255;
+    --fg-3: 93, 182, 255;
+    --accent-blue: 0, 109, 198;
     --accent-pink: 255, 236, 233;
     --accent-red: 228, 88, 66;
   }
@@ -81,7 +81,7 @@ svg {
 
 .primary-btn {
   background-color: rgb(var(--accent-blue));
-  color: rgb(var(--fg-2));
+  color: rgb(var(--fg-1));
 }
 
 .icon-btn {
@@ -160,6 +160,71 @@ footer {
   color: inherit;
 }
 
+/*=== side bar ===*/
+.sidebar {
+  flex-basis: 25%;
+  max-width: 360px;
+  max-height: fit-content;
+}
+
+.sidebar-menu-ctn {
+  row-gap: 1rem;
+  padding: 1.5rem 1rem;
+  max-width: 360px;
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgb(var(--bg-1));
+}
+
+.sidebar-menu {
+  row-gap: 0.875rem;
+  font-size: 0.875rem;
+}
+
+.sidebar-menu-ctn.show {
+  transform: translateX(0);
+}
+
+.sidebar-menu-button {
+  padding: 0.5rem 0.625rem;
+  border-radius: 0.625rem;
+}
+
+.sidebar-menu-button::first-letter{
+  text-transform: capitalize;
+}
+
+.sidebar-menu-button:hover {
+  background: rgb(var(--bg-3), 0.14);
+}
+
+.sidebar-menu-button.current {
+  background: rgb(var(--bg-3));
+  pointer-events: none;
+  color: rgb(var(--fg-2));
+}
+
+.sidebar-tab{
+  margin-left: 1rem;
+  row-gap: 0.5rem;
+  display: none;
+}
+
+.sidebar-current-tab::first-letter{
+  text-transform: capitalize;
+}
+
+.tab-btn {
+  width: fit-content;
+}
+
+.close-btn {
+  display: none;
+  place-self: end;
+}
+
+
+/**=== responsiveness ===**/
+
 @media (min-width: 1440px) {
   main {
     margin-inline: auto;
@@ -167,6 +232,15 @@ footer {
 }
 
 @media (max-width: 768px) {
+  .sidebar-menu-ctn {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform: translateX(-100%);
+    z-index: 100;
+    width: calc(100% - 2.5rem);
+    height: 100%;
+  }
   main {
     margin-inline: 1rem;
     width: calc(100% - 2rem);
