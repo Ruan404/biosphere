@@ -1,11 +1,18 @@
 <?php
 namespace App\User;
 
-use App\Entities\Role;
-
 class User
 {
 
+        public function __construct(string $pseudo = "", string $mdp = "")
+        {
+                if ($pseudo) {
+                        $this->pseudo = htmlspecialchars($pseudo);
+                }
+                if ($mdp) {
+                        $this->mdp = htmlspecialchars($mdp);
+                }
+        }
         public string $pseudo {
                 get => htmlspecialchars(string: $this->pseudo);
                 set(string $pseudo) {
@@ -23,10 +30,6 @@ class User
                         $this->mdp = htmlspecialchars($mdp);
                 }
         }
-
-        // public Role $role = Role::Admin {
-        //         get => $this->role;
-        // }
 
         public string $role {
                 get => $this->role;

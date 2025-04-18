@@ -36,14 +36,11 @@ th, td {
 }
 
 th {
-  background-color: rgb(var(--bg-4));
+  background-color: rgb(var(--bg-3));
   font-weight: bold;
   color: rgb(var(--fg-2));
 }
 
-/* tr:hover {
-  background-color: rgb(var(--bg-2));
-} */
 
 
 /* Gestion des boutons admin */
@@ -55,12 +52,8 @@ th {
 
 /* Ajustement des tableaux */
 .table-container table tr:nth-child(even) {
-  background-color: rgb(var(--bg-1));
+  background-color: rgb(var(--bg-2));
 }
-
-/* .table-container table tr:hover {
-  background-color: rgb(var(--bg-3));
-} */
 
 
 main, .container{
@@ -118,7 +111,7 @@ main {
 }
 
 .tab-btn:hover {
-  background: rgb(var(--bg-4), 0.14);
+  background: rgb(var(--bg-3), 0.14);
 }
 
 .tab-btn.current {

@@ -1,11 +1,13 @@
 <?php
-
 namespace App\Film;
+
 use App\Core\Database;
+use App\Exceptions\BadRequestException;
 use PDO;
 use Exception;
 use Dotenv\Dotenv;
-ini_set('max_execution_time', 300);
+use PDOException;
+use function App\Helpers\generateRandomString;
 
 class FilmService
 {
@@ -15,139 +17,173 @@ class FilmService
         $dotenv->load();
     }
 
-    public function generateUniqueToken()
-    {
-        return bin2hex(random_bytes(16));
-    }
-
-    public function processHLS($inputFile, $outputFolder)
-    {
-        if (!file_exists($outputFolder)) {
-            mkdir($outputFolder, 0777, true);
-        }
-
-        $playlistPath = $outputFolder . "/playlist.m3u8";
-
-        $command = escapeshellcmd("ffmpeg -i $inputFile -c:v h264 -c:a aac -b:v 1500k -f hls -hls_time 5 -hls_playlist_type vod $playlistPath");
-        exec($command, $output, $returnCode);
-
-        if ($returnCode !== 0) {
-            throw new Exception("Error generating HLS files.");
-        }
-
-        return $playlistPath;
-    }
-
     public function getAllFilms(): ?array
     {
-        $query = Database::getPDO()->query('SELECT cover_image,token, title FROM film JOIN genre ON film.genre_id = genre.id');
-        $films = $query->fetchAll(PDO::FETCH_CLASS, Film::class);
-        return $films;
+        try {
+            $query = Database::getPDO()->query('SELECT cover_image, token, title FROM film JOIN genre ON film.genre_id = genre.id');
+
+            return $query->fetchAll(PDO::FETCH_CLASS, Film::class);
+
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong");
+        }
     }
 
-    public function getFilmByTitle($title): ?array
+    public function uploadImage(array $coverFile, string $token)
     {
-        $query = Database::getPDO()->prepare('SELECT cover_image,description, token, title, playlist_path FROM film WHERE film.title = :title');
-        $query->bindParam(':title', $title, PDO::PARAM_STR);
-        $query->execute();
-        $film = $query->fetchAll(PDO::FETCH_CLASS, Film::class);
+        try {
+            $this->validateFile($coverFile, ["jpg", "jpeg", "png"], "cover");
 
-        if ($film) {
-            return $film;
+            $coverPath = $_ENV['COVER_DIR'] . $token . '.' . pathinfo($coverFile['name'], PATHINFO_EXTENSION);
+            move_uploaded_file($coverFile['tmp_name'], $coverPath);
+
+            return $coverPath;
+
+        } catch (Exception $e) {
+            error_log("Upload error: " . $e->getMessage());
+            throw new Exception("cover upload failed");
         }
-
-        return null;
     }
 
     private function validateFile(array $file, array $allowedTypes, string $type)
     {
         $ext = strtolower(pathinfo($file["name"], PATHINFO_EXTENSION));
+
         if (!in_array($ext, $allowedTypes)) {
-            throw new Exception("Invalid $type file type.");
+            throw new BadRequestException("Invalid $type file type.");
         }
     }
 
-    public function handleFilmUpload(array $videoFile, array $coverFile): string
+    public function chunkedUpload(array $videoFile, int $chunkNumber, int $totalChunks, string $filename, string $token): array
     {
-        // Validate files
-        $this->validateFile($videoFile, ["mp4", "mov", "avi"], "video");
-        $this->validateFile($coverFile, ["jpg", "jpeg", "png"], "cover");
+        try {
+            $this->validateFile(["name" => $filename], ["mp4", "mov", "avi"], "video");
 
-        // Generate unique token
-        $uniqueToken = $this->generateUniqueToken();
-      
-        // Define file paths
-        $videoPath = $_ENV['UPLOAD_DIR'] . $uniqueToken . "." . pathinfo($videoFile["name"], PATHINFO_EXTENSION);
-        $coverPath = $_ENV['COVER_DIR'] . $uniqueToken . "." . pathinfo($coverFile["name"], PATHINFO_EXTENSION);
-        $hlsFolder = $_ENV['HLS_DIR'] . $uniqueToken;
+            $tempDir = $_ENV['TEMP_UPLOAD_DIR'] . $token;
 
-        // Move files
-        move_uploaded_file($videoFile["tmp_name"], $_ENV['BASE_URL'] . $videoPath);
-        move_uploaded_file($coverFile["tmp_name"], $_ENV['BASE_URL'] . $coverPath);
+            if (!file_exists($tempDir)) {
+                mkdir($tempDir, 0755, true);
+            }
 
-        // Process HLS
-        $playlistPath = $this->processHLS($_ENV['BASE_URL'] . $videoPath, $_ENV['BASE_URL'] . $hlsFolder);
-        $playlistPath = str_replace($_ENV['BASE_URL'], '', $playlistPath); // Store relative path
+            $chunkFilePath = $tempDir . '/chunk_' . $chunkNumber;
 
-        // Store in database
-        $title = strtolower(pathinfo($videoFile["name"], PATHINFO_FILENAME));
-        $this->addFilm($title, $videoPath, $playlistPath, $coverPath, $uniqueToken);
+            move_uploaded_file($videoFile['tmp_name'], $chunkFilePath);
 
-        return $uniqueToken;
+            // Check if all chunks are uploaded
+          
+            $uploadedChunks = glob($tempDir . '/chunk_*');
+
+            if (count($uploadedChunks) === $totalChunks) {
+                $newToken = generateRandomString();
+                $finalPath = $this->assembleFile($tempDir, $newToken);
+                return ["state" => "done", "token" => $newToken, "path" => $finalPath];
+            }
+
+            return ["state" => "in progress"];
+
+        } catch (Exception $e) {
+            $this->cleanChunkFolder($tempDir);
+            error_log("Chunk upload error: " . $e->getMessage());
+            throw new Exception("video upload failed");
+        }
     }
 
-    public function addFilm($title, $filePath, $playlistPath, $coverPath, $token)
+    private function assembleFile($tempDir, $token)
     {
-        $stmt = Database::getPDO()->prepare("INSERT INTO film (title, file_path, playlist_path, cover_image, token) VALUES (?, ?, ?, ?, ?)");
-        return $stmt->execute([$title, $filePath, $playlistPath, $coverPath, $token]);
+        try {
+            $finalFilePath = $_ENV['UPLOAD_DIR'] . $token . '.mp4';
+            $finalFile = fopen($finalFilePath, 'wb');
+
+            $chunks = glob($tempDir . '/chunk_*');
+            natsort($chunks);
+
+            foreach ($chunks as $chunkFile) {
+                $chunk = fopen($chunkFile, 'rb');
+                while (!feof($chunk)) {
+                    fwrite($finalFile, fread($chunk, 1024));
+                }
+                fclose($chunk);
+                unlink($chunkFile);
+            }
+
+            fclose($finalFile);
+            $this->cleanChunkFolder($tempDir);
+
+            return $finalFilePath;
+        } catch (Exception $e) {
+            error_log("Upload error: " . $e->getMessage());
+            throw new Exception("video upload failed");
+        }
     }
 
-    public function getFilmByToken($token)
+    private function cleanChunkFolder($tempDir)
     {
-        $stmt = Database::getPDO()->prepare("SELECT cover_image,description, token, title,file_path, playlist_path FROM film WHERE token = ?");
-        $stmt->execute([$token]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!is_dir($tempDir))
+            return;
+
+        $files = glob($tempDir . '/*');
+        foreach ($files as $file) {
+            if (is_file($file)) {
+                unlink($file);
+            }
+        }
+
+        if (count(glob($tempDir . '/*')) === 0) {
+            rmdir($tempDir);
+        }
     }
 
+    public function addFilm(string $title, string $description, string $filePath, string $playlistPath, string $coverPath, string $token): bool
+    {
+        try {
+            $query = Database::getPDO()->prepare("INSERT INTO film (title, description, file_path, playlist_path, cover_image, token) VALUES (?, ?, ?, ?, ?, ?)");
+            $query->execute([$title, $description, $filePath, $playlistPath, $coverPath, $token]);
+
+            return true;
+
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong");
+        }
+    }
+
+    public function getFilmByToken($token): ?array
+    {
+        try {
+            if (!$token) {
+                throw new BadRequestException("film uri is required");
+            }
+
+            $query = Database::getPDO()->prepare("SELECT cover_image, description, token, title, file_path, playlist_path FROM film WHERE token = ?");
+            $query->execute([$token]);
+            $film = $query->fetch(PDO::FETCH_ASSOC);
+
+            return $film ?: null;
+
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong");
+        }
+    }
 
     public function deleteFilm($token)
     {
-        // Get video details from DB
         $video = $this->getFilmByToken($token);
 
-        if (!$video) {
-            throw new Exception("Film not found.");
-        }
-    
-        // Remove the video file
         $videoFilePath = realpath($video['file_path']);
-       
-        
-        if (file_exists($videoFilePath)) {
+        if ($videoFilePath && file_exists($videoFilePath)) {
             unlink($videoFilePath);
         }
-    
-        // Remove the cover image
+
         $coverFilePath = realpath($video['cover_image']);
-        if (!empty($video['cover_image']) && file_exists($coverFilePath)) {
+        if ($coverFilePath && file_exists($coverFilePath)) {
             unlink($coverFilePath);
         }
-    
-        // Remove the HLS folder and all its contents
-        $hlsFolder = $_ENV['HLS_DIR'] . $token;
-        if (is_dir($hlsFolder)) {
-            foreach (glob("$hlsFolder/*") as $file) {
-                unlink($file);
-            }
-            rmdir($hlsFolder);
-        }
-    
-        // Delete database entry
-        $stmt = Database::getPDO()->prepare("DELETE FROM film WHERE token = ?");
-        $stmt->execute([$token]);
-    
-        return $stmt->rowCount() > 0;
-    }
-    
 
+        $query = Database::getPDO()->prepare("DELETE FROM film WHERE token = ?");
+        $query->execute([$token]);
+
+        return $query->rowCount() > 0;
+    }
 }

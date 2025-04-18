@@ -131,11 +131,11 @@ $currentTopic = isset($data['currentTopic']) ? htmlspecialchars($data['currentTo
     });
 
     function showTab() {
-        document.querySelector('.topics').style.display = 'block';
+        document.querySelector('.sidebar-menu-ctn').style.display = 'block';
     }
 
     function hideTab() {
-        document.querySelector('.topics').style.display = 'none';
+        document.querySelector('.sidebar-menu-ctn').style.display = 'none';
     }
 </script>
 

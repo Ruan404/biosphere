@@ -2,11 +2,13 @@
 namespace App\Auth;
 
 use App\Entities\Layout;
+use App\Exceptions\HttpExceptionInterface;
 use \App\User\{
     User
 };
 
 use App\Attributes\Route;
+use Exception;
 use function App\Helpers\view;
 
 class AuthController
@@ -29,29 +31,30 @@ class AuthController
     #[Route(method: "POST", path: "/login")]
     public function login()
     {
-        if (!empty($_POST)) {
+        try {
+            if (!empty($_POST)) {
 
-            //instantier la class user
-            $loginUser = new User();
-            $loginUser->pseudo = $_POST['pseudo'];
-            $loginUser->mdp = $_POST['password'];
+                //instantier la class user
+                $loginUser = new User($_POST['pseudo'], $_POST['password']);
 
-            $user = $this->authService->login($loginUser);
+                $user = $this->authService->login($loginUser);
 
-            if ($user) {
-                $_SESSION['user_id'] = $user->id;
-                $_SESSION['role'] = $user->role; // Suppose que 'role' est bien stocké dans l'objet $user
-                
                 if ($user->role === 'admin') {
                     header('Location: /admin'); // Redirige vers l'espace admin
+                    exit();
                 } else {
                     header('Location: /'); // Redirige vers l'accueil normal
+                    exit();
                 }
-                exit();
             }
-        }
+        } catch (HttpExceptionInterface $e) {
+            // return new Response()->json([$e->getMessage()], $e->getStatusCode());
+            return view(view: 'auth/login', layout: $this->layout, data: ['error' => true]);
 
-        return view(view: 'auth/login', layout: $this->layout, data: ['error' => true]);
+        } catch (Exception $e) {
+            error_log("Something wrong happened: " . $e->getMessage());
+            return view("/errors/500", Layout::Clean);
+        }
     }
 
     #[Route(method: "GET", path: "/signup")]
@@ -63,22 +66,23 @@ class AuthController
     #[Route(method: "POST", path: "/signup")]
     public function signup()
     {
-        if (!empty($_POST)) {
+        try {
+            if (!empty($_POST)) {
 
-            //create a new user
-            $signupUser = new User();
-            $signupUser->pseudo = $_POST['pseudo'];
-            $signupUser->mdp = $_POST['password'];
+                //create a new user
+                $signupUser = new User($_POST['pseudo'], $_POST['password']);
 
-            //essayer d'inscrire l'utilisateur
-            $result = $this->authService->signup($signupUser);
+                //essayer d'inscrire l'utilisateur
+                $this->authService->signup($signupUser);
 
-            if ($result === true) {
                 header('Location: /login');
                 exit();
             }
-
+        } catch (HttpExceptionInterface $e) {
             return view(view: 'auth/signup', layout: $this->layout, data: ['error' => true]);
+        } catch (Exception $e) {
+            error_log("Something wrong happened: " . $e->getMessage());
+            return view("/errors/500", Layout::Clean);
         }
     }
 

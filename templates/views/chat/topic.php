@@ -1,39 +1,37 @@
 <?php
-use App\Auth\AuthService;
 use App\Helpers\Text;
 $style = "chat";
 $topics = $data['topics'] ?? [];
 $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 
-$user = AuthService::getUserSession();
-
-if ($user == null) {
-	header('Location: /login');
-	exit();
-}
 ?>
 
 <div class="container">
-	<div class="tab-topic">
-		<button class="tab-btn shadow-btn" onclick="showTab()">Topics</button>
-		<?php if (!empty($currentTopic)): ?>
-			<h3 class="current-topic"><?= Text::removeUnderscore($currentTopic) ?></h3>
-		<?php endif ?>
-	</div>
-	<div class="topics">
-		<button class="close-btn icon-btn" onclick="hideTab()" aria-label="close button">
-			<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-				<path
-					d="M20.3536 4.35355C20.5488 4.15829 20.5488 3.84171 20.3536 3.64645C20.1583 3.45118 19.8417 3.45118 19.6464 3.64645L12 11.2929L4.35355 3.64645C4.15829 3.45118 3.84171 3.45118 3.64645 3.64645C3.45118 3.84171 3.45118 4.15829 3.64645 4.35355L11.2929 12L3.64645 19.6464C3.45118 19.8417 3.45118 20.1583 3.64645 20.3536C3.84171 20.5488 4.15829 20.5488 4.35355 20.3536L12 12.7071L19.6464 20.3536C19.8417 20.5488 20.1583 20.5488 20.3536 20.3536C20.5488 20.1583 20.5488 19.8417 20.3536 19.6464L12.7071 12L20.3536 4.35355Z" />
-			</svg>
-		</button>
-		<div class="topics-list">
-			<?php foreach ($topics as $topic): ?>
-				<a class='topic-link' data-slug="<?= $topic->name ?>" onclick="viewChat(event, '<?= $topic->name ?>')"
-					href="#"><?= Text::removeUnderscore($topic->name) ?></a>
-			<?php endforeach ?>
+	<!--sidebar-->
+	<div class="sidebar">
+		<div class="sidebar-tab">
+			<button class="tab-btn shadow-btn" onclick="showTab()">Topics</button>
+			<?php if (!empty($currentTopic)): ?>
+				<h3 class="sidebar-current-tab"><?= Text::removeUnderscore($currentTopic) ?></h3>
+			<?php endif ?>
+		</div>
+		<div class="sidebar-menu-ctn">
+			<button class="close-btn icon-btn" onclick="hideTab()" aria-label="close button">
+				<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+					<path
+						d="M20.3536 4.35355C20.5488 4.15829 20.5488 3.84171 20.3536 3.64645C20.1583 3.45118 19.8417 3.45118 19.6464 3.64645L12 11.2929L4.35355 3.64645C4.15829 3.45118 3.84171 3.45118 3.64645 3.64645C3.45118 3.84171 3.45118 4.15829 3.64645 4.35355L11.2929 12L3.64645 19.6464C3.45118 19.8417 3.45118 20.1583 3.64645 20.3536C3.84171 20.5488 4.15829 20.5488 4.35355 20.3536L12 12.7071L19.6464 20.3536C19.8417 20.5488 20.1583 20.5488 20.3536 20.3536C20.5488 20.1583 20.5488 19.8417 20.3536 19.6464L12.7071 12L20.3536 4.35355Z" />
+				</svg>
+			</button>
+			<div class="sidebar-menu">
+				<?php foreach ($topics as $topic): ?>
+					<a class='sidebar-menu-button' data-slug="<?= $topic->name ?>"
+						onclick="viewChat(event, '<?= $topic->name ?>')"
+						href="#"><?= Text::removeUnderscore($topic->name) ?></a>
+				<?php endforeach ?>
+			</div>
 		</div>
 	</div>
+	<!--messages-->
 	<div class="messages">
 		<div class="msgs-display">
 			<div></div>
@@ -44,18 +42,9 @@ if ($user == null) {
 		</form>
 	</div>
 </div>
-<script>
-	var topics = document.querySelector('.topics')
+<script src="/assets/js/sidebar.js"></script>
+<script type="module" src="/assets/js/components/Message.js"></script>
 
-	function showTab() {
-		topics.classList.add('show');
-		document.body.classList.add('black-mask')
-	}
-	function hideTab() {
-		topics.classList.remove('show')
-		document.body.classList.remove('black-mask')
-	}
-</script>
 <script>
 	const msgsDisplayCtn = document.querySelector(".msgs-display")
 	const form = document.querySelector(".send-msg-form")
@@ -74,7 +63,7 @@ if ($user == null) {
 	function viewChat(ev, topic) {
 		ev.preventDefault();
 		if (topic != currentTopic) {
-			document.querySelector(".topic-link.current").classList.remove("current")
+			document.querySelector(".sidebar-menu-button.current").classList.remove("current")
 
 			ev.target.classList.add("current")
 			history.pushState({ topic }, `chat ${topic}`, `/chat/${topic}`)
@@ -97,8 +86,8 @@ if ($user == null) {
 
 				currentTopic = topic
 
-				document.querySelector(".current-topic").innerText = currentTopic
-				document.querySelector(".topic-link.current").classList.remove("current")
+				document.querySelector(".sidebar-current-tab").innerText = currentTopic
+				document.querySelector(".sidebar-menu-button.current").classList.remove("current")
 				document.querySelector(`[data-slug=${currentTopic}]`).classList.add("current")
 			}
 		} else {
@@ -120,7 +109,7 @@ if ($user == null) {
 					socket.send(JSON.stringify(data))
 					displayMessages(data)
 					msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: 'smooth' });
-					optionsEvent();
+
 				}
 			})
 			.catch(error => {
@@ -133,20 +122,20 @@ if ($user == null) {
 	// When a message is received from the WebSocket server
 	socket.onmessage = function (event) {
 		const data = JSON.parse(event.data);
-		if (data.messages) {
-			msgsDisplayCtn.innerHTML = "";
-			data.messages.map(chat => {
-				displayMessages(chat);
-			});
-			msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: 'smooth' });
-			optionsEvent();
+		if (data.action === "delete" && data.messages) {
+			const items = document.querySelectorAll('action-menu')
+
+			items.forEach((el) => {
+				if (data.messages.includes(el.getAttribute('item-id'))) {
+					el.closest('.message').remove();
+				}
+			})
 		}
 
 		// New chat event
 		if (data.message) {
 			displayMessages(data, false)
 			msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: 'smooth' });
-			optionsEvent();
 		}
 	}
 
@@ -160,13 +149,14 @@ if ($user == null) {
 			})
 			.then((data) => {
 				msgsDisplayCtn.innerHTML = "";
-				data.messages.map(chat => {
-					displayMessages(chat)
-				});
+				if (data.messages) {
+					data.messages.map(chat => {
+						displayMessages(chat)
+					});
+				}
 				msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: 'smooth' });
 				currentTopic = topic;
-				document.querySelector(".current-topic").innerText = currentTopic
-				optionsEvent();
+				document.querySelector(".sidebar-current-tab").innerText = currentTopic
 			})
 			.catch((err) => console.error(`Fetch problem: ${err.message}`));
 	}
@@ -178,44 +168,36 @@ if ($user == null) {
 		})
 			.then(response => response.text())
 			.then(data => {
-				socket.send(JSON.stringify({ "action": "new", data }))
+				socket.send(data)
 			})
 			.catch(error => {
 				console.error("Error submitting the form:", error);
 			});
 	}
-
 	function displayMessages(chat, show = true) {
-		return (
-			msgsDisplayCtn.innerHTML += `<div class='msg-ctn'>
-				<div class="msg-img">
-				</div>
-				<div class="msg-info-ctn">
-					<div class="msg-pseudo-date-ctn">
-						<p class="msg-pseudo">${chat.pseudo}</p>
-						<p class="msg-date">${chat.date}</p>
-					</div>
-					<p>${chat.message}</p>
-				</div>
-				${show ? chat.options : ""}
-			</div>`
-		)
-	}
-	function optionsEvent() {
-		const optionTab = document.getElementsByClassName("options-btn")
-		Array.from(optionTab).forEach(el => {
-			el.addEventListener("click", () => {
-				const options = el.parentNode.children[0];
-				options.classList.toggle("show")
+		const hasOptions = show && Array.isArray(chat.options) && chat.options.length > 0;
 
-				window.addEventListener("click", (ev) => {
-					if (ev.target !== options && ev.target !== el && options.classList.contains("show")) {
-						options.classList.remove("show")
-					}
+		const msgBox = document.createElement('message-box');
 
-				})
-			})
-		});
+		msgBox.setAttribute('pseudo', chat.pseudo)
+		msgBox.setAttribute('date', chat.date)
+		msgBox.setAttribute('message', chat.message)
+		msgBox.setAttribute('hasOptions', hasOptions)
+		msgBox.setAttribute('options', JSON.stringify(chat.options))
+
+		msgsDisplayCtn.appendChild(msgBox)
 	}
+
+</script>
+<script>
+	msgsDisplayCtn.addEventListener("selected", (e) => {
+		const { action, itemId } = e.detail;
+		switch (action) {
+			case 'delete':
+				deleteMessage(itemId);
+			default:
+				console.log("not uspported")
+		}
+	});
 
 </script>
