@@ -24,7 +24,7 @@ class Chat
         if (session_status() === 1) {
             session_start();
         }
-        $this->options = $this->getOptions($this->pseudo === $_SESSION['username']);
+        $this->options = $this->getOptions($this->pseudo === $_SESSION['username'] || $_SESSION["role"] === "admin" );
     }
     public int $topic_id = 0 {
         get => $this->topic_id;

@@ -107,6 +107,8 @@ class ChatController
             return view("/errors/500", Layout::Clean);
         }
     }
+}
+
 
     #[Route("POST", "/[*:slug]")]
     public function addMessage($params)
