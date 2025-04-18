@@ -39,7 +39,7 @@ class AuthService
                 $_SESSION['auth'] = $user->id;
                 $_SESSION['user_id'] = $user->id;
                 $_SESSION['username'] = $user->pseudo;
-                $_SESSION['is_admin'] = $user->role;
+                $_SESSION['role'] = $user->role;
                 return $user;
             }
 
