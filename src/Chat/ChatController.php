@@ -107,7 +107,6 @@ class ChatController
             return view("/errors/500", Layout::Clean);
         }
     }
-}
 
 
     #[Route("POST", "/[*:slug]")]
@@ -146,5 +145,4 @@ class ChatController
             return view("/errors/500", Layout::Clean);
         }
     }
-
 }
