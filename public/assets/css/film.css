@@ -6,6 +6,11 @@
   width: 100%;
 }
 
+.video-container{
+  width: fit-content;
+  margin-inline: auto;
+}
+
 video {
   width: 100%;
   height: auto;

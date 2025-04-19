@@ -2,6 +2,7 @@
 namespace App\Core;
 
 use AltoRouter;
+use App\Entities\Layout;
 use App\Entities\Role;
 use ReflectionClass;
 use App\Attributes\{
@@ -9,6 +10,7 @@ use App\Attributes\{
     Roles
 };
 use App\Auth\AuthService;
+use function App\Helpers\view;
 
 class Router
 {
@@ -76,6 +78,10 @@ class Router
     {
         $match = $this->router->match();
         $target = $match['target'] ?? null;
+
+        if($target === null){
+            return view("/errors/404", Layout::Error);
+        }
 
         $roles = $target["roles"] ?? [];
 
