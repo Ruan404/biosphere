@@ -40,7 +40,7 @@ export default class ActionMenu extends HTMLElement {
 			this.menu.appendChild(btn);
 		});
 
-		document.body.appendChild(this.menu);
+		this.appendChild(this.menu);
 
 		this.button.addEventListener('click', (e) => {
 			e.stopPropagation();
