@@ -166,6 +166,10 @@ footer {
   flex-basis: 25%;
 }
 
+.sidebar-menu-button::first-letter {
+  text-transform: uppercase;
+}
+
 .black-mask::after {
   content: "";
   width: 100%;

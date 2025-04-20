@@ -46,10 +46,6 @@ class SidebarTab extends HTMLElement {
         text-align: left;
       }
 
-      ::slotted(.sidebar-menu-button::first-letter) {
-        text-transform: capitalize;
-      }
-
       ::slotted(.sidebar-menu-button:hover) {
         background: rgb(var(--bg-3), 0.14) !important;
       }
