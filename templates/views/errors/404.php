@@ -1,8 +1,6 @@
 <?php
 $title = "404 error";
-$error = htmlspecialchars($data["error"]) ?? "ressource was not found";
+$error = htmlspecialchars($data["error"] ?? "Ressource was not found");
 ?>
 
-<div>
-   <?= $error ?>
-</div>
+<p><?= $error ?></p>

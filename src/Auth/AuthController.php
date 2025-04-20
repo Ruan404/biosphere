@@ -53,7 +53,7 @@ class AuthController
 
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());
-            return view("/errors/500", Layout::Clean);
+            return view("/errors/500", Layout::Error);
         }
     }
 
@@ -82,7 +82,7 @@ class AuthController
             return view(view: 'auth/signup', layout: $this->layout, data: ['error' => true]);
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());
-            return view("/errors/500", Layout::Clean);
+            return view("/errors/500", Layout::Error);
         }
     }
 

@@ -161,67 +161,26 @@ footer {
 }
 
 /*=== side bar ===*/
-.sidebar {
+.sidebar-ctn{
+  max-width: 360px;
   flex-basis: 25%;
-  max-width: 360px;
-  max-height: fit-content;
 }
 
-.sidebar-menu-ctn {
-  row-gap: 1rem;
-  padding: 1.5rem 1rem;
-  max-width: 360px;
-  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
-  background: rgb(var(--bg-1));
+.sidebar-menu-button::first-letter {
+  text-transform: uppercase;
 }
 
-.sidebar-menu {
-  row-gap: 0.875rem;
-  font-size: 0.875rem;
-}
-
-.sidebar-menu-ctn.show {
-  transform: translateX(0);
-}
-
-.sidebar-menu-button {
-  padding: 0.5rem 0.625rem;
-  border-radius: 0.625rem;
-}
-
-.sidebar-menu-button::first-letter{
-  text-transform: capitalize;
-}
-
-.sidebar-menu-button:hover {
-  background: rgb(var(--bg-3), 0.14);
-}
-
-.sidebar-menu-button.current {
-  background: rgb(var(--bg-3));
-  pointer-events: none;
-  color: rgb(var(--fg-2));
-}
-
-.sidebar-tab{
-  margin-left: 1rem;
-  row-gap: 0.5rem;
+.black-mask::after {
+  content: "";
+  width: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: #00000080;
+  z-index: 99;
   display: none;
 }
-
-.sidebar-current-tab::first-letter{
-  text-transform: capitalize;
-}
-
-.tab-btn {
-  width: fit-content;
-}
-
-.close-btn {
-  display: none;
-  place-self: end;
-}
-
 
 /**=== responsiveness ===**/
 
@@ -232,17 +191,16 @@ footer {
 }
 
 @media (max-width: 768px) {
-  .sidebar-menu-ctn {
-    position: absolute;
-    left: 0;
-    top: 0;
-    transform: translateX(-100%);
-    z-index: 100;
-    width: calc(100% - 2.5rem);
-    height: 100%;
-  }
   main {
     margin-inline: 1rem;
     width: calc(100% - 2rem);
+  }
+
+  .sidebar-ctn{
+    flex-basis: auto;
+  }
+
+  .black-mask::after{
+    display: inline-block;
   }
 }

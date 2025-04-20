@@ -29,7 +29,7 @@ class FilmController
 
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());
-            return view("/errors/500", Layout::Clean);
+            return view("/errors/500", Layout::Error);
         }
     }
 
@@ -45,7 +45,7 @@ class FilmController
             return new Response()->json($video, 200);
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());
-            return view("/errors/500", Layout::Clean);
+            return view("/errors/500", Layout::Error);
         }
     }
 
@@ -60,7 +60,7 @@ class FilmController
             return view(view: "/film/watch", data: $video);
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());
-            return view("/errors/500", Layout::Clean);
+            return view("/errors/500", Layout::Error);
         }
     }
 }

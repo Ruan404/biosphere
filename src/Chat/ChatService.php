@@ -57,13 +57,14 @@ class ChatService extends Chat
     //supprimer tous mes messages
     public function deleteMyMessages(string $pseudo, int $topicId, array $dates): bool
     {
-        $in_array = explode(',', $dates[0]);
+       
+        // $in_array = explode(',', $dates[0]);
 
-        $in = str_repeat('?,', count($in_array) - 1) . '?';
+        $in = str_repeat('?,', count($dates) - 1) . '?';
 
         $query = Database::getPDO()->prepare("DELETE FROM chat WHERE pseudo=? AND topic_id=? AND date IN ($in)");
 
-        $query->execute(array_merge([$pseudo, $topicId], array_merge($in_array)));
+        $query->execute(array_merge([$pseudo, $topicId], array_merge($dates)));
 
         return $query->rowCount() > 0;
     }

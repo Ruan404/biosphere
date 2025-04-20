@@ -24,7 +24,7 @@
     <link rel="stylesheet" type="text/css" href="/assets/css/navbar.css">
     <link rel="stylesheet" type="text/css" href="/assets/css/style.css">
     <?php if (isset($style)): ?>
-        <link rel="stylesheet" type="text/css" href=<?= '/assets/css/' . $style . '.css' ?>>
+        <link rel="stylesheet" type="text/css" href=<?= '/assets/css/' . htmlspecialchars($style) . '.css' ?>>
     <?php endif ?>
 
 </head>

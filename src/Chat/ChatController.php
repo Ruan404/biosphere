@@ -55,7 +55,7 @@ class ChatController
             }
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());
-            return view("/errors/500", Layout::Clean);
+            return view("/errors/500", Layout::Error);
         }
     }
 
@@ -75,7 +75,7 @@ class ChatController
             }
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());
-            return view("/errors/500", Layout::Clean);
+            return view("/errors/500", Layout::Error);
         }
     }
 
@@ -104,7 +104,7 @@ class ChatController
             }
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());
-            return view("/errors/500", Layout::Clean);
+            return view("/errors/500", Layout::Error);
         }
     }
 
@@ -142,7 +142,7 @@ class ChatController
 
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());
-            return view("/errors/500", Layout::Clean);
+            return view("/errors/500", Layout::Error);
         }
     }
 }
