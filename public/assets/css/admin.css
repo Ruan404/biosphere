@@ -4,18 +4,21 @@
   padding: 1rem;
   flex-grow: 1;
   font-size: 0.875rem;
+  overflow: hidden;
 }
 
 .tab-content.active {
-  display: block;
+  display: grid;
+  grid-template-rows: min-content auto;
 }
 
 /* Table container */
 .table-container {
-  overflow-x: auto;
+  overflow: auto;
+  border-radius: 8px;
 }
 
-.tab-content-head{
+.tab-content-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -25,11 +28,10 @@
 table {
   width: 100%;
   border-collapse: collapse;
-  border-radius: 8px;
-  overflow: hidden;
 }
 
-th, td {
+th,
+td {
   padding: 12px;
   text-align: left;
   border-bottom: 1px solid rgb(var(--bg-3));
@@ -41,7 +43,11 @@ th {
   color: rgb(var(--fg-2));
 }
 
-
+thead {
+  position: sticky;
+  top: 0;
+  left: 0;
+}
 
 /* Gestion des boutons admin */
 .admin-buttons {
@@ -55,8 +61,8 @@ th {
   background-color: rgb(var(--bg-2));
 }
 
-
-main, .container{
+main,
+.container {
   overflow-y: hidden;
 }
 
