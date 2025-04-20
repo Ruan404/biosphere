@@ -42,7 +42,7 @@ class TopicService
     public function getAllTopics(): ?array
     {
         try {
-            $query = Database::getPDO()->query('SELECT * FROM topic ORDER BY topic.name ASC');
+            $query = Database::getPDO()->query('SELECT name FROM topic ORDER BY topic.name ASC');
             $topics = $query->fetchAll(PDO::FETCH_CLASS, Topic::class);
 
             return $topics;

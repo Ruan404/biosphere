@@ -20,7 +20,7 @@ class FilmService
     public function getAllFilms(): ?array
     {
         try {
-            $query = Database::getPDO()->query('SELECT cover_image, token, title FROM film JOIN genre ON film.genre_id = genre.id');
+            $query = Database::getPDO()->query('SELECT cover_image, token, title, description FROM film JOIN genre ON film.genre_id = genre.id');
 
             return $query->fetchAll(PDO::FETCH_CLASS, Film::class);
 

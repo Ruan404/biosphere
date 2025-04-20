@@ -11,18 +11,17 @@ $films = $data['films'] ?? [];
 ?>
 
 <div class="container">
-    <div class="tab-admin">
-        <button class="tab-btn shadow-btn" onclick="showTabNav()">Actions</button>
-    </div>
-    <div class="tabs">
-        <button class="close-btn icon-btn" onclick="hideTabNav()">close</button>
-        <div class="tabs-list">
-            <button class="tab-btn" onclick="showTab('users')">Gestion des utilisateurs</button>
-            <button class="tab-btn" onclick="showTab('topics')">Gestion des topics</button>
-            <button class="tab-btn" onclick="showTab('podcasts')">Gestion des podcasts</button>
-            <button class="tab-btn" onclick="showTab('films')">Gestion des films</button>
-        </div>
-    </div>
+    <div class="sidebar-ctn">
+		<sidebar-tab>
+			<button slot="trigger" class="tab-btn shadow-btn" id="toggle-btn">Actions</button>
+
+            <button slot="menu" class='sidebar-menu-button' onclick="showTab('users')">Gestion des utilisateurs</button>
+            <button slot="menu" class='sidebar-menu-button' onclick="showTab('topics')">Gestion des topics</button>
+            <button slot="menu" class='sidebar-menu-button' onclick="showTab('podcasts')">Gestion des podcasts</button>
+            <button slot="menu" class='sidebar-menu-button' onclick="showTab('films')">Gestion des films</button>
+		</sidebar-tab>
+
+	</div>
 
     <!-- Gestion des utilisateurs -->
     <div class="tab-content" id="users">
@@ -172,7 +171,7 @@ $films = $data['films'] ?? [];
         </div>
     </div>
 </div>
-
+<script src="/assets/js/components/SideBar.js"></script>
 <script>
     // Fonction pour afficher les différents onglets
     function showTab(tabName) {
@@ -182,7 +181,7 @@ $films = $data['films'] ?? [];
         document.getElementById(tabName).classList.add('active');
 
         // Met à jour les boutons de tabs
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('current'));
+        document.querySelectorAll('.sidebar-menu-button').forEach(btn => btn.classList.remove('current'));
         document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('current');
     }
 
@@ -194,19 +193,6 @@ $films = $data['films'] ?? [];
 
     // Afficher l'onglet des utilisateurs par défaut au chargement
     showTab('users');
-
-    var tabs = document.querySelector('.tabs')
-
-    function showTabNav() {
-        tabs.classList.add('show');
-        document.body.classList.add('black-mask')
-    }
-
-    function hideTabNav() {
-        tabs.classList.remove('show')
-
-        document.body.classList.remove('black-mask')
-    }
 
     // Fonction pour afficher le formulaire d'ajout de topic
     function showAddTopicForm() {

@@ -8,28 +8,19 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 
 <div class="container">
 	<!--sidebar-->
-	<div class="sidebar">
-		<div class="sidebar-tab">
-			<button class="tab-btn shadow-btn" onclick="showTab()">Topics</button>
-			<?php if (!empty($currentTopic)): ?>
-				<h3 class="sidebar-current-tab"><?= Text::removeUnderscore($currentTopic) ?></h3>
-			<?php endif ?>
-		</div>
-		<div class="sidebar-menu-ctn">
-			<button class="close-btn icon-btn" onclick="hideTab()" aria-label="close button">
-				<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-					<path
-						d="M20.3536 4.35355C20.5488 4.15829 20.5488 3.84171 20.3536 3.64645C20.1583 3.45118 19.8417 3.45118 19.6464 3.64645L12 11.2929L4.35355 3.64645C4.15829 3.45118 3.84171 3.45118 3.64645 3.64645C3.45118 3.84171 3.45118 4.15829 3.64645 4.35355L11.2929 12L3.64645 19.6464C3.45118 19.8417 3.45118 20.1583 3.64645 20.3536C3.84171 20.5488 4.15829 20.5488 4.35355 20.3536L12 12.7071L19.6464 20.3536C19.8417 20.5488 20.1583 20.5488 20.3536 20.3536C20.5488 20.1583 20.5488 19.8417 20.3536 19.6464L12.7071 12L20.3536 4.35355Z" />
-				</svg>
-			</button>
-			<div class="sidebar-menu">
-				<?php foreach ($topics as $topic): ?>
-					<a class='sidebar-menu-button' data-slug="<?= $topic->name ?>"
-						onclick="viewChat(event, '<?= $topic->name ?>')"
-						href="#"><?= Text::removeUnderscore($topic->name) ?></a>
-				<?php endforeach ?>
-			</div>
-		</div>
+
+	<div class="sidebar-ctn">
+		<sidebar-tab>
+			<button slot="trigger" class="tab-btn shadow-btn" id="toggle-btn">Topics</button>
+			<span slot="current-label"><?= Text::removeUnderscore($currentTopic) ?></span>
+
+			<?php foreach ($topics as $topic): ?>
+				<a slot="menu" class='sidebar-menu-button' data-slug="<?= $topic->name ?>"
+					onclick="viewChat(event, '<?= $topic->name ?>')"
+					href="#"><?= Text::removeUnderscore($topic->name) ?></a>
+			<?php endforeach ?>
+		</sidebar-tab>
+
 	</div>
 	<!--messages-->
 	<div class="messages">
@@ -42,8 +33,8 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 		</form>
 	</div>
 </div>
-<script src="/assets/js/sidebar.js"></script>
 <script type="module" src="/assets/js/components/Message.js"></script>
+<script src="/assets/js/components/SideBar.js"></script>
 
 <script>
 	const msgsDisplayCtn = document.querySelector(".msgs-display")
@@ -156,7 +147,7 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 				}
 				msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: 'smooth' });
 				currentTopic = topic;
-				document.querySelector(".sidebar-current-tab").innerText = currentTopic
+				document.querySelector('[slot="current-label"]').textContent = currentTopic
 			})
 			.catch((err) => console.error(`Fetch problem: ${err.message}`));
 	}
