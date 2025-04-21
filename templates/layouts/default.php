@@ -1,4 +1,5 @@
 <?php
+    use App\Entities\Role;
     use App\Helpers\Text;
     
     if(session_status() === 1){
@@ -11,6 +12,8 @@
     }
 
     $profile = Text::getFirstStr($_SESSION["username"]);
+    $role = $_SESSION["role"];
+    $roles = [Role::Admin];
 ?>
 
 <!DOCTYPE html>
@@ -48,6 +51,9 @@
                     <a href="/films">Films</a>
                     <a href="/podcast">Podcast</a>
                     <a href="/sensors">Capteurs</a>
+                    <?php if($role && in_array(Role::tryFrom($role), $roles)) : ?>
+                        <a href="/admin">Admin</a>
+                    <?php endif ?>
                 </div>
                 <div class="user-profile">
                     <span class="user-pofile-frame"><?= $profile ?></span>
