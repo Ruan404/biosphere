@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content='bienvenu dans le biosphere'>
-    <title><?= htmlspecialchars($title) ?? 'biosphère' ?></title>
+    <title><?= htmlspecialchars($title ?? 'biosphère') ?></title>
     <link rel="stylesheet" href="/assets/css/style.css" />
     <link rel="stylesheet" href="/assets/css/sign.css" />
 </head>

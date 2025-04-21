@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($title) ?? 'error occured' ?></title>
+    <title><?= htmlspecialchars($title ?? 'error occured') ?></title>
     <meta name="description" content='something went wrong'>
     <style>
         body,
