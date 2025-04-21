@@ -23,7 +23,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($title ?? 'title') ?></title>
-    <meta name="description" content=<?= htmlspecialchars($description ?? 'bienvenu dans le biosphere') ?>>
+    <meta name="description" content="<?=htmlspecialchars($description ?? 'bienvenu dans le biosphere')?>">
 
     <link rel="stylesheet" type="text/css" href="/assets/css/navbar.css">
     <link rel="stylesheet" type="text/css" href="/assets/css/style.css">

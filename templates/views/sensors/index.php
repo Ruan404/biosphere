@@ -1,3 +1,9 @@
+<?php
+    $style = "sensor";
+    $title = "station météo";
+    $description = "voir les données de la station météo";
+?>
+
 <div class="sensor-ctn">
     <table>
         <thead>
@@ -32,29 +38,3 @@
         }
     }
 </script>
-
-<style>
-    table,
-    tr,
-    td,
-    th {
-        border: 1px solid black;
-        border-collapse: collapse;
-    }
-
-    .sensor-ctn {
-        overflow-x: auto;
-    }
-
-    .sensor-value, .head {
-        padding: 0.5rem 1rem;
-    }
-    .head{
-        text-align: left;
-    }
-
-    .sensor {
-        padding: 0.5rem 1rem;
-        font-weight: bold;
-    }
-</style>
