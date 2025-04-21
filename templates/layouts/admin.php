@@ -1,18 +1,17 @@
 <?php
-    use App\Auth\AuthService;
-    use App\Helpers\Text;
-    $user = AuthService::getUserSession();
+use App\Helpers\Text;
 
-    //l'utilisiteur n'est pas connecté
-    if(session_status() === 1){
-        session_start();
-    }
-    if(!$_SESSION){
-       header('Location: /login');
-       exit();
-    }
+if (session_status() === 1) {
+    session_start();
+}
 
-    $profile = Text::getFirstStr($_SESSION["username"]);
+//l'utilisiteur n'est pas connecté
+if (!$_SESSION) {
+    header('Location: /login');
+    exit();
+}
+
+$profile = Text::getFirstStr($_SESSION["username"]);
 ?>
 
 <!DOCTYPE html>
@@ -22,11 +21,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $title ?? 'biosphere' ?></title>
-    <meta name="description" content=<?= $description ?? 'bienvenu dans le biosphere' ?>>
+    <meta name="description" content=<?= htmlspecialchars($description) ?? 'bienvenu dans le biosphere' ?>>
 
     <link rel="stylesheet" type="text/css" href="/assets/css/navbar.css">
     <link rel="stylesheet" type="text/css" href="/assets/css/style.css">
     <link rel="stylesheet" type="text/css" href="/assets/css/admin.css">
+    <?php if (isset($style)): ?>
+        <link rel="stylesheet" type="text/css" href=<?= '/assets/css/' . htmlspecialchars($style) . '.css' ?>>
+    <?php endif ?>
 
 </head>
 
@@ -42,7 +44,7 @@
                     </div>
                     <a href="/">Biosphère</a>
                 </div>
-                
+
                 <div class="user-profile">
                     <span class="user-pofile-frame"><?= $profile ?></span>
                     <a class="primary-btn" href="/logout">se déconnecter</a>

@@ -64,7 +64,7 @@ class AdminController
             $result = $this->filmService->chunkedUpload($videoFile, $chunkNumber, $totalChunks, $filename, $token);
 
             if ($result["state"] !== "done") {
-                return new Response()->json(["message" => "Chunk $chunkNumber uploaded successfully."]);
+                return new Response()->json(["message" => "chunk $chunkNumber téléchargé avec success."]);
             } else {
                 try {
                     $title = $_POST['title'];
@@ -75,16 +75,16 @@ class AdminController
 
                     if ($cover) {
                         $this->filmService->addFilm($title, $description, $result["path"], 'playlistPath', $cover, $result["token"]);
-                        return new Response()->json(["message" => "Upload complete"]);
+                        return new Response()->json(["message" => "téléchargement terminé"]);
                     }
                 } catch (Exception $e) {
                     error_log("Video upload failed: " . $e->getMessage());
-                    return new Response()->json(["error" => "An error occurred during upload."]);
+                    return new Response()->json(["error" => "une erreur s'est produite lors du téléchargement"]);
                 }
             }
         } catch (Exception $e) {
             error_log("Chunk upload failed: " . $e->getMessage());
-            return new Response()->json(["error" => "An error occurred during upload."]);
+            return new Response()->json(["error" => "une erreur s'est produite lors du téléchargement"]);
         }
     }
 
