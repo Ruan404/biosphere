@@ -190,12 +190,6 @@ videoInput.addEventListener("change", (event) => {
   let file = event.target.files[0];
 
   let video = URL.createObjectURL(file);
-  video.onload = () => {
-    const w = video.width;
-    const h = video.height;
-    console.log("NEW IMAGE width", w);
-    console.log("NEW IMAGE height: ", h);
-  };
   videoPreviewCtn.classList.add("show");
   document.querySelector("#video-preview").src = video;
   document.querySelector("#video-preview-file-name").textContent = file.name;
@@ -211,12 +205,7 @@ coverInput.addEventListener("change", (event) => {
   let file = event.target.files[0];
 
   let img = URL.createObjectURL(file);
-  img.onload = () => {
-    const w = img.width;
-    const h = img.height;
-    console.log("NEW IMAGE width", w);
-    console.log("NEW IMAGE height: ", h);
-  };
+  
   imagePreviewCtn.classList.add("show");
   document.querySelector("#image-preview").src = img;
   document.querySelector("#image-preview-file-name").textContent = file.name;
@@ -240,7 +229,6 @@ function validateStep(n) {
 
   for (var i = 0; i < inputs.length; i++) {
     if (inputs[i].value == "") {
-      console.log(inputs[i]);
       inputs[i].parentNode.classList.add("invalid");
       return false;
     }
