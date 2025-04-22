@@ -1,141 +1,116 @@
 <?php
-session_start(); // Toujours démarrer la session au début
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-use App\Helpers\Text;
-use App\Admin\AdminService;
-use App\Topic\TopicService;
+use App\Message\MessageService;
+use App\Auth\AuthService;
 
-$style = "message"; // Correction : le style doit être "admin" pour la gestion des utilisateurs
-$adminService = new AdminService();
+$style = "message";
+$messageService = new MessageService();
+$authService = new AuthService();
 
+if (!isset($_SESSION['username'], $_SESSION['user_id'])) {
+    header('Location: /login');
+    exit();
+}
 
-$users =[]; // Récupération des utilisateurs
-$messages = []; // Récupération des messages
-
-$currentTopic = isset($data['currentTopic']) ? htmlspecialchars($data['currentTopic']) : '';
-
+$currentUser = $_SESSION['username'];
+$currentUserId = $_SESSION['user_id'];
+$users = $messageService->getUsers();
 ?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Gestion</title>
-    <link rel="stylesheet" href="css/message<?= $style ?>.css"> <!-- Ajout correct du fichier CSS -->
+    <title>Messagerie</title>
+    <link rel="stylesheet" href="/assets/css/message.css">
 </head>
 <body>
 
+<header>
+</header>
 <div class="container">
-    <h1>Bienvenue, <?= htmlspecialchars($_SESSION['username'] ?? 'Utilisateur') ?> !</h1>
-    
-    <h2>Gestion des utilisateurs</h2>
-    <table class="admin-table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nom d'utilisateur</th>
-                <th>Rôle</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
+	<div class="user-list">
+    	<h2>Utilisateurs disponibles</h2>
+        <ul>
             <?php foreach ($users as $user): ?>
-                <tr>
-                    <td><?= htmlspecialchars($user['id']) ?></td>
-                    <td><?= htmlspecialchars($user['username']) ?></td>
-                    <td><?= $user['is_admin'] ? 'Administrateur' : 'Utilisateur' ?></td>
-                    <td>
-                        <?php if (!$user['is_admin']): ?>
-                            <button class="promote-btn" data-id="<?= htmlspecialchars($user['id']) ?>">Promouvoir</button>
-                        <?php endif; ?>
-                        <button class="delete-user-btn" data-id="<?= htmlspecialchars($user['id']) ?>">Supprimer</button>
-                    </td>
-                </tr>
+                <li>
+                    <a href="?user_id=<?= $user['id'] ?>"><?= htmlspecialchars($user['pseudo']) ?></a>
+                </li>
             <?php endforeach; ?>
-        </tbody>
-    </table>
-    
-    <h2>Gestion des Messages</h2>
-    <table class="admin-table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Auteur</th>
-                <th>Message</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($messages as $message): ?>
-                <tr>
-                    <td><?= htmlspecialchars($message['id']) ?></td>
-                    <td><?= htmlspecialchars($message['author']) ?></td>
-                    <td><?= htmlspecialchars($message['content']) ?></td>
-                    <td>
-                        <button class="delete-message-btn" data-id="<?= htmlspecialchars($message['id']) ?>">Supprimer</button>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
-    
-    <a href="../login">Déconnexion</a>
+        </ul>
+    </div>
 </div>
+<div class="message">
+	<div class="no-user">aucun utilisateur sélectionné</div>
+</div>
+<?php if (isset($_GET['user_id'])): ?>
+    <?php
+        $recipientId = (int) $_GET['user_id'];
+        $messages = $messageService->getMessages($recipientId);
+        $recipient = $messageService->getUserById($recipientId);
+    ?>
+
+    <?php if ($recipient): ?>
+        <div class="conversation">
+            <h2>Conversation avec <?= htmlspecialchars($recipient['pseudo']) ?></h2>
+
+            <div class="messages">
+                <?php foreach ($messages as $message): ?>
+                    <div class="message" data-id="<?= $message['id'] ?>">
+                        <p>
+                            <strong><?= htmlspecialchars($message['pseudo']) ?>:</strong>
+                            <?= nl2br(htmlspecialchars($message['message'])) ?>
+                        </p>
+                        <small><?= $message['date'] ?></small>
+                        <?php if ($message['id_auteur'] === $currentUserId || $_SESSION['role'] === 'admin'): ?>
+                            <button onclick="deleteMessage(<?= $message['id'] ?>)">Supprimer</button>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+
+            <form method="POST" action="/message/<?= $recipientId ?>">
+                <textarea name="message" placeholder="Écrivez votre message..." required></textarea>
+                <button type="submit">Envoyer</button>
+            </form>
+        </div>
+    <?php else: ?>
+        <p>Utilisateur introuvable.</p>
+    <?php endif; ?>
+<?php endif; ?>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Suppression des utilisateurs
-        document.querySelectorAll('.delete-user-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                let userId = this.dataset.id;
-                if (confirm("Voulez-vous vraiment supprimer cet utilisateur ?")) {
-                    fetch(`delete_user.php?id=${encodeURIComponent(userId)}`, { method: 'POST' })
-                        .then(response => response.json())
-                        .then(data => {
-                            alert(data.message);
-                            location.reload();
-                        });
+    // Récupère le user_id depuis l'URL (attendu comme segment)
+    const urlParams = new URLSearchParams(window.location.search);
+    const userIdParam = urlParams.get('user_id');
+    const userId = userIdParam ? userIdParam : '';
+
+    function deleteMessage(messageId) {
+        if (confirm("Êtes-vous sûr de vouloir supprimer ce message ?")) {
+            // Utilise l'URL avec segment : /message/<user_id>
+            const url = `/message/${userId}`;
+
+            fetch(url, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message_id: messageId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.querySelector(`.message[data-id='${messageId}']`)?.remove();
+                } else {
+                    alert("Erreur : " + data.message);
                 }
-            });
-        });
-
-        // Promotion des utilisateurs
-        document.querySelectorAll('.promote-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                let userId = this.dataset.id;
-                if (confirm("Promouvoir cet utilisateur en administrateur ?")) {
-                    fetch(`set_admin.php?id=${encodeURIComponent(userId)}`, { method: 'POST' })
-                        .then(response => response.json())
-                        .then(data => {
-                            alert(data.message);
-                            location.reload();
-                        });
-                }
-            });
-        });
-
-        // Suppression des messages
-        document.querySelectorAll('.delete-message-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                let messageId = this.dataset.id;
-                if (confirm("Voulez-vous vraiment supprimer ce message ?")) {
-                    fetch(`delete_message.php?id=${encodeURIComponent(messageId)}`, { method: 'POST' })
-                        .then(response => response.json())
-                        .then(data => {
-                            alert(data.message);
-                            location.reload();
-                        });
-                }
-            });
-        });
-    });
-
-    function showTab() {
-        document.querySelector('.topics').style.display = 'block';
-    }
-
-    function hideTab() {
-        document.querySelector('.topics').style.display = 'none';
+            })
+            .catch(() => alert("Erreur lors de la suppression."));
+        }
     }
 </script>
 
