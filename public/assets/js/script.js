@@ -1,18 +1,32 @@
-const burger = document.querySelector('.nav-btn')
-const burgerLines = burger.children
-const navLinks = document.querySelector('.nav-links')
+const burger = document.querySelector(".nav-btn");
+const burgerLines = burger.children;
+const navLinks = document.querySelector(".nav-links");
 
-const burgerL1 = burgerLines[0]
-const burgerL2 = burgerLines[1]
-const burgerL3 = burgerLines[2]
+const burgerL1 = burgerLines[0];
+const burgerL2 = burgerLines[1];
+const burgerL3 = burgerLines[2];
 
-burger.addEventListener("click", toggleNav)
-
+burger.addEventListener("click", toggleNav);
 
 function toggleNav() {
-    navLinks.classList.toggle('show')
-    burgerL1.classList.toggle('nav-btn-active-l1')
-    burgerL2.classList.toggle('hide')
-    burgerL3.classList.toggle('nav-btn-active-l3')
-    document.body.classList.toggle('no-overflow')
+  navLinks.classList.toggle("show");
+  burgerL1.classList.toggle("nav-btn-active-l1");
+  burgerL2.classList.toggle("hide");
+  burgerL3.classList.toggle("nav-btn-active-l3");
+  document.body.classList.toggle("no-overflow");
 }
+
+let controller; // global controller
+
+window.addEventListener("beforeunload", () => {
+  if (controller) {
+    controller.abort();
+  }
+
+  const video = document.querySelector("video");
+  if (video) {
+    video.pause();
+    video.removeAttribute("src");
+    video.load();
+  }
+});

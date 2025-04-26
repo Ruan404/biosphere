@@ -55,20 +55,10 @@ class TopicService
 
     public function deleteTopic($topicId): string
     {
-        try {
-            $topic = $this->getTopicById($topicId);
-            if ($topic === null) {
-                throw new NotFoundException("Topic could not be found");
-            }
-            $query = Database::getPDO()->prepare('DELETE FROM topic WHERE id = ?');
-            $query->execute([$topic->id]);
+        $query = Database::getPDO()->prepare('DELETE FROM topic WHERE id = ?');
+        $query->execute([$topicId]);
 
-            return "$topic->name has been successfully deleted";
-
-        } catch (PDOException $e) {
-            error_log("Database error: " . $e->getMessage());
-            throw new Exception("Something went wrong");
-        }
+        return "the topic has been successfully deleted";
     }
 
     public function addTopic($name): string
