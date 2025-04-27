@@ -1,10 +1,5 @@
 <?php
 use App\Helpers\Text;
-
-if (session_status() === 1) {
-    session_start();
-}
-
 $profile = Text::getFirstStr($_SESSION["username"]);
 ?>
 

@@ -7,6 +7,10 @@ function view($view, Layout $layout = Layout::Preset, array $data = [])
 {
     $viewPath = dirname(__DIR__) . '../../templates';
 
+    if (session_status() === 1) {
+        session_start();
+    }
+
     if ($layout !== Layout::Clean) {
         ob_start();
         require $viewPath . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . $view . '.php';

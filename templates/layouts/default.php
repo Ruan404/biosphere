@@ -2,9 +2,6 @@
     use App\Entities\Role;
     use App\Helpers\Text;
     
-    if(session_status() === 1){
-        session_start();
-    }
     $profile = Text::getFirstStr($_SESSION["username"]);
     $role = $_SESSION["role"];
     $roles = [Role::Admin];
