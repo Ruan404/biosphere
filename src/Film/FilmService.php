@@ -2,7 +2,7 @@
 namespace App\Film;
 
 use App\Core\Database;
-use App\Exceptions\BadRequestException;
+use App\Core\Exceptions\BadRequestException;
 use PDO;
 use Exception;
 use Dotenv\Dotenv;

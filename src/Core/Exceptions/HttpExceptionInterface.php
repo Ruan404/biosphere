@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Exceptions;
+namespace App\Core\Exceptions;
 
 interface HttpExceptionInterface {
     public function getStatusCode(): int;

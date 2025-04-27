@@ -2,14 +2,16 @@
 namespace App\Core;
 
 use AltoRouter;
-use App\Entities\Layout;
-use App\Entities\Role;
+use App\Attributes\Middlewares;
+use App\Entities\{
+    Layout,
+    Role
+};
 use ReflectionClass;
 use App\Attributes\{
     Route,
     Roles
 };
-use App\Auth\AuthService;
 use function App\Helpers\view;
 
 class Router
@@ -38,13 +40,27 @@ class Router
         return $this;
     }
 
+    public function middleware($callable)
+    {
+        call_user_func($callable);
+
+        return $this;
+    }
+
     public function registerController($controller)
     {
         $reflection = new ReflectionClass($controller);
-
-        $routeAttributes = $reflection->getAttributes();
+        $routeAttributes = $reflection->getAttributes(Route::class);
+        $middlewareAttributes = $reflection->getAttributes(Middlewares::class);
 
         $prefix = '';
+
+        $middlewares = [];
+
+        if (!empty($middlewareAttributes)) {
+            $attribute = $middlewareAttributes[0];
+            $middlewares = $attribute->newInstance()->name;
+        }
 
         if (!empty($routeAttributes)) {
             $prefix = $routeAttributes[0]->newInstance()->path;
@@ -66,7 +82,8 @@ class Router
                 $this->router->map($route->method, $prefix . $route->path, [
                     'controller' => $controller, //controller class
                     'action' => $method->getName(), //method name,
-                    'roles' => $roles
+                    'roles' => $roles,
+                    'middlewares' => $middlewares
                 ]);
             }
         }
@@ -79,24 +96,24 @@ class Router
         $match = $this->router->match();
         $target = $match['target'] ?? null;
 
-        if($target === null){
+        if ($target === null) {
             return view("/errors/404", Layout::Error);
         }
 
         $roles = $target["roles"] ?? [];
-
-        if (!empty($roles)) {
-            $user = AuthService::getUserSession();
-            if ($user === null) {
-                header("Location: /login");
-                exit;
+        $middlewares = $target["middlewares"];
+       
+        if(!empty($middlewares)){
+            foreach($middlewares as $middleware){
+                (new $middleware)->handle();
             }
-          
-            if (in_array(Role::tryFrom($user->role), $roles)) {
+        }
+        
+        if (!empty($roles)) {
+            if (in_array(Role::tryFrom($_SESSION['role']), $roles)) {
 
                 $this->handle($target, $match);
-            }
-            else{
+            } else {
                 header("Location: /");
                 exit;
             }

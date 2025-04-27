@@ -13,8 +13,11 @@ function view($view, Layout $layout = Layout::Preset, array $data = [])
         $content = ob_get_clean();
 
         require $viewPath . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . $layout->value . '.php';
+
+        exit();
     } else {
         require $viewPath . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . $view . '.php';
+        exit();
     }
 }
 

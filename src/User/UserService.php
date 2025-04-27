@@ -3,8 +3,8 @@
 namespace App\User;
 
 use App\Core\Database;
-use App\Exceptions\BadRequestException;
-use App\Exceptions\NotFoundException;
+use App\Core\Exceptions\BadRequestException;
+use App\Core\Exceptions\NotFoundException;
 use App\User\User;
 use Exception;
 use PDO;

@@ -1,7 +1,9 @@
 <?php
 namespace App\Film;
 
+use App\Attributes\Middlewares;
 use App\Attributes\Route;
+use App\Core\Middleware\IsLoggedIn;
 use App\Entities\Layout;
 use App\Helpers\Response;
 use Exception;
@@ -9,6 +11,7 @@ use function App\Helpers\view;
 use App\Film\FilmService;
 
 #[Route("GET", "/films")]
+#[Middlewares([IsLoggedIn::class])]
 class FilmController
 {
     private $filmService;

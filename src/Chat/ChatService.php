@@ -2,7 +2,7 @@
 
 namespace App\Chat;
 use App\Core\Database;
-use App\Exceptions\BadRequestException;
+use App\Core\Exceptions\BadRequestException;
 use App\Topic\TopicService;
 use Exception;
 use PDO;

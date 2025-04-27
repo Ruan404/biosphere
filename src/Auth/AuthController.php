@@ -2,7 +2,7 @@
 namespace App\Auth;
 
 use App\Entities\Layout;
-use App\Exceptions\HttpExceptionInterface;
+use App\Core\Exceptions\HttpExceptionInterface;
 use \App\User\{
     User
 };

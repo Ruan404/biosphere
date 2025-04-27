@@ -1,8 +1,8 @@
 <?php
 namespace App\Topic;
 use App\Core\Database;
-use App\Exceptions\BadRequestException;
-use App\Exceptions\NotFoundException;
+use App\Core\Exceptions\BadRequestException;
+use App\Core\Exceptions\NotFoundException;
 use Exception;
 use PDO;
 use PDOException;

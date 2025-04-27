@@ -5,12 +5,6 @@
     if(session_status() === 1){
         session_start();
     }
-    //l'utilisiteur n'est pas connecté
-    if(!$_SESSION){
-       header('Location: /login');
-       exit();
-    }
-
     $profile = Text::getFirstStr($_SESSION["username"]);
     $role = $_SESSION["role"];
     $roles = [Role::Admin];

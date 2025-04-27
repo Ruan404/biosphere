@@ -6,7 +6,7 @@ use \App\User\{
     UserService
 };
 
-use App\Exceptions\BadRequestException;
+use App\Core\Exceptions\BadRequestException;
 
 
 class AuthService
@@ -34,7 +34,7 @@ class AuthService
              * 1 ----> PHP_SESSION_NONE if sessions are enabled, but none exists.
              * 2 ----> PHP_SESSION_ACTIVE if sessions are enabled, and one exists.
              */
-            if (session_status() == PHP_SESSION_NONE) {
+            if (session_status() === 1) {
                 session_start();
                 $_SESSION['auth'] = $user->id;
                 $_SESSION['user_id'] = $user->id;
@@ -63,8 +63,9 @@ class AuthService
     {
         // Initialize the session.
         // If you are using session_name("something"), don't forget it now!
-        session_start();
-
+        if(session_status() === 1){
+            session_start();
+        }
         // Unset all of the session variables.
         $_SESSION = array();
 

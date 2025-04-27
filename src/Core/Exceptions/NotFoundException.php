@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Exceptions;
+namespace App\Core\Exceptions;
 
 Class NotFoundException extends HttpException{
     protected int $statusCode = 404;

@@ -4,9 +4,11 @@ use App\Attributes\{
     Route
 };
 
+use App\Attributes\Middlewares;
+use App\Core\Middleware\IsLoggedIn;
 use function App\Helpers\view;
 
-
+#[Middlewares([IsLoggedIn::class])]
 class HomeController
 {
     #[Route(method: "GET", path: "/")]
