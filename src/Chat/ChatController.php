@@ -45,12 +45,8 @@ class ChatController
                     header('Location: /chat');
                     exit();
                 }
-                $topicId = $topic->id;
 
-
-                // récupère l'id du dernier message affiché
-                $lastMessageId = $_GET['lastMessageId'] ?? 0;
-                $messages = new ChatService()->getChatMessages($topicId, $lastMessageId);
+                $messages = new ChatService()->getChatMessages($topic->id);
                 return new Response()->json(["messages" => $messages]);
             }
         } catch (Exception $e) {
