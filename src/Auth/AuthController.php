@@ -2,12 +2,11 @@
 namespace App\Auth;
 
 use App\Entities\Layout;
+use App\Entities\Role;
 use App\Exceptions\HttpExceptionInterface;
-use \App\User\{
-    User
-};
-
 use App\Attributes\Route;
+use App\User\Dto\CreateUserDto;
+use App\User\Dto\LoginUserDto;
 use Exception;
 use function App\Helpers\view;
 
@@ -35,11 +34,11 @@ class AuthController
             if (!empty($_POST)) {
 
                 //instantier la class user
-                $loginUser = new User($_POST['pseudo'], $_POST['password']);
+                $loginUserDto = new LoginUserDto($_POST['pseudo'], $_POST['password']);
 
-                $user = $this->authService->login($loginUser);
+                $user = $this->authService->login($loginUserDto);
 
-                if ($user->role === 'admin') {
+                if ($user->role === Role::Admin) {
                     header('Location: /admin'); // Redirige vers l'espace admin
                     exit();
                 } else {
@@ -70,10 +69,10 @@ class AuthController
             if (!empty($_POST)) {
 
                 //create a new user
-                $signupUser = new User($_POST['pseudo'], $_POST['password']);
+                $createUserDto = new CreateUserDto($_POST['pseudo'], $_POST['password']);
 
                 //essayer d'inscrire l'utilisateur
-                $this->authService->signup($signupUser);
+                $this->authService->signup($createUserDto);
 
                 header('Location: /login');
                 exit();

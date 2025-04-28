@@ -30,7 +30,6 @@ if ($_SERVER['REQUEST_URI'] !== '/' && str_ends_with($_SERVER['REQUEST_URI'], '/
         exit;
 }
 
-
 $router = new Router();
 
 $router->registerController(HomeController::class)

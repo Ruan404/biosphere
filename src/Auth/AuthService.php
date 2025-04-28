@@ -7,6 +7,8 @@ use \App\User\{
 };
 
 use App\Exceptions\BadRequestException;
+use App\User\Dto\CreateUserDto;
+use App\User\Dto\LoginUserDto;
 
 
 class AuthService
@@ -18,9 +20,9 @@ class AuthService
         $this->userService = new UserService();
     }
 
-    public function login(User $loginUser): ?User
+    public function login(LoginUserDto $loginUserDto): ?User
     {
-        $user = $this->userService->getUserByPseudo($loginUser->pseudo);
+        $user = $this->userService->getUserByPseudo($loginUserDto->pseudo);
 
         if ($user === null) {
             throw new BadRequestException("mauvais pseudo ou mot de passe");
@@ -28,7 +30,7 @@ class AuthService
         }
         //verify password
 
-        if (sha1($loginUser->mdp) == $user->mdp) {
+        if (sha1($loginUserDto->mdp) == $user->mdp) {
             /**
              * 0 ----> PHP_SESSION_DISABLED if sessions are disabled.
              * 1 ----> PHP_SESSION_NONE if sessions are enabled, but none exists.
@@ -48,10 +50,10 @@ class AuthService
         throw new BadRequestException("mauvais pseudo ou mot de passe");
     }
 
-    public function signup(User $signupUser)
+    public function signup(CreateUserDto $createUserDto)
     {
 
-        return $this->userService->createUser($signupUser);
+        return $this->userService->createUser($createUserDto);
     }
 
     /**

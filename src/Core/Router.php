@@ -92,7 +92,7 @@ class Router
                 exit;
             }
           
-            if (in_array(Role::tryFrom($user->role), $roles)) {
+            if (in_array($user->role, $roles)) {
 
                 $this->handle($target, $match);
             }

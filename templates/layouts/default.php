@@ -51,7 +51,7 @@
                     <a href="/films">Films</a>
                     <a href="/podcast">Podcast</a>
                     <a href="/sensors">Capteurs</a>
-                    <?php if($role && in_array(Role::tryFrom($role), $roles)) : ?>
+                    <?php if($role && in_array($role, $roles)) : ?>
                         <a href="/admin">Admin</a>
                     <?php endif ?>
                 </div>

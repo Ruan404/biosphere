@@ -3,6 +3,7 @@
 namespace App\Chat;
 
 use App\Auth\AuthService;
+use App\Entities\Role;
 //voir les messages par rapport à un topic
 /**
  * récupérer le topic
@@ -24,7 +25,7 @@ class Chat
         if (session_status() === 1) {
             session_start();
         }
-        $this->options = $this->getOptions($this->pseudo === $_SESSION['username'] || $_SESSION["role"] === "admin" );
+        $this->options = $this->getOptions($this->pseudo === $_SESSION['username'] || $_SESSION["role"] === Role::Admin);
     }
     public int $topic_id = 0 {
         get => $this->topic_id;

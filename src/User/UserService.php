@@ -5,6 +5,7 @@ namespace App\User;
 use App\Core\Database;
 use App\Exceptions\BadRequestException;
 use App\Exceptions\NotFoundException;
+use App\User\Dto\CreateUserDto;
 use App\User\User;
 use Exception;
 use PDO;
@@ -12,15 +13,15 @@ use PDOException;
 
 class UserService
 {
-    public function createUser(User $newUser): string
+    public function createUser(CreateUserDto $createUserDto): string
     {
         try {
             //verify if the user already exists in the database
-            $user = $this->getUserByPseudo($newUser->pseudo);
+            $user = $this->getUserByPseudo($createUserDto->pseudo);
 
             if ($user === null) {
                 $query = Database::getPDO()->prepare('INSERT INTO users(pseudo, mdp)VALUES(?, ?)');
-                $query->execute([htmlspecialchars($newUser->pseudo), sha1($newUser->mdp)]);
+                $query->execute([htmlspecialchars($createUserDto->pseudo), sha1($createUserDto->mdp)]);
                 $response = "your account has been created";
                 return $response;
             }

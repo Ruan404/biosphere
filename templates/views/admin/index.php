@@ -41,7 +41,7 @@ $films = $data['films'] ?? [];
                     <?php foreach ($users as $user): ?>
                         <tr>
                             <td><?= htmlspecialchars($user->pseudo) ?></td>
-                            <td><?= htmlspecialchars($user->role) ?></td>
+                            <td><?= htmlspecialchars(($user->role)->value) ?></td>
                             <td>
                                 <form action="admin/action" method="POST">
                                     <input type="hidden" name="action" value="delete_user">
