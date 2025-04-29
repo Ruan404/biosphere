@@ -46,7 +46,7 @@ class TopicService
             $topics = $query->fetchAll(PDO::FETCH_CLASS, Topic::class);
 
             return $topics;
-            
+
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());
             throw new Exception("Something went wrong");
@@ -64,14 +64,15 @@ class TopicService
     public function addTopic($name): string
     {
         try {
+            $newTopic = mb_strtolower(str_replace(' ', '_', $name));
             // On vérifie si le topic existe déjà
-            if ($this->getTopicByName($name)) {
+            if ($this->getTopicByName($newTopic)) {
                 throw new BadRequestException("The topic already exist"); // Si le topic existe, on ne l'ajoute pas
             }
 
             // On insère le nouveau topic
             $query = Database::getPDO()->prepare('INSERT INTO topic (name) VALUES (?)');
-            $query->execute([htmlspecialchars($name)]);
+            $query->execute([htmlspecialchars($newTopic)]);
 
             return "the topic $name has been successfully added";
 
