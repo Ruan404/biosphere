@@ -34,13 +34,15 @@ class ChatService extends Chat
         }
     }
 
-    public function getChatMessages(int $topicId): ?array
+    public function getChatMessages(int $topicId, int $lastMessageId): ?array
     {
 
         try {
-            $query = Database::getPDO()->prepare('SELECT chat.pseudo, chat.message, chat.date FROM chat WHERE topic_id = :topic ORDER BY chat.id ASC LIMIT 50');
+            $query = Database::getPDO()->prepare('SELECT chat.pseudo, chat.message, chat.date FROM chat WHERE topic_id = :topic AND chat.id > :lastMessageId ORDER BY chat.id ASC LIMIT 50');
+
 
             $query->bindParam(':topic', $topicId, PDO::PARAM_STR);
+            $query->bindParam(':lastMessageId', $lastMessageId, PDO::PARAM_INT);
             $query->execute();
 
             $messages = $query->fetchAll(PDO::FETCH_CLASS, Chat::class);
@@ -66,6 +68,18 @@ class ChatService extends Chat
 
         return $query->rowCount() > 0;
     }
+    
+     public function deleteMessagesAsAdmin(int $topicId, array $dates): bool
+     {
+        //$in_array = explode(',', $dates[0]);
+        $in = str_repeat('?,', count($dates) - 1) . '?';
+
+        $query = Database::getPDO()->prepare("DELETE FROM chat WHERE topic_id=? AND date IN ($in)");
+        $query->execute(array_merge([$topicId], $dates));
+
+        return $query->rowCount() > 0;
+     }
+
 
     public function deleteChat($topicId): string
     {

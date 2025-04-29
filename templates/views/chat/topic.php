@@ -34,13 +34,12 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 	</div>
 </div>
 <script type="module" src="/assets/js/components/Message.js"></script>
-<script src="/assets/js/components/SideBar.js"></script>
 
 <script>
 	const msgsDisplayCtn = document.querySelector(".msgs-display")
 	const form = document.querySelector(".send-msg-form")
 	var currentTopic = "<?= $currentTopic ?>";
-	const socket = new WebSocket(`ws://localhost:3000/chat/${currentTopic}`);
+	const socket = new WebSocket(`ws://10.44.64.199:3000/chat/${currentTopic}`);
 
 
 	//au chargement de la page
@@ -124,7 +123,7 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 		}
 
 		// New chat event
-		if (data.message) {
+		if (data.message && data.topic === currentTopic) {
 			displayMessages(data, false)
 			msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: 'smooth' });
 		}
