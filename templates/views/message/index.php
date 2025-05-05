@@ -5,6 +5,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 use App\Message\MessageService;
 use App\Auth\AuthService;
+use App\Helpers\Text;
 
 $style = "message";
 $messageService = new MessageService();
@@ -30,14 +31,23 @@ $users = $messageService->getUsers();
 </head>
 <body>
 
-<header>
-    <!-- Bouton hamburger pour ouvrir la liste des utilisateurs -->
-    <div class="hamburger-menu" onclick="toggleUserList()">☰</div>
-</header>
-
 <div class="container">
-    <!-- Liste des utilisateurs -->
+    <!-- Nouveau bouton pour mobile -->
+    <div class="tab-users mobile-only">
+        <button class="tab-btn shadow-btn" onclick="showUserList()">Contacts</button>
+        <?php if (isset($recipient)): ?>
+            <h3 class="current-contact"><?= htmlspecialchars($recipient['pseudo']) ?></h3>
+        <?php endif ?>
+    </div>
+
     <div class="user-list" id="userList">
+        <!-- Bouton de fermeture pour mobile -->
+        <!-- <button class="close-btn icon-btn mobile-only" onclick="hideUserList()" aria-label="Fermer la liste">
+            <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20.3536 4.35355C20.5488 4.15829 20.5488 3.84171 20.3536 3.64645C20.1583 3.45118 19.8417 3.45118 19.6464 3.64645L12 11.2929L4.35355 3.64645C4.15829 3.45118 3.84171 3.45118 3.64645 3.64645C3.45118 3.84171 3.45118 4.15829 3.64645 4.35355L11.2929 12L3.64645 19.6464C3.45118 19.8417 3.45118 20.1583 3.64645 20.3536C3.84171 20.5488 4.15829 20.5488 4.35355 20.3536L12 12.7071L19.6464 20.3536C19.8417 20.5488 20.1583 20.5488 20.3536 20.3536C20.5488 20.1583 20.5488 19.8417 20.3536 19.6464L12.7071 12L20.3536 4.35355Z"/>
+            </svg>
+        </button> -->
+        
         <h2>Utilisateurs disponibles</h2>
         <ul>
             <?php foreach ($users as $user): ?>
@@ -48,7 +58,6 @@ $users = $messageService->getUsers();
         </ul>
     </div>
 
-    <!-- Conteneur de conversation -->
     <div class="conversation-container">
         <?php if (isset($_GET['user_id'])): ?>
             <?php
@@ -57,7 +66,7 @@ $users = $messageService->getUsers();
                 $recipient = $messageService->getUserById($recipientId);
             ?>
             <?php if ($recipient): ?>
-                <div class="conversation">
+                <div class="conversation full-page">
                     <h2>Conversation avec <?= htmlspecialchars($recipient['pseudo']) ?></h2>
 
                     <div class="messages">
@@ -71,8 +80,8 @@ $users = $messageService->getUsers();
                             ></message-bubble>
                         <?php endforeach; ?>
                     </div>
-
-                    <form method="POST" action="/message/<?= $recipientId ?>">
+                            
+                    <form method="POST" action="/message/<?= $recipientId ?>" class="send-message-form">
                         <textarea name="message" placeholder="Écrivez votre message..." required></textarea>
                         <button type="submit">Envoyer</button>
                     </form>
@@ -85,22 +94,6 @@ $users = $messageService->getUsers();
         <?php endif; ?>
     </div>
 </div>
-
-<script>
-// Fonction pour basculer l'affichage de la liste des utilisateurs
-function toggleUserList() {
-    const userList = document.getElementById('userList');
-    userList.classList.toggle('show');
-}
-</script>
-
-<script>
-  // Lorsque le bouton "Close" est cliqué, on cache la liste des utilisateurs
-  document.querySelector('.close-btn').addEventListener('click', function() {
-    document.querySelector('.user-list').classList.add('closed');
-  });
-</script>
-
 
 <script>
 class MessageBubble extends HTMLElement {
@@ -141,8 +134,8 @@ class MessageBubble extends HTMLElement {
         style.textContent = `
             .bubble {
                 position: relative;
-                max-width: 60%;
-                margin: 0.5em 0;
+                max-width: 40%;
+                margin: 15px 0;
                 padding: 0.75em 1em;
                 background: #f0f0f0;
                 border-radius: 1em;
@@ -207,20 +200,67 @@ class MessageBubble extends HTMLElement {
             const menu = container.querySelector('.options-menu');
             const deleteBtn = container.querySelector('.delete-option');
 
-            menuBtn.addEventListener('click', function() {
+            menuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
                 menu.hidden = !menu.hidden;
             });
 
-            deleteBtn.addEventListener('click', function() {
-                fetch(`/message/delete/${messageId}`, {
-                    method: 'DELETE',
-                }).then(() => location.reload());
+            document.addEventListener('click', () => {
+                menu.hidden = true;
+            });
+
+            deleteBtn.addEventListener('click', () => {
+                if (confirm("Supprimer ce message ?")) {
+                    fetch(`/message/${userId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ message_id: messageId })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            this.remove();
+                        } else {
+                            alert("Erreur : " + data.message);
+                        }
+                    })
+                    .catch(() => alert("Erreur lors de la suppression."));
+                }
             });
         }
     }
 }
 
 customElements.define('message-bubble', MessageBubble);
+
+// Gestion de l'affichage mobile
+function showUserList() {
+    document.getElementById('userList').classList.add('show');
+    document.body.classList.add('no-scroll');
+}
+
+function hideUserList() {
+    document.getElementById('userList').classList.remove('show');
+    document.body.classList.remove('no-scroll');
+}
+
+// Fermer la liste si on clique à l'extérieur
+document.addEventListener('click', function(event) {
+    const userList = document.getElementById('userList');
+    if (event.target.closest('.tab-btn') || event.target.closest('.user-list')) return;
+    if (userList.classList.contains('show')) {
+        hideUserList();
+    }
+});
+
+// Fermer automatiquement quand on sélectionne un utilisateur
+document.querySelectorAll('.user-list a').forEach(link => {
+    link.addEventListener('click', () => {
+        hideUserList();
+    });
+});
 </script>
 
 </body>
