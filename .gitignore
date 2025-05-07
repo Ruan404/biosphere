@@ -11,8 +11,12 @@ vendor
 #rest
 .rest
 
-#stream feature
-VideoStream
-
 #uploads
 uploads
+
+#tests
+tests
+
+#phpunit
+.phpunit.result.cache
+phpunit.xml

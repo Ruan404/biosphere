@@ -1,8 +1,13 @@
- /* Container principal qui va contenir les deux sections */
+/* Container principal qui va contenir les deux sections */
 .container {
   display: flex;
   justify-content: flex-start;
-  gap: 20px;
+  height: 100%;
+  overflow: hidden;
+}
+
+main {
+  overflow: hidden;
 }
 
 /* Liste des utilisateurs sur la gauche */
@@ -14,9 +19,12 @@
   font-weight: bold;
   padding: 1.5rem 1rem;
   max-width: 360px;
-  background: rgb(var(--bg-2));
   border-radius: 0.5rem;
   transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  height: 100%;
+  overflow-y: auto;
+  padding-top: 1rem;
+  background: rgb(var(--bg-1));
 }
 
 /* Ajout du bouton Close pour mobile */
@@ -37,12 +45,7 @@
   row-gap: 0.875rem;
   padding: 0;
   margin: 0;
-  list-style: none
-}
-
-.user-list ul li {
-  padding: 10px 0;
-  border-bottom: 1px solid #ddd;
+  list-style: none;
 }
 
 .user-list ul li a {
@@ -65,12 +68,13 @@
 
 /* Conteneur de conversation */
 .conversation-container {
-  width: 65%;
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  padding: 10px;
-  position: relative;
+  width: 100%;
+  display: grid;
+  grid-template-rows: auto min-content;
+  height: 100%;
+  border-radius: 0.5rem 0.5rem 0 0;
+  overflow: hidden;
+  background: rgb(var(--bg-2));
 }
 
 /* Quand aucun utilisateur n'est sélectionné */
@@ -78,133 +82,75 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  height: 100%;
   margin: 1;
 }
 
 .full-page {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
   overflow: hidden; /* pour éviter un scroll externe */
 }
 
 /* Le style des messages dans la conversation */
 .messages {
-  /* display: flex;
-  flex-direction: column; */
-  /* margin-bottom: 10px; */
-  flex-grow: 1; 
-  overflow-y: auto; 
-  padding-bottom: 90px; 
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  row-gap: 0.875rem;
 }
 
 .send-message-form {
   display: flex;
-  gap: 10px;
-  padding: 15px;
-  /* border-top: 1px solid #ddd; */
-  background-color: #fff;
-  position: fixed; 
-  bottom: 0;
-  left: 25%; /*pour ne pas recouvrir la liste utilisateur  */
-  right: 0;
+  gap: 0.875rem;
+  padding: 0.875rem 1rem;
 }
 
-textarea {
-  flex-grow: 1;
-  height: 50px;
-  resize: none;
-  border: 1px solid #ccc;
-  border-radius: 20px;
-  padding: 10px 15px;
-  font-size: 14px;
-  font-family: Arial, sans-serif;
+.title {
+  padding: 1rem;
+  border-bottom: 1px solid rgb(var(--bg-3),0.35);
+  display: flex;
+  align-items: center;
+  column-gap: 0.875rem;
+
 }
 
-button {
-  background-color: black;
-  color: white;
-  border: none;
-  padding: 12px 20px;
-  border-radius: 20px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s ease;
-}
-
-button:hover {
-  background-color: #333;
+.title h2 {
+  font-weight: 500;
 }
 
 /* Style des bulles de message */
 .bubble {
-  position: relative;
-  background: #f0f0f0;
-  border-radius: 15px;
-  padding: 10px;
-  margin-bottom: 15px;
-  width: fit-content;
-  max-width: 80%;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  column-gap: 0.875rem;
 }
 
-:host([align="right"]) .bubble {
-  background: #d1e7dd;
-  margin-left: auto;
-  text-align: right;
-}
-
-.bottom {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 0.5em;
-}
-
-small {
-  font-size: 0.75em;
-  color: #888;
+.bubble.right{
+  justify-items: end;
 }
 
 /* Styles pour l'affichage mobile */
 .mobile-only {
   display: none;
 }
-      
+
 .tab-users {
   display: none;
-  padding: 10px;
-  background: white;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
-      
-.tab-btn {
-  background: #f0f0f0;
-  border: none;
-  padding: 8px 15px;
-  border-radius: 20px;
-  cursor: pointer;
-  font-weight: bold;
-}
-      
+
 .current-contact {
   margin: 10px 0;
   font-size: 1.2rem;
-  }
+}
 
 /* Partie mobile */
 @media (max-width: 768px) {
-  .mobile-only {
-    display: block !important;
-  }
-
   /* Container principal devient en colonne */
   .container {
     flex-direction: column;
-    margin-top: 10px;
   }
 
   /* Liste des utilisateurs devient une liste déroulante ou peut être masquée */
@@ -213,11 +159,7 @@ small {
     top: 0;
     left: -100%;
     width: 80%;
-    height: 100%;
-    background: white;
     z-index: 100;
-    padding: 20px;
-    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
     transition: left 0.3s ease;
     overflow-y: auto;
   }
@@ -230,33 +172,6 @@ small {
     display: flex;
     align-items: center;
     gap: 15px;
-}
-
-.container {
-    padding-top: 60px;
-}
-  /* Pour le conteneur de conversation */
-  .conversation-container {
-    width: 100%;
-    padding: 10px;
-  }
-
-  /* Le textarea prend toute la largeur */
-  textarea {
-    width: 100%;
-  }
-
-  /* Les messages dans la conversation prennent toute la largeur */
-  .messages {
-    width: 100%;
-    padding: 10px;
-  }
-
-  /* Bullles de messages ajustées pour les petits écrans */
-  .bubble {
-    width: 90%;
-    padding: 10px;
-    font-size: 14px;
   }
 
   /* La fenêtre de messagerie ne sera plus en deux colonnes */
@@ -265,12 +180,6 @@ small {
     text-align: center;
     color: #888;
     padding: 10px;
-  }
-
-  button {
-    width: 100%;
-    padding: 12px;
-    margin-top: 10px;
   }
 
   /* Les icônes de suppression dans les bulles de message sont ajustées */
@@ -296,5 +205,4 @@ small {
     right: 0;
     width: 100%;
   }
-
 }

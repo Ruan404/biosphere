@@ -21,24 +21,8 @@ $currentUserId = $_SESSION['user_id'];
 $users = $messageService->getUsers();
 ?>
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Messagerie</title>
-    <link rel="stylesheet" href="/assets/css/message.css">
-</head>
-<body>
 
 <div class="container">
-    <!-- Nouveau bouton pour mobile -->
-    <div class="tab-users mobile-only">
-        <button class="tab-btn shadow-btn" onclick="showUserList()">Contacts</button>
-        <?php if (isset($recipient)): ?>
-            <h3 class="current-contact"><?= htmlspecialchars($recipient['pseudo']) ?></h3>
-        <?php endif ?>
-    </div>
 
     <div class="user-list" id="userList">
         <!-- Bouton de fermeture pour mobile -->
@@ -47,7 +31,7 @@ $users = $messageService->getUsers();
                 <path d="M20.3536 4.35355C20.5488 4.15829 20.5488 3.84171 20.3536 3.64645C20.1583 3.45118 19.8417 3.45118 19.6464 3.64645L12 11.2929L4.35355 3.64645C4.15829 3.45118 3.84171 3.45118 3.64645 3.64645C3.45118 3.84171 3.45118 4.15829 3.64645 4.35355L11.2929 12L3.64645 19.6464C3.45118 19.8417 3.45118 20.1583 3.64645 20.3536C3.84171 20.5488 4.15829 20.5488 4.35355 20.3536L12 12.7071L19.6464 20.3536C19.8417 20.5488 20.1583 20.5488 20.3536 20.3536C20.5488 20.1583 20.5488 19.8417 20.3536 19.6464L12.7071 12L20.3536 4.35355Z"/>
             </svg>
         </button> -->
-        
+
         <h2>Utilisateurs disponibles</h2>
         <ul>
             <?php foreach ($users as $user): ?>
@@ -61,31 +45,31 @@ $users = $messageService->getUsers();
     <div class="conversation-container">
         <?php if (isset($_GET['user_id'])): ?>
             <?php
-                $recipientId = (int) $_GET['user_id'];
-                $messages = $messageService->getMessages($recipientId);
-                $recipient = $messageService->getUserById($recipientId);
+            $recipientId = (int) $_GET['user_id'];
+            $messages = $messageService->getMessages($recipientId);
+            $recipient = $messageService->getUserById($recipientId);
             ?>
             <?php if ($recipient): ?>
                 <div class="conversation full-page">
-                    <h2>Conversation avec <?= htmlspecialchars($recipient['pseudo']) ?></h2>
+                    <div class="title">
+                        <div class="tab-users mobile-only">
+                            <button class="tab-btn shadow-btn" onclick="showUserList()">Contacts</button>
 
+                        </div>
+                        <h2>Conversation avec <?= htmlspecialchars($recipient['pseudo']) ?></h2>
+                    </div>
                     <div class="messages">
                         <?php foreach ($messages as $message): ?>
-                            <message-bubble
-                                content="<?= htmlspecialchars($message['message']) ?>"
-                                date="<?= $message['date'] ?>"
-                                message-id="<?= $message['id'] ?>"
-                                <?= $message['id_auteur'] === $currentUserId || $_SESSION['role'] === 'admin' ? 'can-delete' : '' ?>
-                                <?= $message['id_auteur'] === $currentUserId ? 'align="right"' : '' ?>
-                            ></message-bubble>
+                            <message-bubble class="<?= $message['id_auteur'] === $currentUserId ? 'bubble right' : 'bubble' ?>"
+                                content="<?= htmlspecialchars($message['message']) ?>" date="<?= $message['date'] ?>"
+                                message-id="<?= $message['id'] ?>" <?= $message['id_auteur'] === $currentUserId || $_SESSION['role'] === 'admin' ? 'can-delete' : '' ?>></message-bubble>
                         <?php endforeach; ?>
                     </div>
-                            
-                    <form method="POST" action="/message/<?= $recipientId ?>" class="send-message-form">
-                        <textarea name="message" placeholder="Écrivez votre message..." required></textarea>
-                        <button type="submit">Envoyer</button>
-                    </form>
                 </div>
+                <form method="POST" action="/message/<?= $recipientId ?>" class="send-message-form">
+                    <textarea name="message" placeholder="Écrivez votre message..." required></textarea>
+                    <button class="primary-btn" type="submit">Envoyer</button>
+                </form>
             <?php else: ?>
                 <p>Utilisateur introuvable.</p>
             <?php endif; ?>
@@ -96,27 +80,28 @@ $users = $messageService->getUsers();
 </div>
 
 <script>
-class MessageBubble extends HTMLElement {
-    constructor() {
-        super();
-        this.shadow = this.attachShadow({ mode: 'open' });
-    }
+    class MessageBubble extends HTMLElement {
+        constructor() {
+            super();
+            this.shadow = this.attachShadow({ mode: 'open' });
+        }
 
-    connectedCallback() {
-        this.render();
-    }
+        connectedCallback() {
+            this.render();
+        }
 
-    render() {
-        const content = this.getAttribute('content') || '';
-        const date = this.getAttribute('date') || '';
-        const messageId = this.getAttribute('message-id');
-        const userId = new URLSearchParams(window.location.search).get('user_id');
-        const canDelete = this.hasAttribute('can-delete');
+        render() {
+            const content = this.getAttribute('content') || '';
+            const date = this.getAttribute('date') || '';
+            const messageId = this.getAttribute('message-id');
+            const userId = new URLSearchParams(window.location.search).get('user_id');
+            const canDelete = this.hasAttribute('can-delete');
 
-        const container = document.createElement('div');
-        container.classList.add('bubble');
 
-        container.innerHTML = `
+            const container = document.createElement('div');
+            container.classList.add('bubble');
+
+            container.innerHTML = `
             <p class="content">${content}</p>
             <div class="bottom">
                 <small>${date}</small>
@@ -130,29 +115,36 @@ class MessageBubble extends HTMLElement {
             </div>
         `;
 
-        const style = document.createElement('style');
-        style.textContent = `
+            const style = document.createElement('style');
+            style.textContent = `
+            *{
+                margin: 0;
+                padding: 0;
+            }
             .bubble {
                 position: relative;
-                max-width: 40%;
-                margin: 15px 0;
-                padding: 0.75em 1em;
-                background: #f0f0f0;
-                border-radius: 1em;
-                font-family: Arial, sans-serif;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 0.5rem 0.75rem;
+                gap: 0.625rem;
                 word-wrap: break-word;
+                grid-column: 1 / span 5;
+                border-radius: 0.5rem;
+                background: rgb(var(--bg-1));
+                font-size: 0.875rem;
+                max-width: fit-content;
             }
-            :host([align="right"]) .bubble {
-                background: #d1e7dd;
-                margin-left: auto;
-                text-align: right;
+            :host(.bubble.right) .bubble{
+                grid-column: span 5 / -1;
+                background: rgb(var(--bg-4));
             }
             .bottom {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                margin-top: 0.5em;
+                width: 100%;
+                column-gap: 1rem
             }
             .menu-wrapper {
                 position: relative;
@@ -186,82 +178,89 @@ class MessageBubble extends HTMLElement {
                 background-color: #eee;
             }
             small {
-                font-size: 0.75em;
-                color: #888;
+                font-size: 0.625em;
+                color: rgb(var(--fg-1), 0.6);
+            }
+
+            @media (max-width: 768px) { 
+                .bubble{
+                    grid-column: 1 / span 11;
+                }
+
+                :host(.bubble.right) .bubble{ 
+                    grid-column: span 11 / -1;
+                }
             }
         `;
 
-        this.shadow.innerHTML = '';
-        this.shadow.appendChild(style);
-        this.shadow.appendChild(container);
+            this.shadow.innerHTML = '';
+            this.shadow.appendChild(style);
+            this.shadow.appendChild(container);
 
-        if (canDelete) {
-            const menuBtn = container.querySelector('.menu-btn');
-            const menu = container.querySelector('.options-menu');
-            const deleteBtn = container.querySelector('.delete-option');
+            if (canDelete) {
+                const menuBtn = container.querySelector('.menu-btn');
+                const menu = container.querySelector('.options-menu');
+                const deleteBtn = container.querySelector('.delete-option');
 
-            menuBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                menu.hidden = !menu.hidden;
-            });
+                menuBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    menu.hidden = !menu.hidden;
+                });
 
-            document.addEventListener('click', () => {
-                menu.hidden = true;
-            });
+                document.addEventListener('click', () => {
+                    menu.hidden = true;
+                });
 
-            deleteBtn.addEventListener('click', () => {
-                if (confirm("Supprimer ce message ?")) {
-                    fetch(`/message/${userId}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ message_id: messageId })
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            this.remove();
-                        } else {
-                            alert("Erreur : " + data.message);
-                        }
-                    })
-                    .catch(() => alert("Erreur lors de la suppression."));
-                }
-            });
+                deleteBtn.addEventListener('click', () => {
+                    if (confirm("Supprimer ce message ?")) {
+                        fetch(`/message/${userId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ message_id: messageId })
+                        })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.status === 'success') {
+                                    this.remove();
+                                } else {
+                                    alert("Erreur : " + data.message);
+                                }
+                            })
+                            .catch(() => alert("Erreur lors de la suppression."));
+                    }
+                });
+            }
         }
     }
-}
 
-customElements.define('message-bubble', MessageBubble);
+    customElements.define('message-bubble', MessageBubble);
 
-// Gestion de l'affichage mobile
-function showUserList() {
-    document.getElementById('userList').classList.add('show');
-    document.body.classList.add('no-scroll');
-}
-
-function hideUserList() {
-    document.getElementById('userList').classList.remove('show');
-    document.body.classList.remove('no-scroll');
-}
-
-// Fermer la liste si on clique à l'extérieur
-document.addEventListener('click', function(event) {
-    const userList = document.getElementById('userList');
-    if (event.target.closest('.tab-btn') || event.target.closest('.user-list')) return;
-    if (userList.classList.contains('show')) {
-        hideUserList();
+    // Gestion de l'affichage mobile
+    function showUserList() {
+        document.getElementById('userList').classList.add('show');
+        document.body.classList.add('no-scroll');
     }
-});
 
-// Fermer automatiquement quand on sélectionne un utilisateur
-document.querySelectorAll('.user-list a').forEach(link => {
-    link.addEventListener('click', () => {
-        hideUserList();
+    function hideUserList() {
+        document.getElementById('userList').classList.remove('show');
+        document.body.classList.remove('no-scroll');
+    }
+
+    // Fermer la liste si on clique à l'extérieur
+    document.addEventListener('click', function (event) {
+        const userList = document.getElementById('userList');
+        if (event.target.closest('.tab-btn') || event.target.closest('.user-list')) return;
+        if (userList.classList.contains('show')) {
+            hideUserList();
+        }
     });
-});
-</script>
 
-</body>
-</html>
+    // Fermer automatiquement quand on sélectionne un utilisateur
+    document.querySelectorAll('.user-list a').forEach(link => {
+        link.addEventListener('click', () => {
+            hideUserList();
+        });
+    });
+</script>
