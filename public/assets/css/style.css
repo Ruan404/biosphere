@@ -178,6 +178,13 @@ footer {
   text-transform: uppercase;
 }
 
+.sidebar-title{
+  padding-bottom: 0.875rem;
+  position: sticky;
+  top: 0;
+  background: rgb(var(--bg-1));
+}
+
 .black-mask::after {
   content: "";
   width: 100%;
