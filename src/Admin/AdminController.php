@@ -8,12 +8,14 @@ use App\Admin\AdminService;
 use App\Entities\Layout;
 use App\Entities\Role;
 use App\Film\FilmService;
+use App\Helpers\Response;
 use App\Topic\TopicService;
 use App\User\UserService;
+use Exception;
 use function App\Helpers\view;
 ini_set('max_execution_time', 300);
 
-#[Route("GET", "/admin")]
+
 class AdminController
 {
     private $adminService;
@@ -25,7 +27,7 @@ class AdminController
         $this->filmService = new FilmService();
     }
 
-    #[Route("GET", "")]
+    #[Route("GET", "/admin")]
     #[Roles(array(Role::Admin))]
     public function index()
     {
@@ -36,7 +38,7 @@ class AdminController
         return view(view: "/admin/index", data: ['users' => $users, 'topics' => $topics, 'films' => $films], layout: Layout::Admin);
     }
 
-    #[Route("GET", "/film/upload")]
+    #[Route("GET", "/admin/film/upload")]
     #[Roles(array(Role::Admin))]
     public function upload()
     {
@@ -48,24 +50,45 @@ class AdminController
     #[Roles(array(Role::Admin))]
     public function uploadFilm()
     {
-        if ($_SERVER["REQUEST_METHOD"] !== "POST" || !isset($_FILES["video"]) || !isset($_FILES["cover"])) {
-            die("Invalid request.");
+        try {
+            $token = $_POST['token'];
+            $videoFile = $_FILES['file'];
+            $chunkNumber = (int) ($_POST['step']);
+            $totalChunks = (int) ($_POST['totalChunks']);
+            $filename = $_POST['filename'];
+        } catch (Exception) {
+            return new Response()->json(["error" => "Invalid upload data."], 400);
         }
 
-        $videoFile = $_FILES["video"];
-        $coverFile = $_FILES["cover"];
-    
         try {
-            $videoToken = $this->filmService->handleFilmUpload($videoFile, $coverFile);
-            echo "Video uploaded. <a href='/films/watch/$videoToken'>Watch here</a>";
-        } catch (\Exception $e) {
-            die("Upload failed: " . $e->getMessage());
+            $result = $this->filmService->chunkedUpload($videoFile, $chunkNumber, $totalChunks, $filename, $token);
+
+            if ($result["state"] !== "done") {
+                return new Response()->json(["message" => "chunk $chunkNumber téléchargé avec success."]);
+            } else {
+                try {
+                    $title = $_POST['title'];
+                    $description = $_POST['description'];
+                    $coverFile = $_FILES['cover'];
+
+                    $cover = $this->filmService->uploadImage($coverFile, $result["token"]);
+
+                    if ($cover) {
+                        $this->filmService->addFilm($title, $description, $result["path"], 'playlistPath', $cover, $result["token"]);
+                        return new Response()->json(["message" => "téléchargement terminé"]);
+                    }
+                } catch (Exception $e) {
+                    error_log("Video upload failed: " . $e->getMessage());
+                    return new Response()->json(["error" => "une erreur s'est produite lors du téléchargement"]);
+                }
+            }
+        } catch (Exception $e) {
+            error_log("Chunk upload failed: " . $e->getMessage());
+            return new Response()->json(["error" => "une erreur s'est produite lors du téléchargement"]);
         }
     }
 
-
-
-    #[Route("POST", "/action")]
+    #[Route("POST", "/admin/action")]
     #[Roles(array(Role::Admin))]
     public function handleActions()
     {

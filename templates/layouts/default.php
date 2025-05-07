@@ -1,15 +1,19 @@
 <?php
-    use App\Auth\AuthService;
+    use App\Entities\Role;
     use App\Helpers\Text;
-    $user = AuthService::getUserSession();
-
+    
+    if(session_status() === 1){
+        session_start();
+    }
     //l'utilisiteur n'est pas connecté
-    if($user == null){
+    if(!$_SESSION){
        header('Location: /login');
        exit();
     }
 
-    $profile = Text::getFirstStr($user->pseudo);
+    $profile = Text::getFirstStr($_SESSION["username"]);
+    $role = $_SESSION["role"];
+    $roles = [Role::Admin];
 ?>
 
 <!DOCTYPE html>
@@ -18,13 +22,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $title ?? 'biosphere' ?></title>
-    <meta name="description" content=<?= $description ?? 'bienvenu dans le biosphere' ?>>
+    <title><?= htmlspecialchars($title ?? 'title') ?></title>
+    <meta name="description" content="<?=htmlspecialchars($description ?? 'bienvenu dans le biosphere')?>">
 
     <link rel="stylesheet" type="text/css" href="/assets/css/navbar.css">
     <link rel="stylesheet" type="text/css" href="/assets/css/style.css">
     <?php if (isset($style)): ?>
-        <link rel="stylesheet" type="text/css" href=<?= '/assets/css/' . $style . '.css' ?>>
+        <link rel="stylesheet" type="text/css" href=<?= '/assets/css/' . htmlspecialchars($style) . '.css' ?>>
     <?php endif ?>
 
 </head>
@@ -47,6 +51,9 @@
                     <a href="/films">Films</a>
                     <a href="/podcast">Podcast</a>
                     <a href="/sensors">Capteurs</a>
+                    <?php if($role && in_array(Role::tryFrom($role), $roles)) : ?>
+                        <a href="/admin">Admin</a>
+                    <?php endif ?>
                 </div>
                 <div class="user-profile">
                     <span class="user-pofile-frame"><?= $profile ?></span>

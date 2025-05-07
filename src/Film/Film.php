@@ -56,9 +56,9 @@ class Film
     }
 
     public string $file_path {
-        get => $this->file_path;
+        get => htmlspecialchars($this->file_path);
     }
     public string $playlist_path {
-        get => $this->playlist_path;
+        get => htmlspecialchars($this->playlist_path);
     }
 }

@@ -6,6 +6,8 @@ use \App\User\{
     UserService
 };
 
+use App\Exceptions\BadRequestException;
+
 
 class AuthService
 {
@@ -20,11 +22,11 @@ class AuthService
     {
         $user = $this->userService->getUserByPseudo($loginUser->pseudo);
 
-        //verify password
+        if ($user === null) {
+            throw new BadRequestException("mauvais pseudo ou mot de passe");
 
-        if ($user == null) {
-            return null;
         }
+        //verify password
 
         if (sha1($loginUser->mdp) == $user->mdp) {
             /**
@@ -37,21 +39,19 @@ class AuthService
                 $_SESSION['auth'] = $user->id;
                 $_SESSION['user_id'] = $user->id;
                 $_SESSION['username'] = $user->pseudo;
-                $_SESSION['is_admin'] = $user->role;
+                $_SESSION['role'] = $user->role;
                 return $user;
             }
 
             return $user;
         }
-
-        return null;
+        throw new BadRequestException("mauvais pseudo ou mot de passe");
     }
 
-    public function signup(User $signupUser): bool
+    public function signup(User $signupUser)
     {
-        $result = $this->userService->createUser($signupUser);
 
-        return $result;
+        return $this->userService->createUser($signupUser);
     }
 
     /**
@@ -99,13 +99,11 @@ class AuthService
             session_start();
         }
 
-        if( empty($_SESSION['auth'])){
+        if (empty($_SESSION['auth'])) {
             return null;
         }
 
-        $userService = new UserService();
-
-        $user = $userService->getUserById($_SESSION['auth']);
+        $user = new UserService()->getUserById($_SESSION['auth']);
 
         return $user;
 

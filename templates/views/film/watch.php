@@ -1,36 +1,25 @@
 <?php
-
 use Dotenv\Dotenv;
-
-$style = "film";
-$description = "regarder une vidéo";
 $dotenv = Dotenv::createImmutable(__DIR__ . '/../../../');
 $dotenv->load();
 
-$video = $data;
+$style = "film";
+$description = "visionner une vidéo du biosphère";
+$title = "regarder une vidéo";
 
-// Convert absolute path to relative URL
-$playlistUrl = str_replace($_ENV['HLS_DIR'], '/uploads/hls/', $video['playlist_path']);
+$filePath = "";
 
+if($data){
+    $filePath = explode($_ENV['UPLOAD_DIR'], $data['file_path'])[1];
+}
 ?>
 
-<div class="film-ctn">
-    <div class="film-card">
-        <h2><?= htmlspecialchars($video['title']) ?></h2>
-        <video id="videoPlayer" controls></video>
-    </div>
+<div class="video-container">
+    <video controls>
+        <source src="/stream/<?= urlencode($filePath) ?>" >
+        Your browser does not support the video tag.
+    </video>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-
 <script>
-    var video = document.getElementById('videoPlayer');
-    var videoSrc = "<?= $playlistUrl ?>";
-
-    if (Hls.isSupported()) {
-        var hls = new Hls();
-        hls.loadSource(videoSrc);
-        hls.attachMedia(video);
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = videoSrc;
-    }
+    controller = new AbortController();
 </script>

@@ -1,66 +1,40 @@
-<div class="sensors">
-    <div class="sensor-ctn">
-    </div>
+<?php
+    $style = "sensor";
+    $title = "station météo";
+    $description = "voir les données de la station météo";
+?>
+
+<div class="sensor-ctn">
+    <table>
+        <thead>
+            <tr>
+                <th class="head">Capteur</th>
+                <th class="head">Valeur</th>
+            </tr>
+        </thead>
+        <tbody id="sensor-table-body">
+
+        </tbody>
+    </table>
 </div>
 
 
 <script>
-    const socket = new WebSocket(`ws://localhost:8000/bar`);
+    const socket = new WebSocket(`ws://localhost:3000/bar`);
 
     // When a message is received from the WebSocket server
     socket.onmessage = function (event) {
         const data = JSON.parse(event.data);
-        console.log(data)
-        // document.querySelector(".sensor-ctn").innerHTML += `<h2>Topic : ${data.topic}</h2>    <div class="sensor-data"></div>`
+        const tbody = document.getElementById("sensor-table-body");
+        tbody.innerHTML = ""; // Clear previous entries
 
-        if (data.message) {
-            var message = JSON.parse(data.message)
-            console.log(message)
-            document.querySelector(".sensor-ctn").innerHTML += `
-                <div class="sensor-info">
-                    <p>${message["end_device_id"]}</p>
-                </div>
-                <div class="sensor-data"></div>
-            `
-
-            if (message.payload) {
-                document.querySelector(".sensor-data").innerHTML += `
-                    <div class="sensor">
-                        <p class="sensor-key">${message.payload}</p>
-                    </div>
-                `
-            }
+        for (const [sensor, value] of Object.entries(data)) {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+            <td class="sensor">${sensor}</td>
+            <td class="sensor-value">${value}</td>
+            `;
+            tbody.appendChild(row);
         }
-
     }
 </script>
-
-<style>
-    .sensor-ctn {
-        display: grid;
-        border-radius: 1rem;
-        background: rgb(var(--bg-2));
-        width: fit-content;
-        overflow: hidden;
-    }
-
-    .sensor-info{
-        background: rgb(var(--bg-3));
-        color: rgb(var(--fg-2));
-        padding: 1rem 1.5rem;
-    }
-
-    .sensor-data {
-        border-bottom-right-radius: 1rem;
-        border-bottom-left-radius: 1rem;
-        overflow: hidden;
-        border: 1px solid rgb(var(--bg-3));
-    }
-
-    .sensor {
-        display: flex;
-        justify-content: space-between;
-        padding: 0.5rem 1.5rem 0.5rem;
-        border-top: 1px solid rgb(var(--bg-3));
-    }
-</style>
