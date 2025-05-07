@@ -47,8 +47,8 @@ class AuthController
                     exit();
                 }
             }
-        } catch (HttpExceptionInterface $e) {
-            // return new Response()->json([$e->getMessage()], $e->getStatusCode());
+        } catch (HttpExceptionInterface $e) {            
+            http_response_code($e->getStatusCode());
             return view(view: 'auth/login', layout: $this->layout, data: ['error' => true]);
 
         } catch (Exception $e) {
@@ -79,6 +79,7 @@ class AuthController
                 exit();
             }
         } catch (HttpExceptionInterface $e) {
+            http_response_code($e->getStatusCode());
             return view(view: 'auth/signup', layout: $this->layout, data: ['error' => true]);
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());

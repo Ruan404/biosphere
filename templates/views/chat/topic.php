@@ -46,6 +46,9 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 	//au chargement de la page
 	window.addEventListener("load", () => {
 		if (currentTopic) {
+			let topic = currentTopic;
+			history.pushState({ topic }, `chat ${topic}`, `/chat/${topic}`)
+		
 			document.querySelector(`[data-slug=${currentTopic}]`).classList.add("current")
 			fetchData(currentTopic)
 		}
@@ -58,33 +61,27 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 
 			ev.target.classList.add("current")
 			history.pushState({ topic }, `chat ${topic}`, `/chat/${topic}`)
-
 			fetchData(topic)
-
-			currentTopic = topic
 		}
 	}
 
 	// This event listener will capture when the user navigates forward or backward
 	window.addEventListener('popstate', function (event) {
 		if (event.state) {
-			const topic = event.state.topic
+			const topic = event.state.topic;
 
-			if (topic != currentTopic) {
-				history.pushState({ topic }, `chat ${topic}`, `/chat/${topic}`)
+			if (topic !== currentTopic) {
+				currentTopic = topic; // Update your state variable
+				document.querySelector(".sidebar-menu-button.current")?.classList.remove("current");
+				document.querySelector(`[data-slug=${topic}]`)?.classList.add("current");
 
-				fetchData(topic)
-
-				currentTopic = topic
-
-				document.querySelector(".sidebar-current-tab").innerText = currentTopic
-				document.querySelector(".sidebar-menu-button.current").classList.remove("current")
-				document.querySelector(`[data-slug=${currentTopic}]`).classList.add("current")
+				fetchData(topic);
 			}
 		} else {
 			console.log('No state associated with this entry');
 		}
 	});
+
 
 	form.addEventListener("submit", (ev) => {
 		ev.preventDefault();
@@ -124,7 +121,7 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 		}
 
 		// New chat event
-		if (data.message) {
+		if (data.message && data.topic === currentTopic) {
 			displayMessages(data, false)
 			msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: 'smooth' });
 		}
@@ -145,6 +142,7 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 						displayMessages(chat)
 					});
 				}
+
 				msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: 'smooth' });
 				currentTopic = topic;
 				document.querySelector('[slot="current-label"]').textContent = currentTopic

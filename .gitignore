@@ -14,3 +14,10 @@ vendor
 
 #uploads
 uploads
+
+#tests
+tests
+
+#phpunit
+.phpunit.result.cache
+phpunit.xml

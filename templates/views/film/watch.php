@@ -20,3 +20,6 @@ if($data){
         Your browser does not support the video tag.
     </video>
 </div>
+<script>
+    controller = new AbortController();
+</script>

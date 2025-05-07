@@ -90,12 +90,20 @@ class ChatController
                     session_start();
                 }
                 $user = $_SESSION["username"];
+                $role = $_SESSION["role"];
 
                 if ($user) {
                     $topic = new TopicService()->getTopicByName($params["slug"]);
+                    
 
                     if ($topic) {
-                        $response = new ChatService()->deleteMyMessages($user, $topic->id, [$data["messages"]]);
+                        if ($role === "admin") {
+                            $response = new ChatService()->deleteMessagesAsAdmin($topic->id, [$data["messages"]]);
+                        } else {
+                            // Sinon, ne supprime que ses propres messages
+                            $response = new ChatService()->deleteMyMessages($user, $topic->id, [$data["messages"]]);
+                        }
+                        
                         if ($response) {
                             return new Response()->json(["success" => "deletion succeeded", "action" => "delete",...$data]);
                         }
@@ -133,7 +141,7 @@ class ChatController
 
                 $result = new chatService()->addMessage($chat, $topicId);
 
-                return new Response()->json($chat);
+                return new Response()->json([...$chat, 'topic'=>$topic->name]);
 
             }
             return new Response()->json(["error" => "enter required fields"], 400);

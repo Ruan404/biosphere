@@ -12,12 +12,13 @@ body {
   --bg-1: 253, 254, 255;
   --bg-2: 234, 240, 244;
   --bg-3: 27, 37, 46;
+  --bg-4: 187, 215, 237;
   --fg-1: 42, 48, 53;
   --fg-2: 253, 254, 255;
   --fg-3: 4, 107, 190;
-  --accent-blue: 93, 182, 255;
-  --accent-pink: 255, 236, 233;
-  --accent-red: 228, 88, 66;
+  --accent-blue: 58, 163, 249;
+  --accent-error-bg: 255, 236, 233;
+  --accent-error-border: 228, 88, 66;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -25,12 +26,13 @@ body {
     --bg-1: 21, 27, 31;
     --bg-2: 38, 48, 55;
     --bg-3: 245, 248, 251;
+    --bg-4: 26, 108, 175;
     --fg-1: 253, 254, 255;
     --fg-2: 0, 15, 27;
     --fg-3: 93, 182, 255;
     --accent-blue: 0, 109, 198;
-    --accent-pink: 255, 236, 233;
-    --accent-red: 228, 88, 66;
+    --accent-error-bg: 94, 30, 20;
+    --accent-error-border: 207, 111, 96;
   }
 }
 
@@ -131,6 +133,12 @@ textarea {
 
 :is(input[type="text"], input[type="password"], textarea):focus-visible {
   outline-color: rgb(var(--accent-blue));
+}
+
+button:disabled{
+  background: rgb(var(--bg-3), 0.8);
+  color: rgb(var(--fg-2));
+  pointer-events: none;
 }
 
 /*titles*/

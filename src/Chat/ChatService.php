@@ -68,6 +68,18 @@ class ChatService extends Chat
 
         return $query->rowCount() > 0;
     }
+    
+     public function deleteMessagesAsAdmin(int $topicId, array $dates): bool
+     {
+        //$in_array = explode(',', $dates[0]);
+        $in = str_repeat('?,', count($dates) - 1) . '?';
+
+        $query = Database::getPDO()->prepare("DELETE FROM chat WHERE topic_id=? AND date IN ($in)");
+        $query->execute(array_merge([$topicId], $dates));
+
+        return $query->rowCount() > 0;
+     }
+
 
     public function deleteChat($topicId): string
     {
