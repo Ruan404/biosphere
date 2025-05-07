@@ -155,6 +155,7 @@ $users = $messageService->getUsers();
                 font-size: 1.2em;
                 cursor: pointer;
                 padding: 0;
+                color: inherit;
             }
             .options-menu {
                 position: absolute;
