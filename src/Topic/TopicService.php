@@ -3,6 +3,7 @@ namespace App\Topic;
 use App\Core\Database;
 use App\Exceptions\BadRequestException;
 use App\Exceptions\NotFoundException;
+use App\Topic\Dto\TopicAdminPanelDto;
 use Exception;
 use PDO;
 use PDOException;
@@ -44,6 +45,20 @@ class TopicService
         try {
             $query = Database::getPDO()->query('SELECT name FROM topic ORDER BY topic.name ASC');
             $topics = $query->fetchAll(PDO::FETCH_CLASS, Topic::class);
+
+            return $topics;
+
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong");
+        }
+    }
+
+    public function adminAllTopics(): ?array
+    {
+        try {
+            $query = Database::getPDO()->query('SELECT name FROM topic ORDER BY topic.name ASC');
+            $topics = $query->fetchAll(PDO::FETCH_CLASS, TopicAdminPanelDto::class);
 
             return $topics;
 

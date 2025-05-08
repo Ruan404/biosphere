@@ -25,17 +25,42 @@ class AdminController
     {
         $this->adminService = new AdminService();
         $this->filmService = new FilmService();
+
+        if (session_status() == 1) {
+            session_start();
+        }
     }
 
     #[Route("GET", "/admin")]
     #[Roles(array(Role::Admin))]
     public function index()
     {
-        $users = new UserService()->getUsers();
+        $users = new UserService()->getUsersExceptOne($_SESSION['user_id']);
         $topics = new TopicService()->getAllTopics();
         $films = new FilmService()->getAllFilms();
 
         return view(view: "/admin/index", data: ['users' => $users, 'topics' => $topics, 'films' => $films], layout: Layout::Admin);
+    }
+
+    #[Route("GET", "/admin/[*:tab]")]
+    #[Roles(array(Role::Admin))]
+    public function getData($params)
+    {
+        $tab = htmlspecialchars($params["tab"]);
+        switch ($tab) {
+            case "users":
+                $users = new UserService()->getUsersExceptOne($_SESSION['user_id']);
+
+                return new Response()->json(['label' => 'utilisateurs', 'data' => $users]);
+
+            case "topics":
+                $topics = new TopicService()->adminAllTopics();
+
+                return new Response()->json(['label' => 'topics', 'data' => $topics]);
+
+            default :
+                return new Response()->json([]);
+        }
     }
 
     #[Route("GET", "/admin/film/upload")]
@@ -92,12 +117,14 @@ class AdminController
     #[Roles(array(Role::Admin))]
     public function handleActions()
     {
-        if (isset($_POST['action'])) {
-            $action = $_POST['action'];
-            $pseudo = $_POST['pseudo'] ?? null;
-            $topic = $_POST['topic'] ?? null;
-            $podcast = $_POST['podcast'] ?? null;
-            $film = $_POST['film'] ?? null;
+        $data = json_decode(file_get_contents('php://input'), true);
+        // dd($data);
+        if (isset($data)) {
+            $action = $data['action'];
+            $pseudo = $data['item']['pseudo'] ?? null;
+            $topic = $data['item']['topic'] ?? null;
+            $podcast = $data['item']['podcast'] ?? null;
+            $film = $data['item']['film'] ?? null;
 
             switch ($action) {
                 case 'delete_user':
@@ -147,7 +174,7 @@ class AdminController
                     break;
             }
 
-            header("location: /admin");
+            // header("location: /admin");
         }
     }
 }

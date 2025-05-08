@@ -5,6 +5,7 @@ namespace App\User;
 use App\Core\Database;
 use App\Exceptions\BadRequestException;
 use App\Exceptions\NotFoundException;
+use App\User\Dto\UserAdminPanelDto;
 use App\User\User;
 use Exception;
 use PDO;
@@ -113,15 +114,12 @@ class UserService
         }
     }
 
-    public function getUsers(): array
+    public function getUsersExceptOne($userId): array
     {
         try {
-            if (session_status() == 1) {
-                session_start();
-            }
             $query = Database::getPDO()->prepare('SELECT pseudo, role FROM users WHERE id!= ?');
-            $query->execute([htmlspecialchars($_SESSION['user_id'])]);
-            $users = $query->fetchAll(PDO::FETCH_CLASS, User::class);
+            $query->execute([htmlspecialchars($userId)]);
+            $users = $query->fetchAll(PDO::FETCH_CLASS, UserAdminPanelDto::class);
 
             return $users;
 
