@@ -28,7 +28,7 @@ class AuthService
         }
         //verify password
 
-        if (sha1($loginUser->mdp) == $user->mdp) {
+        if (password_verify($loginUser->mdp, $user->mdp) || sha1($loginUser->mdp) == $user->mdp) {
             /**
              * 0 ----> PHP_SESSION_DISABLED if sessions are disabled.
              * 1 ----> PHP_SESSION_NONE if sessions are enabled, but none exists.
