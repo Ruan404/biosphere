@@ -15,7 +15,10 @@
     "require": {
         "altorouter/altorouter": "^2.0",
         "vlucas/phpdotenv": "^5.6",
-        "php-mqtt/client": "^2.2"
+        "php-mqtt/client": "^2.2",
+        "guzzlehttp/guzzle": "^7.9",
+        "psr/http-server-handler": "^1.0",
+        "psr/http-server-middleware": "^1.0"
     },
     "require-dev": {
         "filp/whoops": "^2.17",

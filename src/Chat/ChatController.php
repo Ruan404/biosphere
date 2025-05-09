@@ -6,8 +6,8 @@ use App\Attributes\Route;
 use App\Auth\AuthService;
 use App\Entities\Layout;
 use App\Exceptions\BadRequestException;
-use App\Exceptions\HttpExceptionInterface;
-use App\Helpers\Response;
+use Psr\Http\Message\ServerRequestInterface;
+use function App\Helpers\json;
 use App\Topic\TopicService;
 use App\Chat\ChatService;
 use DateTime;
@@ -19,13 +19,14 @@ use function App\Helpers\view;
 #[Route("GET", "/chat")]
 class ChatController
 {
-    private $authService;
     private $topics;
+
+    private $chatService;
 
     public function __construct()
     {
-        $this->authService = new AuthService();
         $this->topics = new TopicService()->getAllTopics();
+        $this->chatService = new ChatService();
     }
 
     #[Route("GET", "")]
@@ -35,23 +36,23 @@ class ChatController
     }
 
     #[Route("GET", "/api/[*:slug]")]
-    public function getChat($params)
+    public function getChat($request)
     {
+        $params = $request->getAttribute('params');
         try {
             if (isset($params['slug'])) {
                 $topic = new TopicService()->getTopicByName(htmlspecialchars($params['slug']));
                 //topic does not exists
                 if ($topic == null) {
-                    header('Location: /chat');
-                    exit();
+                    return json(["success"=>false, "message"=>"le topic n'existe pas"], 404);
                 }
+
                 $topicId = $topic->id;
 
 
-                // récupère l'id du dernier message affiché
-                $lastMessageId = $_GET['lastMessageId'] ?? 0;
-                $messages = new ChatService()->getChatMessages($topicId, $lastMessageId);
-                return new Response()->json(["messages" => $messages]);
+                $messages = $this->chatService->getChatMessages($topicId);
+
+                return json(["messages" => $messages]);
             }
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());
@@ -61,15 +62,16 @@ class ChatController
 
 
     #[Route("GET", "/[*:slug]")]
-    public function viewChat($params)
+    public function viewChat($request)
     {
+        $params = $request->getAttribute('params');
+
         try {
             if (isset($params['slug'])) {
                 $topic = new TopicService()->getTopicByName(htmlspecialchars($params['slug']));
                 //topic does not exists
                 if ($topic === null) {
-                    header('Location: /chat');
-                    exit();
+                    return view("/errors/404", Layout::Error);
                 }
                 return view(view: '/chat/topic', data: ['topics' => $this->topics, 'currentTopic' => $topic->name]);
             }
@@ -80,32 +82,31 @@ class ChatController
     }
 
     #[Route("DELETE", "/[*:slug]")]
-    public function deleteMyMessages($params)
+    public function deleteMyMessages(ServerRequestInterface $request)
     {
-        try {
-            if ($_SERVER['REQUEST_METHOD'] === "DELETE" && isset($params['slug'])) {
-                $data = json_decode(file_get_contents('php://input'), true);
+        $params = $request->getAttribute('params');
 
-                if (session_status() === 1) {
-                    session_start();
-                }
+        try {
+            if ($request->getMethod() === "DELETE" && isset($params['slug'])) {
+                $data = json_decode($request->getBody()->getContents(), true);
+
                 $user = $_SESSION["username"];
                 $role = $_SESSION["role"];
 
                 if ($user) {
                     $topic = new TopicService()->getTopicByName($params["slug"]);
-                    
+
 
                     if ($topic) {
                         if ($role === "admin") {
-                            $response = new ChatService()->deleteMessagesAsAdmin($topic->id, [$data["messages"]]);
+                            $response = $this->chatService->deleteMessagesAsAdmin($topic->id, [$data["messages"]]);
                         } else {
                             // Sinon, ne supprime que ses propres messages
-                            $response = new ChatService()->deleteMyMessages($user, $topic->id, [$data["messages"]]);
+                            $response = $this->chatService->deleteMyMessages($user, $topic->id, [$data["messages"]]);
                         }
-                        
+
                         if ($response) {
-                            return new Response()->json(["success" => "deletion succeeded", "action" => "delete",...$data]);
+                            return json(["success" => "deletion succeeded", "action" => "delete", ...$data]);
                         }
                     }
                 }
@@ -118,35 +119,35 @@ class ChatController
 
 
     #[Route("POST", "/[*:slug]")]
-    public function addMessage($params)
+    public function addMessage($request)
     {
+        $params = $request->getAttribute('params');
+
+        $data = $request->getParsedBody();
+
+
         try {
-            if (!empty($_POST) && isset($params['slug'])) {
+            if (!empty($data) && isset($params['slug'])) {
                 $topic = new TopicService()->getTopicByName(htmlspecialchars($params['slug']));
                 //topic does not exists
                 if ($topic == null) {
-                    return $this->index();
+                    return json(["success"=>false, "message"=>"le topic n'existe pas"], 404);
                 }
-                $topicId = $topic->id;
 
-                //create a new chat
-                if (session_status() === 1) {
-                    session_start();
-                }
                 $timezone = new DateTimeZone('Europe/Paris');
                 $date = new DateTime("now", $timezone)->format('Y-m-d H:i:s');
 
                 $chat = new Chat($_SESSION["username"], $date);
-                $chat->message = $_POST['message'];
+                $chat->message = $data['message'];
 
-                $result = new chatService()->addMessage($chat, $topicId);
+                $this->chatService->addMessage($chat, $topic->id);
 
-                return new Response()->json([...$chat, 'topic'=>$topic->name]);
+                return json([...$chat, 'topic' => $topic->name]);
 
             }
-            return new Response()->json(["error" => "enter required fields"], 400);
+            return json(["error" => "enter required fields"], 400);
         } catch (BadRequestException $e) {
-            return new Response()->json(["error" => $e->getMessage()], $e->getCode());
+            return json(["error" => $e->getMessage()], $e->getCode());
 
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());

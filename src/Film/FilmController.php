@@ -3,7 +3,7 @@ namespace App\Film;
 
 use App\Attributes\Route;
 use App\Entities\Layout;
-use App\Helpers\Response;
+use function App\Helpers\json;
 use Exception;
 use function App\Helpers\view;
 use App\Film\FilmService;
@@ -34,15 +34,16 @@ class FilmController
     }
 
     #[Route("GET", "/details/[*:token]")]
-    public function details($token)
+    public function details($request)
     {
+        $params = $request->getAttribute('params');
         try {
-            $video = $this->filmService->getFilmByToken($token['token']);
+            $video = $this->filmService->getFilmByToken($params['token']);
             if ($video === null) {
 
-                return new Response()->json(["error" => "the video was not found"]);
+                return json(["error" => "the video was not found"]);
             }
-            return new Response()->json($video, 200);
+            return json($video, 200);
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());
             return view("/errors/500", Layout::Error);
@@ -50,14 +51,17 @@ class FilmController
     }
 
     #[Route("GET", "/watch/[*:token]")]
-    public function watchVideo($token)
+    public function watchVideo($request)
     {
+        $params = $request->getAttribute('params');
+
         try {
-            $video = $this->filmService->getFilmByToken($token["token"]);
+            $video = $this->filmService->getFilmByToken($params["token"]);
             if ($video === null) {
                 return view(view: "/errors/404", data: ["error" => "video was not found"]);
             }
             return view(view: "/film/watch", data: $video);
+            
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());
             return view("/errors/500", Layout::Error);

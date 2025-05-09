@@ -6,11 +6,15 @@ use App\Chat\ChatController;
 use App\Film\FilmController;
 use App\Core\Router;
 use App\Home\HomeController;
+use App\Middleware\CsrfMiddleware;
+use App\Middleware\IsLoggedInMiddleware;
+use App\Middleware\RemoveTrailingSlashMiddleware;
 use App\Podcast\PodcastController;
 use App\Admin\AdminController;
 use App\Sensor\SensorController;
 Use App\Message\MessageController;
 use App\VideoStream\VideoStreamController;
+use GuzzleHttp\Psr7\ServerRequest;
 
 
 $whoops = new \Whoops\Run;
@@ -19,28 +23,33 @@ $whoops->register();
 
 define('DEBUG_TIME', microtime(true));
 
-// Redirect if URL has a trailing slash (but is not just "/")
-if ($_SERVER['REQUEST_URI'] !== '/' && str_ends_with($_SERVER['REQUEST_URI'], '/')) {
-        // Keep query string intact
-        $uri = rtrim($_SERVER['REQUEST_URI'], '/');
-        if (!empty($_SERVER['QUERY_STRING'])) {
-                $uri .= '?' . $_SERVER['QUERY_STRING'];
-        }
+$request = ServerRequest::fromGlobals();
 
-        header("Location: $uri", true, 301);
-        exit;
+$app = new Router();
+
+$isLoggedIn = new IsLoggedInMiddleware();
+
+$app->registerController(HomeController::class, [$isLoggedIn]);
+$app->registerController(AuthController::class);
+$app->registerController(ChatController::class, [$isLoggedIn]);
+$app->registerController(FilmController::class, [$isLoggedIn]);
+$app->registerController(PodcastController::class, [$isLoggedIn]);
+$app->registerController(AdminController::class, [$isLoggedIn]);
+$app->registerController(SensorController::class, [$isLoggedIn]);
+$app->registerController(VideoStreamController::class, [$isLoggedIn]);
+$app->registerController(MessageController::class, [$isLoggedIn]);
+
+$handler = $app->middleware(
+    [new RemoveTrailingSlashMiddleware()],
+    $app
+);
+
+$response = $handler->handle($request);
+
+http_response_code($response->getStatusCode());
+foreach ($response->getHeaders() as $name => $values) {
+    foreach ($values as $value) {
+        header("$name: $value", false);
+    }
 }
-
-
-$router = new Router();
-
-$router->registerController(HomeController::class)
-        ->registerController(AuthController::class)
-        ->registerController(ChatController::class)
-        ->registerController(FilmController::class)
-        ->registerController(PodcastController::class)
-        ->registerController(AdminController::class)
-        ->registerController(SensorController::class)
-        ->registerController(VideoStreamController::class)
-        ->registerController(MessageController::class)
-        ->run();
+echo $response->getBody();

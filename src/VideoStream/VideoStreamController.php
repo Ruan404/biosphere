@@ -12,8 +12,10 @@ class VideoStreamController
 {
     #[Roles(array(Role::Admin, Role::User))]
     #[Route("GET", "/stream/[*:file]")]
-    public function stream($params)
+    public function stream($request)
     {
+        $params = $request->getAttribute("params");
+        
         if (empty($_SERVER['HTTP_RANGE'])) {
             return view("/errors/404", Layout::Error);
         }

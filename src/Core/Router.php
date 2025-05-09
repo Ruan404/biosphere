@@ -1,48 +1,43 @@
 <?php
+
 namespace App\Core;
 
 use AltoRouter;
-use App\Entities\Layout;
-use App\Entities\Role;
+use GuzzleHttp\Psr7\Response;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use ReflectionClass;
-use App\Attributes\{
-    Route,
-    Roles
-};
-use App\Auth\AuthService;
-use function App\Helpers\view;
+use ReflectionMethod;
+use App\Attributes\Route;
+use App\Attributes\Middleware;
 
-class Router
+class Router implements RequestHandlerInterface
 {
     private AltoRouter $router;
-
 
     public function __construct()
     {
         $this->router = new AltoRouter();
-    }
 
-    private function handle($target, $match)
+    }
+    
+    public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $controller = new $target['controller'](); //instantiate the controller class
-        $action = $target['action']; //get the class method
-
-        //there is some parameters in the url
-        if ($match['params'] != null) {
-            //use the method with params
-            $controller->$action($match['params']);
-        } else {
-            $controller->$action(); //use the method
-        }
-
-        return $this;
+        return $this->run($request);
     }
 
-    public function registerController($controller)
+    public function map(string $method, string $path, callable|RequestHandlerInterface $controller): void
+    {
+        $this->router->map($method, $path, $controller);
+    }
+
+    public function registerController($controller, array $controllerMiddlewares = []): void
     {
         $reflection = new ReflectionClass($controller);
 
-        $routeAttributes = $reflection->getAttributes();
+        $routeAttributes = $reflection->getAttributes(Route::class);
 
         $prefix = '';
 
@@ -50,60 +45,91 @@ class Router
             $prefix = $routeAttributes[0]->newInstance()->path;
         }
 
-        foreach ($reflection->getMethods() as $method) {
+        foreach ($reflection->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+            $routeAttr = $method->getAttributes(Route::class)[0] ?? null;
+            if (!$routeAttr)
+                continue;
 
-            $attributes = $method->getAttributes(Route::class);
-            $rolesAttributes = $method->getAttributes(Roles::class);
+            $route = $routeAttr->newInstance();
 
-            if (empty($attributes)) {
-                continue; //reviens au début de la boucle sans exécuter la suite
+            // method-level middleware
+            $middlewareAttr = $method->getAttributes(Middleware::class)[0] ?? null;
+            $methodMiddlewares = [];
+
+            if ($middlewareAttr) {
+                foreach ($middlewareAttr->newInstance()->classes as $class) {
+                    $methodMiddlewares[] = new $class();
+                }
             }
 
-            foreach ($attributes as $attribute) {
-                $roles = $rolesAttributes ? $rolesAttributes[0]->newInstance()->roles : [];
-                $route = $attribute->newInstance();
+            // combined middleware stack
+            $allMiddlewares = array_merge($controllerMiddlewares, $methodMiddlewares);
 
-                $this->router->map($route->method, $prefix . $route->path, [
-                    'controller' => $controller, //controller class
-                    'action' => $method->getName(), //method name,
-                    'roles' => $roles
-                ]);
-            }
+            $handler = fn(ServerRequestInterface $req) => $method->invoke(new $controller(), $req);
+
+            $this->map(
+                $route->method,
+                $prefix . $route->path,
+                $this->middleware($allMiddlewares, $handler)
+            );
         }
-
-        return $this;
     }
 
-    public function run()
+    public function middleware(array $middlewares, callable|RequestHandlerInterface $handler): RequestHandlerInterface
+    {
+        $finalHandler = $handler instanceof RequestHandlerInterface
+            ? $handler
+            : new class ($handler) implements RequestHandlerInterface {
+            public function __construct(private $handler)
+            {
+            }
+
+            public function handle(ServerRequestInterface $request): ResponseInterface
+            {
+                return ($this->handler)($request);
+            }
+            };
+
+        return array_reduce(
+            array_reverse($middlewares),
+            fn(RequestHandlerInterface $next, MiddlewareInterface $middleware) =>
+            new class ($middleware, $next) implements RequestHandlerInterface {
+            public function __construct(
+                    private MiddlewareInterface $middleware,
+                    private RequestHandlerInterface $next
+                ) {
+                }
+
+                public function handle(ServerRequestInterface $request): ResponseInterface
+                {
+                    return $this->middleware->process($request, $this->next);
+                }
+                },
+            $finalHandler
+        );
+    }
+
+    public function run(ServerRequestInterface $request): ResponseInterface
     {
         $match = $this->router->match();
         $target = $match['target'] ?? null;
 
-        if($target === null){
-            return view("/errors/404", Layout::Error);
+        if (!$target) {
+            return new Response(404, ['Content-Type' => 'text/plain'], 'Not Found');
         }
 
-        $roles = $target["roles"] ?? [];
-
-        if (!empty($roles)) {
-            $user = AuthService::getUserSession();
-            if ($user === null) {
-                header("Location: /login");
-                exit;
-            }
-          
-            if (in_array(Role::tryFrom($user->role), $roles)) {
-
-                $this->handle($target, $match);
-            }
-            else{
-                header("Location: /");
-                exit;
-            }
-        } elseif (empty($roles)) {
-            $this->handle($target, $match);
+        if (!empty($match['params'])) {
+            $request = $request->withAttribute('params', $match['params']);
         }
 
-        return $this;
+        if ($target instanceof RequestHandlerInterface) {
+            return $target->handle($request);
+        }
+
+        if (is_callable($target)) {
+            return $target($request, new Response());
+        }
+
+        return new Response(500, ['Content-Type' => 'text/plain'], 'Invalid route handler');
     }
 }

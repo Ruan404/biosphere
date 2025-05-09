@@ -8,7 +8,8 @@ use App\Admin\AdminService;
 use App\Entities\Layout;
 use App\Entities\Role;
 use App\Film\FilmService;
-use App\Helpers\Response;
+use Psr\Http\Message\ServerRequestInterface;
+use function App\Helpers\json;
 use App\Topic\TopicService;
 use App\User\UserService;
 use Exception;
@@ -48,43 +49,46 @@ class AdminController
     // Route for handling the video upload and HLS conversion
     #[Route("POST", "/film/upload")]
     #[Roles(array(Role::Admin))]
-    public function uploadFilm()
+    public function uploadFilm(ServerRequestInterface $request)
     {
+        $data = $request->getParsedBody();
+        $files = $request->getUploadedFiles();
+        
         try {
-            $token = $_POST['token'];
-            $videoFile = $_FILES['file'];
-            $chunkNumber = (int) ($_POST['step']);
-            $totalChunks = (int) ($_POST['totalChunks']);
-            $filename = $_POST['filename'];
+            $token = $data['token'];
+            $videoFile = $files['file'];
+            $chunkNumber = (int) ($data['step']);
+            $totalChunks = (int) ($data['totalChunks']);
+            $filename = $data['filename'];
         } catch (Exception) {
-            return new Response()->json(["error" => "Invalid upload data."], 400);
+            return json(["error" => "Invalid upload data."], 400);
         }
 
         try {
             $result = $this->filmService->chunkedUpload($videoFile, $chunkNumber, $totalChunks, $filename, $token);
 
             if ($result["state"] !== "done") {
-                return new Response()->json(["message" => "chunk $chunkNumber téléchargé avec success."]);
+                return json(["message" => "chunk $chunkNumber téléchargé avec success."]);
             } else {
                 try {
-                    $title = $_POST['title'];
-                    $description = $_POST['description'];
-                    $coverFile = $_FILES['cover'];
+                    $title = $data['title'];
+                    $description = $data['description'];
+                    $coverFile = $files['cover'];
 
                     $cover = $this->filmService->uploadImage($coverFile, $result["token"]);
 
                     if ($cover) {
                         $this->filmService->addFilm($title, $description, $result["path"], 'playlistPath', $cover, $result["token"]);
-                        return new Response()->json(["message" => "téléchargement terminé"]);
+                        return json(["message" => "téléchargement terminé"]);
                     }
                 } catch (Exception $e) {
                     error_log("Video upload failed: " . $e->getMessage());
-                    return new Response()->json(["error" => "une erreur s'est produite lors du téléchargement"]);
+                    return json(["error" => "une erreur s'est produite lors du téléchargement"]);
                 }
             }
         } catch (Exception $e) {
             error_log("Chunk upload failed: " . $e->getMessage());
-            return new Response()->json(["error" => "une erreur s'est produite lors du téléchargement"]);
+            return json(["error" => "une erreur s'est produite lors du téléchargement"]);
         }
     }
 

@@ -7,6 +7,8 @@ use App\Auth\AuthService;
 use App\Message\MessageService;
 use DateTime;
 use DateTimeZone;
+use GuzzleHttp\Psr7\Response;
+use function App\Helpers\json;
 use function App\Helpers\view;
 
 #[Route("GET", "/message")]
@@ -33,8 +35,10 @@ class MessageController
 
     // Afficher la conversation avec un autre utilisateur
     #[Route("GET", "/[*:user_id]")]
-    public function viewMessages($params)
+    public function viewMessages($request)
     {
+        $params = $request->getAttribute('params');
+
         if (isset($params['user_id'])) {
             $userId = (int) $params['user_id'];
             $messages = $this->messageService->getMessages($userId);
@@ -47,40 +51,45 @@ class MessageController
 
     // Envoyer un message privé
     #[Route("POST", "/[*:user_id]")]
-    public function sendMessage($params)
+    public function sendMessage($request)
     {
+        $params = $request->getAttribute('params');
+
+
         if (!empty($_POST) && isset($params['user_id'])) {
             $recipientId = (int) $params['user_id'];
             $messageContent = $_POST['message'];
-    
+
             if (!empty($messageContent)) {
                 $timezone = new DateTimeZone('Europe/Paris');
                 $date = new DateTime("now", $timezone)->format('Y-m-d H:i:s');
                 $user = $_SESSION['username'] ?? null;
-    
+
                 if ($user) {
                     // Appeler la méthode pour envoyer le message
                     $result = $this->messageService->sendMessage($recipientId, $messageContent);
-    
+
                     if ($result) {
                         // Rediriger vers la conversation avec l'utilisateur
-                       header("Location: /message?user_id={$recipientId}");
-                        exit(); // Assurez-vous d'arrêter l'exécution du code ici
+                        return new Response(301, ["location" => "/message?user_id={$recipientId}"]);
                     }
                 }
             }
         }
-    
+
         return $this->viewMessages($params); // En cas d'échec, revenir à la conversation
     }
 
     // Supprimer un message privé (uniquement pour l'utilisateur ou l'administrateur)
     // Suppression d'un message
     #[Route("DELETE", "/[*:user_id]")]
-    public function deleteMessage($params)
+    public function deleteMessage($request)
     {
-        if ($_SERVER['REQUEST_METHOD'] === "DELETE" && isset($params['user_id'])) {
-            $data = json_decode(file_get_contents('php://input'), true); // Récupère les données envoyées en POST
+        $params = $request->getAttribute('params');
+
+
+        if ($request->getMethod() === "DELETE" && isset($params['user_id'])) {
+            $data = json_decode($request->getBody()->getContents(), true); // Récupère les données envoyées en POST
 
             $user = $_SESSION["username"] ?? null;
             $role = $_SESSION["role"] ?? "user";
@@ -96,20 +105,15 @@ class MessageController
                     $recipientId = (int) $params['user_id']; // ID du destinataire
                     $messages = $this->messageService->getMessages($recipientId);
 
-                    header('Content-Type: application/json');
-                    echo json_encode(['status' => 'success', 'messages' => $messages]);
-                    exit();
+                    return json(['status' => 'success', 'messages' => $messages]);
                 } else {
                     // Si suppression échoue, renvoyer un message d'erreur
-                    header('Content-Type: application/json');
-                    echo json_encode(['status' => 'error', 'message' => 'Échec de la suppression du message.']);
-                    exit();
+                    
+                    return json(['status' => 'error', 'message' => 'Échec de la suppression du message.'], 500);
                 }
             } else {
                 // Si l'utilisateur ou l'ID du message est invalide
-                header('Content-Type: application/json');
-                echo json_encode(['status' => 'error', 'message' => 'Données invalides.']);
-                exit();
+                return json(['status' => 'error', 'message' => 'Données invalides.']);
             }
         }
     }

@@ -3,6 +3,7 @@ namespace App\Film;
 
 use App\Core\Database;
 use App\Exceptions\BadRequestException;
+use GuzzleHttp\Psr7\UploadedFile;
 use PDO;
 use Exception;
 use Dotenv\Dotenv;
@@ -30,14 +31,13 @@ class FilmService
         }
     }
 
-    public function uploadImage(array $coverFile, string $token)
+    public function uploadImage(UploadedFile $coverFile, string $token)
     {
         try {
-            $this->validateFile($coverFile, ["jpg", "jpeg", "png"], "cover");
+            $this->validateFile(["name"=> $coverFile->getClientFilename()], ["jpg", "jpeg", "png"], "cover");
 
-            $coverPath = $_ENV['COVER_DIR'] . $token . '.' . pathinfo($coverFile['name'], PATHINFO_EXTENSION);
-            move_uploaded_file($coverFile['tmp_name'], $coverPath);
-
+            $coverPath = $_ENV['COVER_DIR'] . $token . '.' . pathinfo($coverFile->getClientFilename(), PATHINFO_EXTENSION);
+            $coverFile->moveTo($coverPath);
             return $coverPath;
 
         } catch (Exception $e) {
@@ -55,9 +55,10 @@ class FilmService
         }
     }
 
-    public function chunkedUpload(array $videoFile, int $chunkNumber, int $totalChunks, string $filename, string $token): array
+    public function chunkedUpload(UploadedFile $videoFile, int $chunkNumber, int $totalChunks, string $filename, string $token): array
     {
         try {
+            
             $this->validateFile(["name" => $filename], ["mp4", "mov", "avi"], "video");
 
             $tempDir = $_ENV['TEMP_UPLOAD_DIR'] . $token;
@@ -68,7 +69,7 @@ class FilmService
 
             $chunkFilePath = $tempDir . '/chunk_' . $chunkNumber;
 
-            move_uploaded_file($videoFile['tmp_name'], $chunkFilePath);
+            $videoFile->moveTo($chunkFilePath);
 
             // Check if all chunks are uploaded
           
