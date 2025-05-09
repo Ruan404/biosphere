@@ -34,11 +34,11 @@ class ChatService extends Chat
         }
     }
 
-    public function getChatMessages(int $topicId, int $lastMessageId): ?array
+    public function getChatMessages(int $topicId): ?array
     {
 
         try {
-            $query = Database::getPDO()->prepare('SELECT chat.pseudo, chat.message, chat.date FROM chat WHERE topic_id = :topic AND chat.id > :lastMessageId ORDER BY chat.id ASC LIMIT 50');
+            $query = Database::getPDO()->prepare('SELECT chat.pseudo, chat.message, chat.date FROM chat WHERE topic_id = :topic ORDER BY chat.id ASC LIMIT 50');
 
 
             $query->bindParam(':topic', $topicId, PDO::PARAM_STR);
