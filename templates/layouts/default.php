@@ -30,7 +30,7 @@
     <?php if (isset($style)): ?>
         <link rel="stylesheet" type="text/css" href=<?= '/assets/css/' . htmlspecialchars($style) . '.css' ?>>
     <?php endif ?>
-
+    <script src="/assets/js/config.js"></script>
 </head>
 
 <body>
@@ -62,17 +62,7 @@
             </div>
         </nav>
     </header>
-    <main>
-        <?= $content ?>
-    </main>
-
-    <footer>
-        <?php if (defined('DEBUG_TIME')): ?>
-
-            temps d'affichage : <?= round(1000 * (microtime(true) - DEBUG_TIME)) ?> ms
-
-        <?php endif ?>
-    </footer>
+    <?= $content ?? "" ?>
     <script src="/assets/js/script.js"></script>
 </body>
 

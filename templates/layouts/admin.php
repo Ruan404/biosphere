@@ -21,7 +21,7 @@ $profile = Text::getFirstStr($_SESSION["username"]);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($title ?? 'biosphere') ?></title>
-    <meta name="description" content="<?=htmlspecialchars($description ?? 'bienvenu dans le biosphere')?>">
+    <meta name="description" content="<?= htmlspecialchars($description ?? 'bienvenu dans le biosphere') ?>">
 
     <link rel="stylesheet" type="text/css" href="/assets/css/navbar.css">
     <link rel="stylesheet" type="text/css" href="/assets/css/style.css">
@@ -59,17 +59,7 @@ $profile = Text::getFirstStr($_SESSION["username"]);
             </div>
         </nav>
     </header>
-    <main>
-        <?= $content ?>
-    </main>
-
-    <footer>
-        <?php if (defined('DEBUG_TIME')): ?>
-
-            temps d'affichage : <?= round(1000 * (microtime(true) - DEBUG_TIME)) ?> ms
-
-        <?php endif ?>
-    </footer>
+    <?= $content ?>
     <script src="/assets/js/script.js"></script>
 </body>
 

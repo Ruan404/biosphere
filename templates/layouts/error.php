@@ -10,9 +10,11 @@
         html {
             height: 100%;
         }
-        *{
+
+        * {
             margin: 0;
         }
+
         body {
             background: black;
             display: flex;
@@ -20,9 +22,9 @@
             font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif
         }
 
-        main{
+        main {
             width: 100%;
-            margin: min(40px,  5%);
+            margin: min(40px, 5%);
             margin-bottom: 0;
             height: fit-content;
         }
@@ -30,9 +32,7 @@
 </head>
 
 <body>
-    <main>
-        <?= $content ?>
-    </main>
+    <?= $content ?>
 </body>
 
 </html>

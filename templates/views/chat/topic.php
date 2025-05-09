@@ -6,29 +6,32 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 
 ?>
 
-<div class="container">
-	<!--sidebar-->
+<main>
+	<div class="container">
+		<!--sidebar-->
 
-	<sidebar-tab class="sidebar-ctn">
-		<button slot="trigger" class="tab-btn shadow-btn" id="toggle-btn">Topics</button>
-		<span slot="current-label"><?= Text::removeUnderscore($currentTopic) ?></span>
+		<sidebar-tab class="sidebar-ctn">
+			<button slot="trigger" class="tab-btn shadow-btn" id="toggle-btn">Topics</button>
+			<span slot="current-label"><?= Text::removeUnderscore($currentTopic) ?></span>
 
-		<?php foreach ($topics as $topic): ?>
-			<a slot="menu" class='sidebar-menu-button' data-slug="<?= $topic->name ?>"
-				onclick="viewChat(event, '<?= $topic->name ?>')" href="#"><?= Text::removeUnderscore($topic->name) ?></a>
-		<?php endforeach ?>
-	</sidebar-tab>
-	<!--messages-->
-	<div class="messages">
-		<div class="msgs-display">
-			<div></div>
+			<?php foreach ($topics as $topic): ?>
+				<a slot="menu" class='sidebar-menu-button' data-slug="<?= $topic->name ?>"
+					onclick="viewChat(event, '<?= $topic->name ?>')"
+					href="#"><?= Text::removeUnderscore($topic->name) ?></a>
+			<?php endforeach ?>
+		</sidebar-tab>
+		<!--messages-->
+		<div class="messages">
+			<div class="msgs-display">
+				<div></div>
+			</div>
+			<form class="send-msg-form">
+				<textarea name="message" required autocomplete="off" placeholder="Entrez votre message"></textarea>
+				<input class="primary-btn" type="submit" name="valider" value="envoyer">
+			</form>
 		</div>
-		<form class="send-msg-form">
-			<textarea name="message" required autocomplete="off" placeholder="Entrez votre message"></textarea>
-			<input class="primary-btn" type="submit" name="valider" value="envoyer">
-		</form>
 	</div>
-</div>
+</main>
 <script type="module" src="/assets/js/components/Message.js"></script>
 <script src="/assets/js/components/SideBar.js"></script>
 
@@ -36,7 +39,7 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 	const msgsDisplayCtn = document.querySelector(".msgs-display")
 	const form = document.querySelector(".send-msg-form")
 	var currentTopic = "<?= $currentTopic ?>";
-	const socket = new WebSocket(`ws://localhost:3000/chat/${currentTopic}`);
+	const socket = new WebSocket(`${WEBSOCKET_URL}/chat/${currentTopic}`);
 
 
 	//au chargement de la page
