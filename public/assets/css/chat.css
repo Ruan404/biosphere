@@ -134,6 +134,10 @@ main {
   background: rgb(var(--bg-3), 0.14);
 }
 
+.sidebar-ctn{
+  margin-left: 1rem;
+}
+
 /*===responsiveness===*/
 
 @media (max-width: 768px) {

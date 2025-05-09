@@ -49,8 +49,7 @@ class ChatController
 
 
                 // récupère l'id du dernier message affiché
-                $lastMessageId = $_GET['lastMessageId'] ?? 0;
-                $messages = new ChatService()->getChatMessages($topicId, $lastMessageId);
+                $messages = new ChatService()->getChatMessages($topicId);
                 return new Response()->json(["messages" => $messages]);
             }
         } catch (Exception $e) {

@@ -11,17 +11,14 @@ $films = $data['films'] ?? [];
 ?>
 
 <div class="container">
-    <div class="sidebar-ctn">
-		<sidebar-tab>
-			<button slot="trigger" class="tab-btn shadow-btn" id="toggle-btn">Actions</button>
+    <sidebar-tab class="sidebar-ctn">
+        <button slot="trigger" class="tab-btn shadow-btn" id="toggle-btn">Actions</button>
 
-            <button slot="menu" class='sidebar-menu-button' onclick="showTab('users')">Gestion des utilisateurs</button>
-            <button slot="menu" class='sidebar-menu-button' onclick="showTab('topics')">Gestion des topics</button>
-            <button slot="menu" class='sidebar-menu-button' onclick="showTab('podcasts')">Gestion des podcasts</button>
-            <button slot="menu" class='sidebar-menu-button' onclick="showTab('films')">Gestion des films</button>
-		</sidebar-tab>
-
-	</div>
+        <button slot="menu" class='sidebar-menu-button' onclick="showTab('users')">Gestion des utilisateurs</button>
+        <button slot="menu" class='sidebar-menu-button' onclick="showTab('topics')">Gestion des topics</button>
+        <button slot="menu" class='sidebar-menu-button' onclick="showTab('podcasts')">Gestion des podcasts</button>
+        <button slot="menu" class='sidebar-menu-button' onclick="showTab('films')">Gestion des films</button>
+    </sidebar-tab>
 
     <!-- Gestion des utilisateurs -->
     <div class="tab-content" id="users">
@@ -46,7 +43,8 @@ $films = $data['films'] ?? [];
                                 <form action="admin/action" method="POST">
                                     <input type="hidden" name="action" value="delete_user">
                                     <input type="hidden" name="pseudo" value="<?= $user->pseudo ?>">
-                                    <button type="submit" class="delete-btn" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')">Supprimer</button>
+                                    <button type="submit" class="delete-btn"
+                                        onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')">Supprimer</button>
                                 </form>
                             </td>
                             <td>
@@ -69,7 +67,8 @@ $films = $data['films'] ?? [];
         <div class="tab-content-head">
             <h3>Topics</h3>
             <!-- Bouton qui va afficher le formulaire d'ajout de topic -->
-            <button type="button" class="primary-btn" id="addTopicBtn" onclick="showAddTopicForm()">Ajouter un topic</button>
+            <button type="button" class="primary-btn" id="addTopicBtn" onclick="showAddTopicForm()">Ajouter un
+                topic</button>
 
             <!-- Formulaire d'ajout de topic caché au départ -->
             <div id="addTopicForm" style="display:none; margin-top: 10px;">
@@ -96,8 +95,10 @@ $films = $data['films'] ?? [];
                                 <!-- Delete Topic Form -->
                                 <form action="admin/action" method="POST" style="display:inline;">
                                     <input type="hidden" name="action" value="delete_topic">
-                                    <input type="hidden" name="topic" value="<?= $topic->name ?>"> <!-- Assuming topic name can be used for action -->
-                                    <button type="submit" class="delete-btn" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce topic ?')">Supprimer</button>
+                                    <input type="hidden" name="topic" value="<?= $topic->name ?>">
+                                    <!-- Assuming topic name can be used for action -->
+                                    <button type="submit" class="delete-btn"
+                                        onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce topic ?')">Supprimer</button>
                                 </form>
                             </td>
                         </tr>
@@ -110,7 +111,8 @@ $films = $data['films'] ?? [];
     <!-- Gestion des podcasts -->
     <div class="tab-content" id="podcasts">
         <div class="tab-content-head">
-            <h3>Gestion des podcasts</h3> <button class="primary-btn" onclick="window.location.href='admin/Set_Admin.php?action=add_podcast'">Ajouter un podcast</button>
+            <h3>Gestion des podcasts</h3> <button class="primary-btn"
+                onclick="window.location.href='admin/Set_Admin.php?action=add_podcast'">Ajouter un podcast</button>
         </div>
         <div class="table-container">
             <table>
@@ -128,8 +130,10 @@ $films = $data['films'] ?? [];
                                 <!-- Delete Podcast Form -->
                                 <form action="admin/action" method="POST" style="display:inline;">
                                     <input type="hidden" name="action" value="delete_podcast">
-                                    <input type="hidden" name="podcast" value="<?= $podcast->title ?>"> <!-- Assuming title can be used for action -->
-                                    <button type="submit" class="delete-btn" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce podcast ?')">Supprimer</button>
+                                    <input type="hidden" name="podcast" value="<?= $podcast->title ?>">
+                                    <!-- Assuming title can be used for action -->
+                                    <button type="submit" class="delete-btn"
+                                        onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce podcast ?')">Supprimer</button>
                                 </form>
                             </td>
                         </tr>
@@ -160,8 +164,10 @@ $films = $data['films'] ?? [];
                                 <!-- Delete Film Form -->
                                 <form action="admin/action" method="POST" style="display:inline;">
                                     <input type="hidden" name="action" value="delete_film">
-                                    <input type="hidden" name="film" value="<?= $film->token ?>"> <!-- Assuming title can be used for action -->
-                                    <button type="submit" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce film ?')">Supprimer</button>
+                                    <input type="hidden" name="film" value="<?= $film->token ?>">
+                                    <!-- Assuming title can be used for action -->
+                                    <button type="submit"
+                                        onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce film ?')">Supprimer</button>
                                 </form>
                             </td>
                         </tr>
@@ -186,7 +192,7 @@ $films = $data['films'] ?? [];
     }
 
     // Afficher l'onglet des utilisateurs par défaut au chargement
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function () {
         showTab('users');
     });
 

@@ -1,7 +1,6 @@
 /* Gestion du contenu des onglets */
 .tab-content {
   display: none;
-  padding: 1rem;
   flex-grow: 1;
   font-size: 0.875rem;
   overflow: hidden;
@@ -79,6 +78,7 @@ main {
   display: flex;
   width: 100%;
   row-gap: 1rem;
+  padding-inline: 1rem;
 }
 
 /*===responsiveness===*/

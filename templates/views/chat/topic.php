@@ -9,19 +9,15 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 <div class="container">
 	<!--sidebar-->
 
-	<div class="sidebar-ctn">
-		<sidebar-tab>
-			<button slot="trigger" class="tab-btn shadow-btn" id="toggle-btn">Topics</button>
-			<span slot="current-label"><?= Text::removeUnderscore($currentTopic) ?></span>
+	<sidebar-tab class="sidebar-ctn">
+		<button slot="trigger" class="tab-btn shadow-btn" id="toggle-btn">Topics</button>
+		<span slot="current-label"><?= Text::removeUnderscore($currentTopic) ?></span>
 
-			<?php foreach ($topics as $topic): ?>
-				<a slot="menu" class='sidebar-menu-button' data-slug="<?= $topic->name ?>"
-					onclick="viewChat(event, '<?= $topic->name ?>')"
-					href="#"><?= Text::removeUnderscore($topic->name) ?></a>
-			<?php endforeach ?>
-		</sidebar-tab>
-
-	</div>
+		<?php foreach ($topics as $topic): ?>
+			<a slot="menu" class='sidebar-menu-button' data-slug="<?= $topic->name ?>"
+				onclick="viewChat(event, '<?= $topic->name ?>')" href="#"><?= Text::removeUnderscore($topic->name) ?></a>
+		<?php endforeach ?>
+	</sidebar-tab>
 	<!--messages-->
 	<div class="messages">
 		<div class="msgs-display">
@@ -48,7 +44,7 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 		if (currentTopic) {
 			let topic = currentTopic;
 			history.pushState({ topic }, `chat ${topic}`, `/chat/${topic}`)
-		
+
 			document.querySelector(`[data-slug=${currentTopic}]`).classList.add("current")
 			fetchData(currentTopic)
 		}
