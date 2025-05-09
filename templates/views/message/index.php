@@ -23,8 +23,8 @@ $users = $messageService->getUsers();
 
 
 <div class="container">
-
     <sidebar-tab class="sidebar-ctn" id="contact-bar">
+        <button id="toggle-tab" slot="trigger" class="tab-btn shadow-btn">Contacts</button>
         <h2 class="sidebar-title" slot="title">Utilisateurs disponibles</h2>
         <?php foreach ($users as $user): ?>
             <a slot="menu" class='sidebar-menu-button'
@@ -42,10 +42,6 @@ $users = $messageService->getUsers();
             <?php if ($recipient): ?>
                 <div class="conversation full-page">
                     <div class="title">
-                        <div class="tab-users mobile-only">
-                            <button id="toggle-tab" class="tab-btn shadow-btn">Contacts</button>
-
-                        </div>
                         <h2>Conversation avec <?= htmlspecialchars($recipient['pseudo']) ?></h2>
                     </div>
                     <div class="messages">
@@ -70,9 +66,3 @@ $users = $messageService->getUsers();
 </div>
 <script src="/assets/js/components/SideBar.js"></script>
 <script src="/assets/js/components/MessageBubble.js"></script>
-<script>
-    document.getElementById('toggle-tab').addEventListener('click', () => {
-        const sidebar = document.getElementById('contact-bar');
-        sidebar.open(); // this will now work!
-    });
-</script>

@@ -51,7 +51,6 @@ class SidebarTab extends HTMLElement {
         color: rgb(var(--fg-2)) !important;
       }
       .sidebar-tab {
-        margin-left: 1rem;
         row-gap: 0.5rem;
         display: none;
       }

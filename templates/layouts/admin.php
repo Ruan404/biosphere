@@ -45,7 +45,7 @@ $profile = Text::getFirstStr($_SESSION["username"]);
                     <a href="/">Biosphère</a>
                 </div>
                 <div class="nav-links">
-                    <a href="#">Messagerie</a>
+                    <a href="/messagerie">Messagerie</a>
                     <a href="/chat">Forum</a>
                     <a href="/films">Films</a>
                     <a href="/podcast">Podcast</a>
