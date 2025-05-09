@@ -18,9 +18,11 @@ class UserService
             //verify if the user already exists in the database
             $user = $this->getUserByPseudo($newUser->pseudo);
 
+            $hashedPassword = password_hash($newUser->mdp, PASSWORD_BCRYPT);
+
             if ($user === null) {
                 $query = Database::getPDO()->prepare('INSERT INTO users(pseudo, mdp)VALUES(?, ?)');
-                $query->execute([htmlspecialchars($newUser->pseudo), sha1($newUser->mdp)]);
+                $query->execute([htmlspecialchars($newUser->pseudo), $hashedPassword]);
                 $response = "your account has been created";
                 return $response;
             }

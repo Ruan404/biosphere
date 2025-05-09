@@ -86,13 +86,15 @@ class Router
         $roles = $target["roles"] ?? [];
 
         if (!empty($roles)) {
-            $user = AuthService::getUserSession();
-            if ($user === null) {
+            if(session_status() === 1){
+                session_start();
+            }
+            if (empty($_SESSION)) {
                 header("Location: /login");
                 exit;
             }
           
-            if (in_array(Role::tryFrom($user->role), $roles)) {
+            if (in_array(Role::tryFrom($_SESSION['role']), $roles)) {
 
                 $this->handle($target, $match);
             }
