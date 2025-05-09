@@ -40,9 +40,7 @@ class ChatService extends Chat
         try {
             $query = Database::getPDO()->prepare('SELECT chat.pseudo, chat.message, chat.date FROM chat WHERE topic_id = :topic ORDER BY chat.id ASC LIMIT 50');
 
-
             $query->bindParam(':topic', $topicId, PDO::PARAM_STR);
-            $query->bindParam(':lastMessageId', $lastMessageId, PDO::PARAM_INT);
             $query->execute();
 
             $messages = $query->fetchAll(PDO::FETCH_CLASS, Chat::class);

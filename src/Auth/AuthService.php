@@ -36,7 +36,6 @@ class AuthService
              */
             if (session_status() == PHP_SESSION_NONE) {
                 session_start();
-                $_SESSION['auth'] = $user->id;
                 $_SESSION['user_id'] = $user->id;
                 $_SESSION['username'] = $user->pseudo;
                 $_SESSION['role'] = $user->role;
@@ -85,27 +84,5 @@ class AuthService
 
         // Finally, destroy the session.
         session_destroy();
-    }
-
-    public static function getUserSession(): ?User
-    {
-        /**
-         * 0 ----> PHP_SESSION_DISABLED if sessions are disabled.
-         * 1 ----> PHP_SESSION_NONE if sessions are enabled, but none exists.
-         * 2 ----> PHP_SESSION_ACTIVE if sessions are enabled, and one exists.
-         */
-
-        if (session_status() == 1) {
-            session_start();
-        }
-
-        if (empty($_SESSION['auth'])) {
-            return null;
-        }
-
-        $user = new UserService()->getUserById($_SESSION['auth']);
-
-        return $user;
-
     }
 }
