@@ -10,6 +10,7 @@ use App\Entities\Layout;
 use App\Entities\Role;
 use App\Film\FilmService;
 use App\Middleware\IsLoggedInMiddleware;
+use GuzzleHttp\Psr7\Response;
 use Psr\Http\Message\ServerRequestInterface;
 use function App\Helpers\json;
 use App\Topic\TopicService;
@@ -136,8 +137,7 @@ class AdminController
 
                 case 'add_topic':
                     if ($topic) {
-                        $message = $this->adminService->addTopic($topic);  // Appeler la méthode addTopic
-                        // Redirect or show confirmation
+                        $this->adminService->addTopic($topic);  // Appeler la méthode addTopic
                     }
                     break;
                 case 'delete_film':
@@ -153,7 +153,7 @@ class AdminController
                     break;
             }
 
-            header("location: /admin");
+            return new Response(status: 200,headers: ["location" => "/admin"]);
         }
     }
 }

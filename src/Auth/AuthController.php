@@ -3,13 +3,17 @@ namespace App\Auth;
 
 use App\Entities\Layout;
 use App\Exceptions\HttpExceptionInterface;
+use App\Helpers\Csrf;
 use \App\User\{
     User
 };
 
 use App\Attributes\Route;
 use Exception;
+use GuzzleHttp\Psr7\Response;
+use Psr\Http\Message\ServerRequestInterface;
 use function App\Helpers\view;
+
 
 class AuthController
 {
@@ -23,33 +27,30 @@ class AuthController
     }
 
     #[Route(method: "GET", path: "/login")]
-    public function loginPage()
+    public function loginPage($request)
     {
-        return view(view: 'auth/login', layout: $this->layout);
+       
+        return view(view: 'auth/login', layout: $this->layout, data: Csrf::get($request));
     }
 
     #[Route(method: "POST", path: "/login")]
-    public function login()
+    public function login(ServerRequestInterface $request)
     {
         try {
-            if (!empty($_POST)) {
+            $payload = $request->getParsedBody();
 
-                //instantier la class user
-                $loginUser = new User($_POST['pseudo'], $_POST['password']);
+            //instantier la class user
+            $loginUser = new User($payload['pseudo'], $payload['password']);
 
-                $user = $this->authService->login($loginUser);
+            $user = $this->authService->login($loginUser);
 
-                if ($user->role === 'admin') {
-                    header('Location: /admin'); // Redirige vers l'espace admin
-                    exit();
-                } else {
-                    header('Location: /'); // Redirige vers l'accueil normal
-                    exit();
-                }
+            if ($user->role === 'admin') {
+                return new Response(301, ["location" => "/admin"]);
+            } else {
+                return new Response(301, ["location" => "/"]);
             }
-        } catch (HttpExceptionInterface $e) {            
-            http_response_code($e->getStatusCode());
-            return view(view: 'auth/login', layout: $this->layout, data: ['error' => true]);
+        } catch (HttpExceptionInterface $e) {
+            return view(view: 'auth/login', layout: $this->layout, data: ['error' => true], status: $e->getStatusCode());
 
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());
@@ -64,23 +65,21 @@ class AuthController
     }
 
     #[Route(method: "POST", path: "/signup")]
-    public function signup()
+    public function signup(ServerRequestInterface $request)
     {
         try {
-            if (!empty($_POST)) {
+            $payload = $request->getParsedBody();
 
-                //create a new user
-                $signupUser = new User($_POST['pseudo'], $_POST['password']);
+            //create a new user
+            $signupUser = new User($payload['pseudo'], $payload['password']);
 
-                //essayer d'inscrire l'utilisateur
-                $this->authService->signup($signupUser);
+            //essayer d'inscrire l'utilisateur
+            $this->authService->signup($signupUser);
 
-                header('Location: /login');
-                exit();
-            }
+            return new Response(301, ["location" => "/login"]);
+
         } catch (HttpExceptionInterface $e) {
-            http_response_code($e->getStatusCode());
-            return view(view: 'auth/signup', layout: $this->layout, data: ['error' => true]);
+            return view(view: 'auth/signup', layout: $this->layout, data: ['error' => true], status: $e->getStatusCode());
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());
             return view("/errors/500", Layout::Error);
@@ -92,7 +91,7 @@ class AuthController
     {
         $this->authService::logout();
 
-        header('Location: /login');
-        exit();
+        return new Response(301, ["location" => "/login"]);
+
     }
 }

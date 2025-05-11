@@ -36,12 +36,13 @@ class AuthService
              */
             if (session_status() == PHP_SESSION_NONE) {
                 session_start();
-                $_SESSION['auth'] = $user->id;
-                $_SESSION['user_id'] = $user->id;
-                $_SESSION['username'] = $user->pseudo;
-                $_SESSION['role'] = $user->role;
-                return $user;
             }
+
+            $_SESSION['auth'] = $user->id;
+            $_SESSION['user_id'] = $user->id;
+            $_SESSION['username'] = $user->pseudo;
+            $_SESSION['role'] = $user->role;
+
 
             return $user;
         }
@@ -63,7 +64,9 @@ class AuthService
     {
         // Initialize the session.
         // If you are using session_name("something"), don't forget it now!
-        session_start();
+        if (session_status() === 1) {
+            session_start();
+        }
 
         // Unset all of the session variables.
         $_SESSION = array();

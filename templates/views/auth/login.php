@@ -1,17 +1,19 @@
 <?php
+
 $title = "connexion à biosphère";
-$error = $data['error'] ?? false; //à améliorer
 ?>
 <div class="sign-ctn">
     <div class="sub-ctn">
         <h1>Se connecter à Biosphère</h1>
         <?php
-        if ($error) {
+        if ($data['error'] ?? false) {
             echo "<div class='error'>pseudo ou  mot de passe incorrecte</div>";
         }
         ?>
     </div>
     <form method="POST">
+        <input type="hidden" name="csrf_name" value="<?= $data['csrf_name'] ?>">
+        <input type="hidden" name="csrf_value" value="<?= $data['csrf_value'] ?>">
         <div class="form-field-ctn">
             <div class="form-field">
                 <label for="pseudo">Pseudo</label>
