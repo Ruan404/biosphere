@@ -2,15 +2,19 @@
 
 namespace App\Message;
 
+use App\Attributes\Middleware;
 use App\Attributes\Route;
 use App\Auth\AuthService;
 use App\Message\MessageService;
+use App\Middleware\IsLoggedInMiddleware;
 use DateTime;
 use DateTimeZone;
 use GuzzleHttp\Psr7\Response;
 use function App\Helpers\json;
 use function App\Helpers\view;
 
+
+#[Middleware(new IsLoggedInMiddleware())]
 #[Route("GET", "/message")]
 class MessageController
 {

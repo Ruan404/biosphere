@@ -2,10 +2,12 @@
 namespace App\Chat;
 
 
+use App\Attributes\Middleware;
 use App\Attributes\Route;
 use App\Auth\AuthService;
 use App\Entities\Layout;
 use App\Exceptions\BadRequestException;
+use App\Middleware\IsLoggedInMiddleware;
 use Psr\Http\Message\ServerRequestInterface;
 use function App\Helpers\json;
 use App\Topic\TopicService;
@@ -15,7 +17,7 @@ use DateTimeZone;
 use Exception;
 use function App\Helpers\view;
 
-
+#[Middleware(new IsLoggedInMiddleware())]
 #[Route("GET", "/chat")]
 class ChatController
 {

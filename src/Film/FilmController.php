@@ -1,13 +1,16 @@
 <?php
 namespace App\Film;
 
+use App\Attributes\Middleware;
 use App\Attributes\Route;
 use App\Entities\Layout;
+use App\Middleware\IsLoggedInMiddleware;
 use function App\Helpers\json;
 use Exception;
 use function App\Helpers\view;
 use App\Film\FilmService;
 
+#[Middleware(new IsLoggedInMiddleware())]
 #[Route("GET", "/films")]
 class FilmController
 {

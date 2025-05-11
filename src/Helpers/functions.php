@@ -7,25 +7,28 @@ use App\Entities\Layout;
 use Psr\Http\Message\ResponseInterface;
 use GuzzleHttp\Psr7\Response;
 
-function view(string $view, Layout $layout = Layout::Preset, array $data = []): ResponseInterface {
+function view(string $view, Layout $layout = Layout::Preset, array $data = []): ResponseInterface
+{
     $viewPath = dirname(__DIR__) . '../../templates';
 
-    $templatePath =  $viewPath . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . $view . '.php';;
-    $layoutPath =  $viewPath . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . $layout->value . '.php';
+    $templatePath = $viewPath . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . $view . '.php';
+    ;
+    $layoutPath = $viewPath . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . $layout->value . '.php';
 
-     ob_start();
-     require $templatePath;
-     $content = ob_get_clean();
- 
-     ob_start();
-     require $layoutPath;
-     $html = ob_get_clean();
-   
+    ob_start();
+    require $templatePath;
+    $content = ob_get_clean();
+
+    ob_start();
+    require $layoutPath;
+    $html = ob_get_clean();
+
     return new Response(200, ['Content-Type' => 'text/html'], $html);
 }
 
 
-function json(array $data, int $status = 200): ResponseInterface {
+function json(array $data, int $status = 200): ResponseInterface
+{
     return new Response(
         $status,
         ['Content-Type' => 'application/json'],
@@ -41,4 +44,16 @@ function generateRandomString($length = 10, $characters = '0123456789abcdefghijk
         $randomString .= $characters[mt_rand(0, strlen($characters) - 1)];
     }
     return $randomString;
+}
+
+function send($response)
+{
+    http_response_code($response->getStatusCode());
+    foreach ($response->getHeaders() as $name => $values) {
+        foreach ($values as $value) {
+            header("$name: $value", false);
+        }
+    }
+    echo $response->getBody();
+
 }

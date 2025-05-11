@@ -3,10 +3,10 @@ require '../vendor/autoload.php';
 
 use App\Auth\AuthController;
 use App\Chat\ChatController;
+use App\Core\Dispatcher;
 use App\Film\FilmController;
 use App\Core\Router;
 use App\Home\HomeController;
-use App\Middleware\CsrfMiddleware;
 use App\Middleware\IsLoggedInMiddleware;
 use App\Middleware\RemoveTrailingSlashMiddleware;
 use App\Podcast\PodcastController;
@@ -15,6 +15,7 @@ use App\Sensor\SensorController;
 Use App\Message\MessageController;
 use App\VideoStream\VideoStreamController;
 use GuzzleHttp\Psr7\ServerRequest;
+use function App\Helpers\send;
 
 
 $whoops = new \Whoops\Run;
@@ -27,29 +28,22 @@ $request = ServerRequest::fromGlobals();
 
 $app = new Router();
 
+$dispatcher = new Dispatcher();
+
 $isLoggedIn = new IsLoggedInMiddleware();
 
-$app->registerController(HomeController::class, [$isLoggedIn]);
-$app->registerController(AuthController::class);
-$app->registerController(ChatController::class, [$isLoggedIn]);
-$app->registerController(FilmController::class, [$isLoggedIn]);
-$app->registerController(PodcastController::class, [$isLoggedIn]);
-$app->registerController(AdminController::class, [$isLoggedIn]);
-$app->registerController(SensorController::class, [$isLoggedIn]);
-$app->registerController(VideoStreamController::class, [$isLoggedIn]);
-$app->registerController(MessageController::class, [$isLoggedIn]);
+$app->register(HomeController::class)
+    ->register(AuthController::class)
+    ->register(ChatController::class)
+    ->register(FilmController::class)
+    ->register(PodcastController::class)
+    ->register(AdminController::class)
+    ->register(SensorController::class)
+    ->register(VideoStreamController::class)
+    ->register(MessageController::class);
 
-$handler = $app->middleware(
-    [new RemoveTrailingSlashMiddleware()],
-    $app
-);
+$dispatcher->pipe(new RemoveTrailingSlashMiddleware());
+$dispatcher->pipe($app);
+$response = $dispatcher->handle($request);
 
-$response = $handler->handle($request);
-
-http_response_code($response->getStatusCode());
-foreach ($response->getHeaders() as $name => $values) {
-    foreach ($values as $value) {
-        header("$name: $value", false);
-    }
-}
-echo $response->getBody();
+send($response);

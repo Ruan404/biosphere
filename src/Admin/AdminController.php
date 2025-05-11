@@ -2,12 +2,14 @@
 
 namespace App\Admin;
 
+use App\Attributes\Middleware;
 use App\Attributes\Roles;
 use App\Attributes\Route;
 use App\Admin\AdminService;
 use App\Entities\Layout;
 use App\Entities\Role;
 use App\Film\FilmService;
+use App\Middleware\IsLoggedInMiddleware;
 use Psr\Http\Message\ServerRequestInterface;
 use function App\Helpers\json;
 use App\Topic\TopicService;
@@ -16,7 +18,7 @@ use Exception;
 use function App\Helpers\view;
 ini_set('max_execution_time', 300);
 
-
+#[Middleware(new IsLoggedInMiddleware())]
 class AdminController
 {
     private $adminService;
