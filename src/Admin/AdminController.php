@@ -174,7 +174,7 @@ class AdminController
                     break;
             }
 
-            // header("location: /admin");
+           return new Response()->json(["success"=> true, "message"=> "action menée avec success"]);
         }
     }
 }
