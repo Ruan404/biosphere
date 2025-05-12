@@ -21,14 +21,11 @@ $profile = Text::getFirstStr($_SESSION["username"]);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($title ?? 'biosphere') ?></title>
-    <meta name="description" content="<?=htmlspecialchars($description ?? 'bienvenu dans le biosphere')?>">
+    <meta name="description" content="<?= htmlspecialchars($description ?? 'bienvenu dans le biosphere') ?>">
 
     <link rel="stylesheet" type="text/css" href="/assets/css/navbar.css">
     <link rel="stylesheet" type="text/css" href="/assets/css/style.css">
     <link rel="stylesheet" type="text/css" href="/assets/css/admin.css">
-    <?php if (isset($style)): ?>
-        <link rel="stylesheet" type="text/css" href=<?= '/assets/css/' . htmlspecialchars($style) . '.css' ?>>
-    <?php endif ?>
 
 </head>
 
@@ -71,6 +68,9 @@ $profile = Text::getFirstStr($_SESSION["username"]);
         <?php endif ?>
     </footer>
     <script src="/assets/js/script.js"></script>
+    <script src="/assets/js/components/Sidebar.js"></script>
+    <script type="module" src="/assets/js/components/ActionMenu.js"></script>
+    <script src="/assets/js/adminPanel.js"></script>
 </body>
 
 </html>

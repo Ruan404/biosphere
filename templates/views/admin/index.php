@@ -1,7 +1,3 @@
-<?php
-$style = "admin";
-?>
-
 <div class="container">
     <!-- Sidebar with management tabs -->
     <sidebar-tab class="sidebar-ctn">
@@ -14,9 +10,11 @@ $style = "admin";
     </sidebar-tab>
 
     <!-- Tab content -->
-    <div class="admin-tab-content">
-        <div class="table-container">
-            <h2 id="tab-title">Chargement...</h2>
+    <div class="tab-content">
+        <div class="tab-content-head">
+            <h3 id="tab-title">Chargement...</h3>
+        </div>
+        <div class="table-container" id="ctn-display">
             <table class="data-table">
                 <thead></thead>
                 <tbody></tbody>
@@ -24,5 +22,3 @@ $style = "admin";
         </div>
     </div>
 </div>
-<script src="/assets/js/components/Sidebar.js"></script>
-<script src="/assets/js/adminPanel.js"></script>

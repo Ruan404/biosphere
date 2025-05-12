@@ -67,10 +67,10 @@ export default class ActionMenu extends HTMLElement {
 		this.menu.style.display = show ? 'grid' : 'none';
 
 		if (show) {
-			document.querySelector(".msgs-display").style.overflowY = "hidden"
+			document.querySelector("#ctn-display").style.overflowY = "hidden"
 			this._startPositionTracking();
 		} else {
-			document.querySelector(".msgs-display").style.overflowY = "auto"
+			document.querySelector("#ctn-display").style.overflowY = "auto"
 			this._stopPositionTracking();
 		}
 	}

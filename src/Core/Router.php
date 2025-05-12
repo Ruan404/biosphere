@@ -42,12 +42,20 @@ class Router
     {
         $reflection = new ReflectionClass($controller);
 
-        $routeAttributes = $reflection->getAttributes();
+        $routeAttributes = $reflection->getAttributes(Route::class);
+
+        $roleAttributes = $reflection->getAttributes(Role::class);
+
+        $rolesAttr = [];
 
         $prefix = '';
 
         if (!empty($routeAttributes)) {
             $prefix = $routeAttributes[0]->newInstance()->path;
+        }
+
+        if (!empty($roleAttributes)) {
+            $rolesAttr = $roleAttributes[0]->newInstance()->roles;
         }
 
         foreach ($reflection->getMethods() as $method) {
@@ -66,7 +74,7 @@ class Router
                 $this->router->map($route->method, $prefix . $route->path, [
                     'controller' => $controller, //controller class
                     'action' => $method->getName(), //method name,
-                    'roles' => $roles
+                    'roles' => array_merge($rolesAttr, $roles)
                 ]);
             }
         }

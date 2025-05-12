@@ -3,6 +3,7 @@ namespace App\Film;
 
 use App\Core\Database;
 use App\Exceptions\BadRequestException;
+use App\Film\Dto\FilmAdminPanelDto;
 use PDO;
 use Exception;
 use Dotenv\Dotenv;
@@ -23,6 +24,19 @@ class FilmService
             $query = Database::getPDO()->query('SELECT cover_image, token, title, description FROM film JOIN genre ON film.genre_id = genre.id');
 
             return $query->fetchAll(PDO::FETCH_CLASS, Film::class);
+
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong");
+        }
+    }
+
+    public function adminFilms(): ?array
+    {
+        try {
+            $query = Database::getPDO()->query('SELECT  title, token As id FROM film');
+
+            return $query->fetchAll(PDO::FETCH_CLASS, FilmAdminPanelDto::class);
 
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());
@@ -71,7 +85,7 @@ class FilmService
             move_uploaded_file($videoFile['tmp_name'], $chunkFilePath);
 
             // Check if all chunks are uploaded
-          
+
             $uploadedChunks = glob($tempDir . '/chunk_*');
 
             if (count($uploadedChunks) === $totalChunks) {
@@ -148,7 +162,7 @@ class FilmService
         }
     }
 
-    public function getFilmByToken($token): ?array
+    public function getFilmByToken($token): ?Film
     {
         try {
             if (!$token) {
@@ -157,7 +171,7 @@ class FilmService
 
             $query = Database::getPDO()->prepare("SELECT cover_image, description, token, title, file_path, playlist_path FROM film WHERE token = ?");
             $query->execute([$token]);
-            $film = $query->fetch(PDO::FETCH_ASSOC);
+            $film = $query->fetchAll(PDO::FETCH_CLASS, Film::class);
 
             return $film ?: null;
 
@@ -167,22 +181,21 @@ class FilmService
         }
     }
 
-    public function deleteFilm($token)
+    public function deleteFilm(Film $video)
     {
-        $video = $this->getFilmByToken($token);
 
-        $videoFilePath = realpath($video['file_path']);
+        $videoFilePath = realpath($video->file_path);
         if ($videoFilePath && file_exists($videoFilePath)) {
             unlink($videoFilePath);
         }
 
-        $coverFilePath = realpath($video['cover_image']);
+        $coverFilePath = realpath($video->cover_image);
         if ($coverFilePath && file_exists($coverFilePath)) {
             unlink($coverFilePath);
         }
 
         $query = Database::getPDO()->prepare("DELETE FROM film WHERE token = ?");
-        $query->execute([$token]);
+        $query->execute([$video->token]);
 
         return $query->rowCount() > 0;
     }

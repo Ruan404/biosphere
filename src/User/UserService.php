@@ -13,19 +13,13 @@ use PDOException;
 
 class UserService
 {
-    public function createUser(User $newUser): string
+    public function createUser(User $user): string
     {
         try {
-            //verify if the user already exists in the database
-            $user = $this->getUserByPseudo($newUser->pseudo);
+            $query = Database::getPDO()->prepare('INSERT INTO users(pseudo, mdp)VALUES(?, ?)');
+            $query->execute([htmlspecialchars($user->pseudo), sha1($user->mdp)]);
 
-            if ($user === null) {
-                $query = Database::getPDO()->prepare('INSERT INTO users(pseudo, mdp)VALUES(?, ?)');
-                $query->execute([htmlspecialchars($newUser->pseudo), sha1($newUser->mdp)]);
-                $response = "your account has been created";
-                return $response;
-            }
-            throw new BadRequestException("user already exist");
+            return true;
 
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());
@@ -70,19 +64,13 @@ class UserService
      * @param int $userId
      * @return bool
      */
-    public function promoteToAdmin(int $userId): string
+    public function promoteToAdmin(int $userId): bool
     {
         try {
-            $user = $this->getUserById($userId);
-
-            if($user===null){
-                throw new NotFoundException("user was not found");
-            }
-
             $query = Database::getPDO()->prepare('UPDATE users SET role = ? WHERE id = ?');
-            $query->execute(['admin', $user->id]);
+            $query->execute(['admin', $userId]);
 
-            return "user $user->pseudo has been successfully promoted";
+            return true;
 
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());
@@ -97,16 +85,13 @@ class UserService
      * @param int $userId
      * @return bool
      */
-    public function deleteUser(int $userId): string
+    public function deleteUser(int $userId): bool
     {
         try {
-            $user = $this->getUserById($userId);
-
             $query = Database::getPDO()->prepare('DELETE FROM users WHERE id = ?');
-            $query->execute([$user->id]);
-            $response = "user $user->pseudo has been successfully deleted";
+            $query->execute([$userId]);
 
-            return $response;
+            return true;
 
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());

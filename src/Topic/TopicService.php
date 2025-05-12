@@ -1,8 +1,6 @@
 <?php
 namespace App\Topic;
 use App\Core\Database;
-use App\Exceptions\BadRequestException;
-use App\Exceptions\NotFoundException;
 use App\Topic\Dto\TopicAdminPanelDto;
 use Exception;
 use PDO;
@@ -54,7 +52,7 @@ class TopicService
         }
     }
 
-    public function adminAllTopics(): ?array
+    public function adminTopics(): ?array
     {
         try {
             $query = Database::getPDO()->query('SELECT name FROM topic ORDER BY topic.name ASC');
@@ -68,28 +66,30 @@ class TopicService
         }
     }
 
-    public function deleteTopic($topicId): string
+    public function deleteTopic($topicId): bool
     {
-        $query = Database::getPDO()->prepare('DELETE FROM topic WHERE id = ?');
-        $query->execute([$topicId]);
+        try {
+            $query = Database::getPDO()->prepare('DELETE FROM topic WHERE id = ?');
+            $query->execute([$topicId]);
 
-        return "the topic has been successfully deleted";
+            return true;
+
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong");
+        }
     }
 
-    public function addTopic($name): string
+    public function addTopic($name): bool
     {
         try {
             $newTopic = mb_strtolower(str_replace(' ', '_', $name));
-            // On vérifie si le topic existe déjà
-            if ($this->getTopicByName($newTopic)) {
-                throw new BadRequestException("The topic already exist"); // Si le topic existe, on ne l'ajoute pas
-            }
 
             // On insère le nouveau topic
             $query = Database::getPDO()->prepare('INSERT INTO topic (name) VALUES (?)');
             $query->execute([htmlspecialchars($newTopic)]);
 
-            return "the topic $name has been successfully added";
+            return true;
 
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());

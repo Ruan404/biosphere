@@ -10,6 +10,8 @@ class TopicAdminPanelDto
             ["type" => "delete_user", "label" => "Supprimer", "confirm" => true]
         ];
 
+        $this->id = $this->name;
+
     }
 
     public string $name {
@@ -21,6 +23,11 @@ class TopicAdminPanelDto
             $this->name = array_pop($slug);
 
         }
+    }
+
+    
+    public string $id {
+        get => $this->id;
     }
 
     public array $actions {

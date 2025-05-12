@@ -50,6 +50,12 @@ class AuthService
 
     public function signup(User $signupUser)
     {
+        $user = $this->userService->getUserByPseudo($signupUser->pseudo);
+
+        if ($user !== null) {
+            throw new BadRequestException("mauvais pseudo ou mot de passe");
+
+        }
 
         return $this->userService->createUser($signupUser);
     }
