@@ -2,8 +2,6 @@
 
 use App\Helpers\Text;
 
-
-$style = "admin";
 $users = $data['users'] ?? [];
 $topics = $data['topics'] ?? [];
 $podcasts = $data['podcasts'] ?? [];

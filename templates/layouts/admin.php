@@ -26,10 +26,6 @@ $profile = Text::getFirstStr($_SESSION["username"]);
     <link rel="stylesheet" type="text/css" href="/assets/css/navbar.css">
     <link rel="stylesheet" type="text/css" href="/assets/css/style.css">
     <link rel="stylesheet" type="text/css" href="/assets/css/admin.css">
-    <?php if (isset($style)): ?>
-        <link rel="stylesheet" type="text/css" href=<?= '/assets/css/' . htmlspecialchars($style) . '.css' ?>>
-    <?php endif ?>
-
 </head>
 
 <body>
