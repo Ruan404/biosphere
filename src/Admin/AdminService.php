@@ -36,6 +36,11 @@ class AdminService
         throw new BadRequestException("l'utilisateur n'existe pas");
     }
 
+    public function deleteUsers(array $users): bool
+    {
+        return $this->userService->deleteUsers($users);
+    }
+
     public function promoteUser($pseudo): bool
     {
         $user = $this->userService->getUserByPseudo($pseudo);
@@ -45,23 +50,52 @@ class AdminService
         throw new BadRequestException("l'utilisateur n'existe pas");
     }
 
+
     /**
      * Delete chat messages related to a topic and the topic itself
      * @param string $topic
      * @return bool
      */
-    public function deleteTopic(string $topic)
+    public function deleteTopic(string $topic): bool
     {
         $topicId = $this->topicService->getTopicByName($topic)->id;
 
         if ($topicId) {
-            $deleteChat = $this->chatService->deleteChat($topicId);
+            $this->chatService->deleteChat($topicId);
 
-            if ($deleteChat) {
-                return $this->topicService->deleteTopic($topicId);
-            }
+            return $this->topicService->deleteTopic($topicId);
+
         }
         throw new BadRequestException("le topic n'existe pas");
+    }
+
+
+    /**
+     * Delete chat messages related to a topic and the topic itself
+     * @param string $topic
+     * @return bool
+     */
+    public function deleteTopics(array $topicNames)
+    {
+
+        $topics = $this->topicService->getTopicsByNames($topicNames);
+
+        $topicsIds = [];
+
+
+        for ($i = 0; $i < count($topics); $i++) {
+            $topicsIds[] = $topics[$i]["id"];
+        }
+        ;
+
+        if ($topicsIds) {
+
+            $this->chatService->deleteChats($topicsIds);
+
+            return $this->topicService->deleteTopics($topicsIds);
+
+        }
+        throw new BadRequestException("le(s) topic(s) n'existent pas");
     }
 
     public function deletePodcast($podcastTitle)
@@ -82,6 +116,25 @@ class AdminService
         }
 
         return $this->filmService->deleteFilm(video: $film);
+    }
+
+    public function deleteFilms(array $tokens)
+    {
+        $films = $this->filmService->getFilmsByTokens($tokens);
+
+        $filmsGrouped = ["file_path" => [], "cover_image" => [], "token" => []];
+
+        if ($films === null) {
+            throw new BadRequestException("Les films n'existent déjà.");
+        }
+
+        for ($i = 0; $i < count($films); $i++) {
+            $filmsGrouped["file_path"][] = $films[$i]["file_path"];
+            $filmsGrouped["cover_image"][] = $films[$i]["cover_image"];
+            $filmsGrouped["token"][] = $films[$i]["token"];
+        }
+
+        return $this->filmService->deleteFilms($filmsGrouped["file_path"], $filmsGrouped["cover_image"], $filmsGrouped["token"]);
     }
 
     public function addTopic($name)

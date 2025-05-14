@@ -34,7 +34,7 @@ class FilmService
     public function adminFilms(): ?array
     {
         try {
-            $query = Database::getPDO()->query('SELECT  title, token As id FROM film');
+            $query = Database::getPDO()->query('SELECT  title, token As slug FROM film');
 
             return $query->fetchAll(PDO::FETCH_CLASS, FilmAdminPanelDto::class);
 
@@ -162,7 +162,7 @@ class FilmService
         }
     }
 
-    public function getFilmByToken($token): ?Film
+    public function getFilmByToken($token): ?array
     {
         try {
             if (!$token) {
@@ -171,7 +171,7 @@ class FilmService
 
             $query = Database::getPDO()->prepare("SELECT cover_image, description, token, title, file_path, playlist_path FROM film WHERE token = ?");
             $query->execute([$token]);
-            $film = $query->fetchAll(PDO::FETCH_CLASS, Film::class);
+            $film = $query->fetch(PDO::FETCH_ASSOC);
 
             return $film ?: null;
 
@@ -181,22 +181,77 @@ class FilmService
         }
     }
 
-    public function deleteFilm(Film $video)
+    /**
+     * Supprimer un film
+     * @param array $video
+     * @return bool
+     */
+    public function deleteFilm(array $video)
     {
 
-        $videoFilePath = realpath($video->file_path);
+        $videoFilePath = realpath($video["file_path"]);
         if ($videoFilePath && file_exists($videoFilePath)) {
             unlink($videoFilePath);
         }
 
-        $coverFilePath = realpath($video->cover_image);
+        $coverFilePath = realpath($video["cover_image"]);
         if ($coverFilePath && file_exists($coverFilePath)) {
             unlink($coverFilePath);
         }
 
         $query = Database::getPDO()->prepare("DELETE FROM film WHERE token = ?");
-        $query->execute([$video->token]);
+        $query->execute([$video["token"]]);
 
-        return $query->rowCount() > 0;
+        return true;
     }
+
+    /**
+     * Supprimer plusieurs films
+     * @param array $films
+     * @return bool
+     */
+    public function deleteFilms(array $files_paths, array $covers_images, array $tokens)
+    {
+
+        for ($i = 0; $i < count($files_paths); $i++) {
+            $videoFilePath = realpath($files_paths[$i]);
+            if ($videoFilePath && file_exists($videoFilePath)) {
+                unlink($videoFilePath);
+            }
+        }
+
+        for ($i = 0; $i < count($covers_images); $i++) {
+            $coverFilePath = realpath($covers_images[$i]);
+            if ($coverFilePath && file_exists($coverFilePath)) {
+                unlink($coverFilePath);
+            }
+        }
+
+
+        $in = str_repeat('?,', count($tokens) - 1) . '?';
+
+        $query = Database::getPDO()->prepare("DELETE FROM film WHERE token IN ($in)");
+        $query->execute($tokens);
+
+        return $query->rowCount() > 0 ?: throw new BadRequestException("le(s) film(s) n'existent pas");
+    }
+
+
+
+    public function getFilmsByTokens(array $tokens): ?array
+    {
+        try {
+            $in = str_repeat('?,', count($tokens) - 1) . '?';
+           
+            $query = Database::getPDO()->prepare("SELECT file_path, cover_image, token FROM film WHERE token IN ($in)");
+            $query->execute($tokens);
+
+            return $query->fetchAll(PDO::FETCH_ASSOC) ?: null;
+
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong");
+        }
+    }
+
 }

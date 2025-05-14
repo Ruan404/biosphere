@@ -99,6 +99,23 @@ class UserService
         }
     }
 
+    public function deleteUsers($users)
+    {
+        try {
+
+            $in = str_repeat('?,', count($users) - 1) . '?';
+
+            $query = Database::getPDO()->prepare("DELETE FROM users WHERE pseudo IN ($in)");
+            $query->execute($users);
+
+            return $query->rowCount() > 0 ?: throw new BadRequestException("les utilisateurs n'existent pas");
+
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong.");
+        }
+    }
+
     public function getUsersExceptOne($userId): array
     {
         try {

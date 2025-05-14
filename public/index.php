@@ -9,7 +9,7 @@ use App\Home\HomeController;
 use App\Podcast\PodcastController;
 use App\Admin\AdminController;
 use App\Sensor\SensorController;
-Use App\Message\MessageController;
+use App\Message\MessageController;
 use App\VideoStream\VideoStreamController;
 
 
@@ -33,6 +33,10 @@ if ($_SERVER['REQUEST_URI'] !== '/' && str_ends_with($_SERVER['REQUEST_URI'], '/
 
 
 $router = new Router();
+
+if (session_status() == 1) {
+        session_start();
+}
 
 $router->registerController(HomeController::class)
         ->registerController(AuthController::class)

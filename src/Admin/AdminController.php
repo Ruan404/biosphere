@@ -27,16 +27,19 @@ class AdminController
     {
         $this->adminService = new AdminService();
         $this->filmService = new FilmService();
-
-        if (session_status() == 1) {
-            session_start();
-        }
     }
 
     #[Route("GET", "/admin")]
     public function index()
     {
         return view(view: "/admin/index", layout: Layout::Admin);
+    }
+
+
+    #[Route("GET", "/admin/film/upload")]
+    public function upload()
+    {
+        return view(view: '/film/upload');
     }
 
     #[Route("GET", "/admin/[*:tab]")]
@@ -46,17 +49,13 @@ class AdminController
             $tab = htmlspecialchars($params["tab"]);
             switch ($tab) {
                 case "users":
-                    $users = new UserService()->getUsersExceptOne($_SESSION['user_id']);
-                    return new Response()->json(['label' => 'utilisateurs', 'data' => $users]);
+                    return new Response()->json(new UserService()->getUsersExceptOne($_SESSION['user_id']));
 
                 case "topics":
-                    $topics = new TopicService()->adminTopics();
-                    return new Response()->json(['label' => 'topics', 'data' => $topics]);
+                    return new Response()->json(new TopicService()->adminTopics());
 
                 case "films":
-                    $films = new FilmService()->adminFilms();
-
-                    return new Response()->json(['label' => 'topics', 'data' => $films]);
+                    return new Response()->json($this->filmService->adminFilms());
 
                 default:
                     return new Response()->json([]);
@@ -65,12 +64,6 @@ class AdminController
             error_log("Admin panel load failed: " . $e->getMessage());
             return new Response()->json(["success" => false, "message" => "impossible de charger la page"]);
         }
-    }
-
-    #[Route("GET", "/admin/film/upload")]
-    public function upload()
-    {
-        return view(view: '/film/upload', layout: Layout::Admin);
     }
 
     // Route for handling the video upload and HLS conversion
@@ -119,28 +112,37 @@ class AdminController
     public function handleActions()
     {
         try {
-            $data = json_decode(file_get_contents('php://input'), true);
-
-            $action = $data['action'];
-            $item = $data['item']['id'] ?? null;
+            $action = $_POST['action'];
+            $slug = $_POST['slug'] ?? "";
+            $slugs = $_POST['slugs'] ?? [];
 
             switch ($action) {
                 case 'delete_user':
-                    $this->adminService->deleteUser($item);
+                    $this->adminService->deleteUser($slug);
+                    break;
+                case 'delete_users':
+                    $this->adminService->deleteUsers($slugs);
+                    break;
                 case 'promote_user':
-                    $this->adminService->promoteUser($item);
+                    $this->adminService->promoteUser($slug);
                     break;
                 case 'delete_topic':
-                    $this->adminService->deleteTopic(topic: $item);
+                    $this->adminService->deleteTopic( $slug);
                     break;
-                case 'delete_podcast':
-                    $this->adminService->deletePodcast($item);
+                 case 'delete_topics':
+                    $this->adminService->deleteTopics($slugs);
                     break;
                 case 'add_topic':
-                    $this->adminService->addTopic($item);
+                    $this->adminService->addTopic($slug);
                     break;
                 case 'delete_film':
-                    $this->adminService->deleteFilm($item);
+                    $this->adminService->deleteFilm($slug);
+                    break;
+                case 'delete_films':
+                    $this->adminService->deleteFilms($slugs);
+                    break;
+                 case 'delete_podcast':
+                    $this->adminService->deletePodcast($slug);
                     break;
                 default:
                     return new Response()->json(["success" => false, "message" => "l'action n'a pas pu aboutir"]);
@@ -148,7 +150,6 @@ class AdminController
 
             return new Response()->json(["success" => true, "message" => "action menée avec success"]);
         } catch (HttpExceptionInterface $e) {
-            http_response_code($e->getStatusCode());
             return new Response()->json(["success" => false, "message" => "l'action n'a pas pu aboutir"], $e->getStatusCode());
         } catch (Exception $e) {
             error_log("Admin action failed: " . $e->getMessage());

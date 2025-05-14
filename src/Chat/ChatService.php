@@ -18,17 +18,17 @@ class ChatService extends Chat
     }
     public function addMessage(Chat $chat, int $topicId): bool
     {
-        try{
+        try {
             if (strlen($chat->message) != 0) {
                 $query = Database::getPDO()->prepare('INSERT INTO chat(pseudo, message, topic_id) VALUES(?,?,?)');
                 $query->execute([$chat->pseudo, $chat->message, $topicId]);
-    
+
                 return true;
             }
-    
+
             throw new BadRequestException("enter a valid message");
-            
-        }catch (PDOException $e) {
+
+        } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());
             throw new Exception("Something went wrong");
         }
@@ -57,20 +57,20 @@ class ChatService extends Chat
     //supprimer tous mes messages
     public function deleteMyMessages(string $pseudo, int $topicId, array $dates): bool
     {
-       
+
         // $in_array = explode(',', $dates[0]);
 
         $in = str_repeat('?,', count($dates) - 1) . '?';
 
         $query = Database::getPDO()->prepare("DELETE FROM chat WHERE pseudo=? AND topic_id=? AND date IN ($in)");
 
-        $query->execute(array_merge([$pseudo, $topicId], array_merge($dates)));
+        $query->execute(array_merge([$pseudo, $topicId], $dates));
 
         return $query->rowCount() > 0;
     }
-    
-     public function deleteMessagesAsAdmin(int $topicId, array $dates): bool
-     {
+
+    public function deleteMessagesAsAdmin(int $topicId, array $dates): bool
+    {
         //$in_array = explode(',', $dates[0]);
         $in = str_repeat('?,', count($dates) - 1) . '?';
 
@@ -78,20 +78,36 @@ class ChatService extends Chat
         $query->execute(array_merge([$topicId], $dates));
 
         return $query->rowCount() > 0;
-     }
+    }
 
 
-    public function deleteChat($topicId): string
+    public function deleteChat($topicId): bool
     {
         try {
             if ($topicId && is_numeric($topicId)) {
                 $query = Database::getPDO()->prepare('DELETE FROM chat WHERE topic_id = ?');
                 $query->execute([$topicId]);
 
-                return $this->topicService->deleteTopic($topicId);
+                return true;
             }
 
             throw new BadRequestException("invalid parameter");
+
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong");
+        }
+    }
+
+    public function deleteChats($topicsIds): bool
+    {
+        try {
+            $in = str_repeat('?,', count($topicsIds) - 1) . '?';
+
+            $query = Database::getPDO()->prepare("DELETE FROM chat WHERE topic_id IN ($in)");
+            $query->execute($topicsIds);
+
+            return $query->rowCount() > 0;
 
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());

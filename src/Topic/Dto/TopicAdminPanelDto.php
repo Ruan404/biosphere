@@ -7,10 +7,10 @@ class TopicAdminPanelDto
     public function __construct()
     {
         $this->actions = [
-            ["type" => "delete_user", "label" => "Supprimer", "confirm" => true]
+            ["type" => "delete_topic", "label" => "Supprimer", "confirm" => true]
         ];
 
-        $this->id = $this->name;
+        $this->slug = $this->name;
 
     }
 
@@ -26,8 +26,8 @@ class TopicAdminPanelDto
     }
 
     
-    public string $id {
-        get => $this->id;
+    public string $slug {
+        get => $this->slug;
     }
 
     public array $actions {

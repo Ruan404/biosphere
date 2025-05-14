@@ -5,6 +5,7 @@ use App\Topic\Dto\TopicAdminPanelDto;
 use Exception;
 use PDO;
 use PDOException;
+use function PHPUnit\Framework\throwException;
 
 class TopicService
 {
@@ -88,6 +89,47 @@ class TopicService
             // On insère le nouveau topic
             $query = Database::getPDO()->prepare('INSERT INTO topic (name) VALUES (?)');
             $query->execute([htmlspecialchars($newTopic)]);
+
+            return true;
+
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong");
+        }
+    }
+
+    /**
+     * recupérer les topics en donnant leurs noms
+     * @param array $topics
+     * @throws \Exception
+     * @return array|null
+     */
+    public function getTopicsByNames(array $names): array|null
+    {
+        try {
+            $in = str_repeat('?,', times: count($names) - 1) . '?';
+            
+            $query = Database::getPDO()->prepare("SELECT * FROM topic WHERE name IN ($in)");
+            $query->execute($names);
+
+            $topics = $query->fetchAll(PDO::FETCH_ASSOC);
+           
+            return $topics ?: null;
+
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong");
+        }
+    }
+
+    public function deleteTopics(array $topics): bool
+    {
+
+        try {
+            $in = str_repeat('?,', count($topics) - 1) . '?';
+
+            $query = Database::getPDO()->prepare("DELETE FROM topic WHERE id IN ($in)");
+            $query->execute($topics);
 
             return true;
 

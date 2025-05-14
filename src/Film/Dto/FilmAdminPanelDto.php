@@ -25,11 +25,11 @@ class FilmAdminPanelDto
         get => $this->actions;
     }
 
-    public string $id{
-        get => htmlspecialchars($this->id);
+    public string $slug{
+        get => htmlspecialchars($this->slug);
 
-        set(string $id) {
-            $this->id = htmlspecialchars($id);
+        set(string $slug) {
+            $this->slug = htmlspecialchars($slug);
         }
     }
 

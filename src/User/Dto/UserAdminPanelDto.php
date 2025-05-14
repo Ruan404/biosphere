@@ -6,7 +6,7 @@ class UserAdminPanelDto
         public function __construct()
         {
                 $this->actions = $this->setActions($this->role);
-                $this->id = $this->pseudo;
+                $this->slug = $this->pseudo;
         }
         public string $pseudo {
                 get => htmlspecialchars(string: $this->pseudo);
@@ -20,8 +20,8 @@ class UserAdminPanelDto
                 get => $this->role;
         }
 
-        public string $id {
-                get => $this->id;
+        public string $slug {
+                get => $this->slug;
         }
 
         public array $actions {
