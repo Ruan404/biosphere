@@ -19,7 +19,7 @@ main {
 
 /* Conteneur de conversation */
 .conversation-container {
-  width: 100%;
+  width: calc(100% - 2rem);
   display: grid;
   grid-template-rows: auto min-content;
   height: 100%;

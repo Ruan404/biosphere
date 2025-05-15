@@ -38,12 +38,12 @@ if (session_status() == 1) {
         session_start();
 }
 
-$router->registerController(HomeController::class)
+$router->registerController(AdminController::class)
+        ->registerController(HomeController::class)
         ->registerController(AuthController::class)
         ->registerController(ChatController::class)
         ->registerController(FilmController::class)
         ->registerController(PodcastController::class)
-        ->registerController(AdminController::class)
         ->registerController(SensorController::class)
         ->registerController(VideoStreamController::class)
         ->registerController(MessageController::class)

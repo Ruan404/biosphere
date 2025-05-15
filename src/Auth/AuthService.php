@@ -68,7 +68,9 @@ class AuthService
     {
         // Initialize the session.
         // If you are using session_name("something"), don't forget it now!
-        session_start();
+        if (session_status() === 1) {
+            session_start();
+        }
 
         // Unset all of the session variables.
         $_SESSION = array();
