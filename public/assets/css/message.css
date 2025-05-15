@@ -4,7 +4,6 @@
   justify-content: flex-start;
   height: 100%;
   overflow: hidden;
-  padding-inline: 1rem;
 }
 
 .sidebar-tab {
@@ -27,6 +26,7 @@ main {
   border-radius: 0.5rem 0.5rem 0 0;
   overflow: hidden;
   background: rgb(var(--bg-2));
+  margin-inline: 1rem;
 }
 
 /* Quand aucun utilisateur n'est sélectionné */
@@ -95,5 +95,9 @@ main {
     flex-direction: column;
     align-items: flex-start;
     margin-top: 0.625rem;
+  }
+
+  .sidebar-ctn {
+    margin-left: 1rem;
   }
 }

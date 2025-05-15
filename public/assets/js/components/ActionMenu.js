@@ -17,6 +17,7 @@ export default class ActionMenu extends HTMLElement {
 
 		this.button = document.createElement('button');
 		this.button.className = 'action-trigger';
+		this.button.setAttribute("aria-label", `effectuer une action sur ${itemId}`);
 		this.button.innerHTML = `
 			<svg width='24' height='24' viewBox='0 0 24 24' fill='currentColor' xmlns='http://www.w3.org/2000/svg'>
 				<rect x='11' y='5' width='2' height='2' rx='1'/>

@@ -140,4 +140,8 @@ main {
   .container {
     flex-direction: column;
   }
+
+  .sidebar-ctn{
+    margin-left: 1rem;
+  }
 }

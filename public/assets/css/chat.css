@@ -6,7 +6,7 @@
   display: flex;
 }
 
-.msg-info-ctn{
+.msg-info-ctn {
   display: flex;
   flex-direction: column;
 }
@@ -108,15 +108,14 @@ main {
   align-items: center;
 }
 
-/*===sidebar===*/
-.sidebar-ctn{
-  margin-left: 1rem;
-}
-
 /*===responsiveness===*/
 
 @media (max-width: 768px) {
   .container {
     flex-direction: column;
+  }
+
+  .sidebar-ctn {
+    margin-left: 1rem;
   }
 }

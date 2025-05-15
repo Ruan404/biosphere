@@ -103,7 +103,7 @@ function renderTab(data) {
     tbody.appendChild(row);
   });
 
-  handleBulkActions()
+  handleBulkActions();
 }
 
 // Handle actions from <action-menu>
@@ -134,7 +134,7 @@ table.addEventListener("selected", (e) => {
         alert("Action effectuée !");
         showTab(currentTab, true);
       } else {
-        alert("Erreur : " + (res.error || "inconnue"));
+        alert("l'action n'a pas pu aboutir");
       }
     })
     .catch((err) => alert("Erreur: " + err.message));
@@ -217,7 +217,7 @@ function handleBulkActions() {
 
       const action = btn.dataset.action;
 
-      if (!confirm(`Confirmer l'action: ${action}?`)) return;
+      if (!confirm(`Confirmer l'action ?`)) return;
 
       const formdata = new FormData();
       formdata.append("action", action);
@@ -233,7 +233,7 @@ function handleBulkActions() {
             alert("Action effectuée !");
             showTab(currentTab, true);
           } else {
-            alert("Erreur : " + (res.error || "inconnue"));
+            alert("l'action n'a pas pu aboutir");
           }
         })
         .catch((err) => alert("Erreur: " + err.message));
