@@ -26,6 +26,7 @@ $profile = Text::getFirstStr($_SESSION["username"]);
     <link rel="stylesheet" type="text/css" href="/assets/css/navbar.css">
     <link rel="stylesheet" type="text/css" href="/assets/css/style.css">
     <link rel="stylesheet" type="text/css" href="/assets/css/admin.css">
+
 </head>
 
 <body>
@@ -41,7 +42,7 @@ $profile = Text::getFirstStr($_SESSION["username"]);
                     <a href="/">Biosphère</a>
                 </div>
                 <div class="nav-links">
-                    <a href="/messagerie">Messagerie</a>
+                    <a href="/message">Messagerie</a>
                     <a href="/chat">Forum</a>
                     <a href="/films">Films</a>
                     <a href="/podcast">Podcast</a>
@@ -57,6 +58,9 @@ $profile = Text::getFirstStr($_SESSION["username"]);
     </header>
     <?= $content ?>
     <script src="/assets/js/script.js"></script>
+    <script src="/assets/js/components/Sidebar.js"></script>
+    <script type="module" src="/assets/js/components/ActionMenu.js"></script>
+    <script src="/assets/js/adminPanel.js"></script>
 </body>
 
 </html>

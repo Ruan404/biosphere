@@ -4,7 +4,7 @@ namespace App\User;
 
 use App\Core\Database;
 use App\Exceptions\BadRequestException;
-use App\Exceptions\NotFoundException;
+use App\User\Dto\UserAdminPanelDto;
 use App\User\User;
 use Exception;
 use PDO;
@@ -12,21 +12,13 @@ use PDOException;
 
 class UserService
 {
-    public function createUser(User $newUser): string
+    public function createUser(User $user): string
     {
         try {
-            //verify if the user already exists in the database
-            $user = $this->getUserByPseudo($newUser->pseudo);
+            $query = Database::getPDO()->prepare('INSERT INTO users(pseudo, mdp)VALUES(?, ?)');
+            $query->execute([htmlspecialchars($user->pseudo), sha1($user->mdp)]);
 
-            $hashedPassword = password_hash($newUser->mdp, PASSWORD_BCRYPT);
-
-            if ($user === null) {
-                $query = Database::getPDO()->prepare('INSERT INTO users(pseudo, mdp)VALUES(?, ?)');
-                $query->execute([htmlspecialchars($newUser->pseudo), $hashedPassword]);
-                $response = "your account has been created";
-                return $response;
-            }
-            throw new BadRequestException("user already exist");
+            return true;
 
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());
@@ -71,19 +63,13 @@ class UserService
      * @param int $userId
      * @return bool
      */
-    public function promoteToAdmin(int $userId): string
+    public function promoteToAdmin(int $userId): bool
     {
         try {
-            $user = $this->getUserById($userId);
-
-            if($user===null){
-                throw new NotFoundException("user was not found");
-            }
-
             $query = Database::getPDO()->prepare('UPDATE users SET role = ? WHERE id = ?');
-            $query->execute(['admin', $user->id]);
+            $query->execute(['admin', $userId]);
 
-            return "user $user->pseudo has been successfully promoted";
+            return true;
 
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());
@@ -98,16 +84,13 @@ class UserService
      * @param int $userId
      * @return bool
      */
-    public function deleteUser(int $userId): string
+    public function deleteUser(int $userId): bool
     {
         try {
-            $user = $this->getUserById($userId);
-
             $query = Database::getPDO()->prepare('DELETE FROM users WHERE id = ?');
-            $query->execute([$user->id]);
-            $response = "user $user->pseudo has been successfully deleted";
+            $query->execute([$userId]);
 
-            return $response;
+            return true;
 
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());
@@ -115,15 +98,29 @@ class UserService
         }
     }
 
-    public function getUsers(): array
+    public function deleteUsers($users)
     {
         try {
-            if (session_status() == 1) {
-                session_start();
-            }
+
+            $in = str_repeat('?,', count($users) - 1) . '?';
+
+            $query = Database::getPDO()->prepare("DELETE FROM users WHERE pseudo IN ($in)");
+            $query->execute($users);
+
+            return $query->rowCount() > 0 ?: throw new BadRequestException("les utilisateurs n'existent pas");
+
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong.");
+        }
+    }
+
+    public function getUsersExceptOne($userId): array
+    {
+        try {
             $query = Database::getPDO()->prepare('SELECT pseudo, role FROM users WHERE id!= ?');
-            $query->execute([htmlspecialchars($_SESSION['user_id'])]);
-            $users = $query->fetchAll(PDO::FETCH_CLASS, User::class);
+            $query->execute([htmlspecialchars($userId)]);
+            $users = $query->fetchAll(PDO::FETCH_CLASS, UserAdminPanelDto::class);
 
             return $users;
 

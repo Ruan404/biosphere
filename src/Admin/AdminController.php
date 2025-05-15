@@ -7,15 +7,17 @@ use App\Attributes\Route;
 use App\Admin\AdminService;
 use App\Entities\Layout;
 use App\Entities\Role;
+use App\Exceptions\HttpExceptionInterface;
 use App\Film\FilmService;
 use App\Helpers\Response;
 use App\Topic\TopicService;
 use App\User\UserService;
+use ErrorException;
 use Exception;
 use function App\Helpers\view;
 ini_set('max_execution_time', 300);
 
-
+#[Roles(array(Role::Admin))]
 class AdminController
 {
     private $adminService;
@@ -28,26 +30,44 @@ class AdminController
     }
 
     #[Route("GET", "/admin")]
-    #[Roles(array(Role::Admin))]
     public function index()
     {
-        $users = new UserService()->getUsers();
-        $topics = new TopicService()->getAllTopics();
-        $films = new FilmService()->getAllFilms();
-
-        return view(view: "/admin/index", data: ['users' => $users, 'topics' => $topics, 'films' => $films], layout: Layout::Admin);
+        return view(view: "/admin/index", layout: Layout::Admin);
     }
 
+
     #[Route("GET", "/admin/film/upload")]
-    #[Roles(array(Role::Admin))]
     public function upload()
     {
-        return view(view: '/film/upload', layout: Layout::Admin);
+        return view(view: '/film/upload');
+    }
+
+    #[Route("GET", "/admin/[*:tab]")]
+    public function getData($params)
+    {
+        try {
+            $tab = htmlspecialchars($params["tab"]);
+            switch ($tab) {
+                case "users":
+                    return new Response()->json(new UserService()->getUsersExceptOne($_SESSION['user_id']));
+
+                case "topics":
+                    return new Response()->json(new TopicService()->adminTopics());
+
+                case "films":
+                    return new Response()->json($this->filmService->adminFilms());
+
+                default:
+                    return new Response()->json([]);
+            }
+        } catch (Exception $e) {
+            error_log("Admin panel load failed: " . $e->getMessage());
+            return new Response()->json(["success" => false, "message" => "impossible de charger la page"]);
+        }
     }
 
     // Route for handling the video upload and HLS conversion
     #[Route("POST", "/film/upload")]
-    #[Roles(array(Role::Admin))]
     public function uploadFilm()
     {
         try {
@@ -89,65 +109,51 @@ class AdminController
     }
 
     #[Route("POST", "/admin/action")]
-    #[Roles(array(Role::Admin))]
     public function handleActions()
     {
-        if (isset($_POST['action'])) {
+        try {
             $action = $_POST['action'];
-            $pseudo = $_POST['pseudo'] ?? null;
-            $topic = $_POST['topic'] ?? null;
-            $podcast = $_POST['podcast'] ?? null;
-            $film = $_POST['film'] ?? null;
+            $slug = $_POST['slug'] ?? "";
+            $slugs = $_POST['slugs'] ?? [];
 
             switch ($action) {
                 case 'delete_user':
-                    if ($pseudo) {
-                        $this->adminService->deleteUser($pseudo);
-                        // Redirect or show confirmation
-                    }
+                    $this->adminService->deleteUser($slug);
                     break;
-
+                case 'delete_users':
+                    $this->adminService->deleteUsers($slugs);
+                    break;
                 case 'promote_user':
-                    if ($pseudo) {
-                        $this->adminService->promoteUser($pseudo);
-                        // Redirect or show confirmation
-                    }
+                    $this->adminService->promoteUser($slug);
                     break;
-
                 case 'delete_topic':
-                    if ($topic) {
-                        $this->adminService->deleteTopic($topic);
-                        // Redirect or show confirmation
-                    }
+                    $this->adminService->deleteTopic( $slug);
                     break;
-
-                case 'delete_podcast':
-                    if ($podcast) {
-                        $this->adminService->deletePodcast($podcast);
-                        // Redirect or show confirmation
-                    }
+                 case 'delete_topics':
+                    $this->adminService->deleteTopics($slugs);
                     break;
-
                 case 'add_topic':
-                    if ($topic) {
-                        $message = $this->adminService->addTopic($topic);  // Appeler la méthode addTopic
-                        // Redirect or show confirmation
-                    }
+                    $this->adminService->addTopic($slug);
                     break;
                 case 'delete_film':
-                    if ($film) {
-                        $this->adminService->deleteFilm($film);
-                        // Redirect or show confirmation
-                    }
+                    $this->adminService->deleteFilm($slug);
                     break;
-
+                case 'delete_films':
+                    $this->adminService->deleteFilms($slugs);
+                    break;
+                 case 'delete_podcast':
+                    $this->adminService->deletePodcast($slug);
+                    break;
                 default:
-                    // Handle unknown actions
-                    echo 'Action not found';
-                    break;
+                    return new Response()->json(["success" => false, "message" => "l'action n'a pas pu aboutir"]);
             }
 
-            header("location: /admin");
+            return new Response()->json(["success" => true, "message" => "action menée avec success"]);
+        } catch (HttpExceptionInterface $e) {
+            return new Response()->json(["success" => false, "message" => "l'action n'a pas pu aboutir"], $e->getStatusCode());
+        } catch (Exception $e) {
+            error_log("Admin action failed: " . $e->getMessage());
+            return new Response()->json(["success" => false, "message" => "l'action n'a pas pu aboutir"], 500);
         }
     }
 }

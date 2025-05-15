@@ -36,12 +36,12 @@ class AuthService
              */
             if (session_status() == PHP_SESSION_NONE) {
                 session_start();
-                $_SESSION['user_id'] = $user->id;
-                $_SESSION['username'] = $user->pseudo;
-                $_SESSION['role'] = $user->role;
-                return $user;
             }
 
+            $_SESSION['auth'] = $user->id;
+            $_SESSION['user_id'] = $user->id;
+            $_SESSION['username'] = $user->pseudo;
+            $_SESSION['role'] = $user->role;
             return $user;
         }
         throw new BadRequestException("mauvais pseudo ou mot de passe");
@@ -49,6 +49,12 @@ class AuthService
 
     public function signup(User $signupUser)
     {
+        $user = $this->userService->getUserByPseudo($signupUser->pseudo);
+
+        if ($user !== null) {
+            throw new BadRequestException("mauvais pseudo ou mot de passe");
+
+        }
 
         return $this->userService->createUser($signupUser);
     }
