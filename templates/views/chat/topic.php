@@ -20,7 +20,7 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 	</sidebar-tab>
 	<!--messages-->
 	<div class="messages">
-		<div class="msgs-display">
+		<div class="msgs-display" id="ctn-display">
 			<div></div>
 		</div>
 		<form class="send-msg-form">
