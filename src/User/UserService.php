@@ -12,13 +12,21 @@ use PDOException;
 
 class UserService
 {
-    public function createUser(User $user): string
+    public function createUser(User $newUser): bool
     {
         try {
-            $query = Database::getPDO()->prepare('INSERT INTO users(pseudo, mdp)VALUES(?, ?)');
-            $query->execute([htmlspecialchars($user->pseudo), sha1($user->mdp)]);
+            //verify if the user already exists in the database
+            $user = $this->getUserByPseudo($newUser->pseudo);
 
-            return true;
+            $hashedPassword = password_hash($newUser->mdp, algo: PASSWORD_BCRYPT);
+
+            if ($user === null) {
+                $query = Database::getPDO()->prepare('INSERT INTO users(pseudo, mdp)VALUES(?, ?)');
+                $query->execute([htmlspecialchars($newUser->pseudo), $hashedPassword]);
+               
+                return true;
+            }
+            throw new BadRequestException("user already exist");
 
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());
