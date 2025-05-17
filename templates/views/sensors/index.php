@@ -1,26 +1,26 @@
 <?php
-    $style = "sensor";
-    $title = "station météo";
-    $description = "voir les données de la station météo";
+$style = "sensor";
+$title = "station météo";
+$description = "voir les données de la station météo";
 ?>
 
-<div class="sensor-ctn">
-    <table>
-        <thead>
-            <tr>
-                <th class="head">Capteur</th>
-                <th class="head">Valeur</th>
-            </tr>
-        </thead>
-        <tbody id="sensor-table-body">
+<main>
+    <div class="sensor-ctn">
+        <table>
+            <thead>
+                <tr>
+                    <th class="head">Capteur</th>
+                    <th class="head">Valeur</th>
+                </tr>
+            </thead>
+            <tbody id="sensor-table-body">
 
-        </tbody>
-    </table>
-</div>
-
-
+            </tbody>
+        </table>
+    </div>
+</main>
 <script>
-    const socket = new WebSocket(`ws://localhost:3000/bar`);
+    const socket = new WebSocket(`${WEBSOCKET_URL}/bar`);
 
     // When a message is received from the WebSocket server
     socket.onmessage = function (event) {

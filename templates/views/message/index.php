@@ -22,57 +22,49 @@ $users = $messageService->getUsers();
 ?>
 
 
-<div class="container">
+<main>
+    <div class="container">
+        <sidebar-tab class="sidebar-ctn" id="contact-bar">
+            <button id="toggle-tab" slot="trigger" class="tab-btn shadow-btn">Contacts</button>
+            <h2 class="sidebar-title" slot="title">Utilisateurs disponibles</h2>
+            <?php foreach ($users as $user): ?>
+                <a slot="menu" class='sidebar-menu-button'
+                    href="?user_id=<?= $user['id'] ?>"><?= htmlspecialchars($user['pseudo']) ?></a>
 
-    <sidebar-tab class="sidebar-ctn" id="contact-bar">
-        <h2 class="sidebar-title" slot="title">Utilisateurs disponibles</h2>
-        <?php foreach ($users as $user): ?>
-            <a slot="menu" class='sidebar-menu-button'
-                href="?user_id=<?= $user['id'] ?>"><?= htmlspecialchars($user['pseudo']) ?></a>
-
-        <?php endforeach; ?>
-    </sidebar-tab>
-    <div class="conversation-container">
-        <?php if (isset($_GET['user_id'])): ?>
-            <?php
-            $recipientId = (int) $_GET['user_id'];
-            $messages = $messageService->getMessages($recipientId);
-            $recipient = $messageService->getUserById($recipientId);
-            ?>
-            <?php if ($recipient): ?>
-                <div class="conversation full-page">
-                    <div class="title">
-                        <div class="tab-users mobile-only">
-                            <button id="toggle-tab" class="tab-btn shadow-btn">Contacts</button>
-
+            <?php endforeach; ?>
+        </sidebar-tab>
+        <div class="conversation-container">
+            <?php if (isset($_GET['user_id'])): ?>
+                <?php
+                $recipientId = (int) $_GET['user_id'];
+                $messages = $messageService->getMessages($recipientId);
+                $recipient = $messageService->getUserById($recipientId);
+                ?>
+                <?php if ($recipient): ?>
+                    <div class="conversation full-page">
+                        <div class="title">
+                            <h2>Conversation avec <?= htmlspecialchars($recipient['pseudo']) ?></h2>
                         </div>
-                        <h2>Conversation avec <?= htmlspecialchars($recipient['pseudo']) ?></h2>
+                        <div class="messages">
+                            <?php foreach ($messages as $message): ?>
+                                <message-bubble class="<?= $message['id_auteur'] === $currentUserId ? 'bubble right' : 'bubble' ?>"
+                                    content="<?= htmlspecialchars($message['message']) ?>" date="<?= $message['date'] ?>"
+                                    message-id="<?= $message['id'] ?>" <?= $message['id_auteur'] === $currentUserId || $_SESSION['role'] === 'admin' ? 'can-delete' : '' ?>></message-bubble>
+                            <?php endforeach; ?>
+                        </div>
                     </div>
-                    <div class="messages">
-                        <?php foreach ($messages as $message): ?>
-                            <message-bubble class="<?= $message['id_auteur'] === $currentUserId ? 'bubble right' : 'bubble' ?>"
-                                content="<?= htmlspecialchars($message['message']) ?>" date="<?= $message['date'] ?>"
-                                message-id="<?= $message['id'] ?>" <?= $message['id_auteur'] === $currentUserId || $_SESSION['role'] === 'admin' ? 'can-delete' : '' ?>></message-bubble>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-                <form method="POST" action="/message/<?= $recipientId ?>" class="send-message-form">
-                    <textarea name="message" placeholder="Écrivez votre message..." required></textarea>
-                    <button class="primary-btn" type="submit">Envoyer</button>
-                </form>
+                    <form method="POST" action="/message/<?= $recipientId ?>" class="send-message-form">
+                        <textarea name="message" placeholder="Écrivez votre message..." required></textarea>
+                        <button class="primary-btn" type="submit">Envoyer</button>
+                    </form>
+                <?php else: ?>
+                    <p>Utilisateur introuvable.</p>
+                <?php endif; ?>
             <?php else: ?>
-                <p>Utilisateur introuvable.</p>
+                <div class="no-user">Aucun utilisateur sélectionné</div>
             <?php endif; ?>
-        <?php else: ?>
-            <div class="no-user">Aucun utilisateur sélectionné</div>
-        <?php endif; ?>
+        </div>
     </div>
-</div>
+</main>
 <script src="/assets/js/components/SideBar.js"></script>
 <script src="/assets/js/components/MessageBubble.js"></script>
-<script>
-    document.getElementById('toggle-tab').addEventListener('click', () => {
-        const sidebar = document.getElementById('contact-bar');
-        sidebar.open(); // this will now work!
-    });
-</script>

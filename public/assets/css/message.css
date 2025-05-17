@@ -4,7 +4,10 @@
   justify-content: flex-start;
   height: 100%;
   overflow: hidden;
-  padding-inline: 1rem;
+}
+
+.sidebar-tab {
+  margin-left: 0 !important;
 }
 
 main {
@@ -16,13 +19,14 @@ main {
 
 /* Conteneur de conversation */
 .conversation-container {
-  width: 100%;
+  width: calc(100% - 2rem);
   display: grid;
   grid-template-rows: auto min-content;
   height: 100%;
   border-radius: 0.5rem 0.5rem 0 0;
   overflow: hidden;
   background: rgb(var(--bg-2));
+  margin-inline: 1rem;
 }
 
 /* Quand aucun utilisateur n'est sélectionné */
@@ -30,8 +34,7 @@ main {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100%;
-  margin: 1;
+  color: rgb(var(--fg-1), 0.35);
 }
 
 .full-page {
@@ -59,11 +62,10 @@ main {
 
 .title {
   padding: 1rem;
-  border-bottom: 1px solid rgb(var(--bg-3),0.35);
+  border-bottom: 1px solid rgb(var(--bg-3), 0.35);
   display: flex;
   align-items: center;
   column-gap: 0.875rem;
-
 }
 
 .title h2 {
@@ -77,22 +79,8 @@ main {
   column-gap: 0.875rem;
 }
 
-.bubble.right{
+.bubble.right {
   justify-items: end;
-}
-
-/* Styles pour l'affichage mobile */
-.mobile-only {
-  display: none;
-}
-
-.tab-users {
-  display: none;
-}
-
-.current-contact {
-  margin: 10px 0;
-  font-size: 1.2rem;
 }
 
 /* Partie mobile */
@@ -102,41 +90,14 @@ main {
     flex-direction: column;
   }
 
-  .tab-users {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-  }
-
-  /* La fenêtre de messagerie ne sera plus en deux colonnes */
-  .no-user {
-    font-size: 16px;
-    text-align: center;
-    color: #888;
-    padding: 10px;
-  }
-
-  /* Les icônes de suppression dans les bulles de message sont ajustées */
-  .menu-wrapper {
-    position: relative;
-    display: inline-block;
-  }
-
-  .menu-btn {
-    font-size: 1.5em;
-  }
-
   /* Eviter l'overlap entre les éléments */
   .bottom {
     flex-direction: column;
     align-items: flex-start;
-    margin-top: 10px;
+    margin-top: 0.625rem;
   }
 
-  .options-menu {
-    position: absolute;
-    top: -40px;
-    right: 0;
-    width: 100%;
+  .sidebar-ctn {
+    margin-left: 1rem;
   }
 }

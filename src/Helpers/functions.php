@@ -12,7 +12,6 @@ function view(string $view, Layout $layout = Layout::Preset, array $data = [], i
     $viewPath = dirname(__DIR__) . '../../templates';
 
     $templatePath = $viewPath . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . $view . '.php';
-    ;
     $layoutPath = $viewPath . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . $layout->value . '.php';
     
     ob_start();
@@ -22,6 +21,8 @@ function view(string $view, Layout $layout = Layout::Preset, array $data = [], i
     ob_start();
     require $layoutPath;
     $html = ob_get_clean();
+
+    require $viewPath . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . 'footer.php';
     
     return new Response($status, ['Content-Type' => 'text/html'], $html);
 }

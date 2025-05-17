@@ -8,9 +8,9 @@ use App\Attributes\Route;
 use App\Admin\AdminService;
 use App\Entities\Layout;
 use App\Entities\Role;
+use App\Exceptions\HttpExceptionInterface;
 use App\Film\FilmService;
 use App\Middleware\IsLoggedInMiddleware;
-use GuzzleHttp\Psr7\Response;
 use Psr\Http\Message\ServerRequestInterface;
 use function App\Helpers\json;
 use App\Topic\TopicService;
@@ -20,6 +20,7 @@ use function App\Helpers\view;
 ini_set('max_execution_time', 300);
 
 #[Middleware(new IsLoggedInMiddleware())]
+#[Roles(array(Role::Admin))]
 class AdminController
 {
     private $adminService;
@@ -32,31 +33,51 @@ class AdminController
     }
 
     #[Route("GET", "/admin")]
-    #[Roles(array(Role::Admin))]
     public function index()
     {
-        $users = new UserService()->getUsers();
-        $topics = new TopicService()->getAllTopics();
-        $films = new FilmService()->getAllFilms();
-
-        return view(view: "/admin/index", data: ['users' => $users, 'topics' => $topics, 'films' => $films], layout: Layout::Admin);
+        return view(view: "/admin/index", layout: Layout::Admin);
     }
 
+
     #[Route("GET", "/admin/film/upload")]
-    #[Roles(array(Role::Admin))]
     public function upload()
     {
-        return view(view: '/film/upload', layout: Layout::Admin);
+        return view(view: '/film/upload');
+    }
+
+    #[Route("GET", "/admin/[*:tab]")]
+    public function getData($request)
+    {
+        $params = $request->getAttribute("params");
+
+        try {
+            $tab = htmlspecialchars($params["tab"]);
+            switch ($tab) {
+                case "users":
+                    return json(new UserService()->getUsersExceptOne($_SESSION['user_id']));
+
+                case "topics":
+                    return json(new TopicService()->adminTopics());
+
+                case "films":
+                    return json($this->filmService->adminFilms());
+
+                default:
+                    return json([]);
+            }
+        } catch (Exception $e) {
+            error_log("Admin panel load failed: " . $e->getMessage());
+            return json(["success" => false, "message" => "impossible de charger la page"]);
+        }
     }
 
     // Route for handling the video upload and HLS conversion
     #[Route("POST", "/film/upload")]
-    #[Roles(array(Role::Admin))]
-    public function uploadFilm(ServerRequestInterface $request)
+    public function uploadFilm($request)
     {
         $data = $request->getParsedBody();
         $files = $request->getUploadedFiles();
-        
+
         try {
             $token = $data['token'];
             $videoFile = $files['file'];
@@ -64,14 +85,14 @@ class AdminController
             $totalChunks = (int) ($data['totalChunks']);
             $filename = $data['filename'];
         } catch (Exception) {
-            return json(["error" => "Invalid upload data."], 400);
+            return json(["success"=>false, "message" => "Invalid upload data."], 400);
         }
 
         try {
             $result = $this->filmService->chunkedUpload($videoFile, $chunkNumber, $totalChunks, $filename, $token);
 
             if ($result["state"] !== "done") {
-                return json(["message" => "chunk $chunkNumber téléchargé avec success."]);
+                return json(["success"=>false, "message" => "chunk $chunkNumber téléchargé avec success."]);
             } else {
                 try {
                     $title = $data['title'];
@@ -82,78 +103,66 @@ class AdminController
 
                     if ($cover) {
                         $this->filmService->addFilm($title, $description, $result["path"], 'playlistPath', $cover, $result["token"]);
-                        return json(["message" => "téléchargement terminé"]);
+                        return json(["success"=>false, "message" => "téléchargement terminé"]);
                     }
                 } catch (Exception $e) {
                     error_log("Video upload failed: " . $e->getMessage());
-                    return json(["error" => "une erreur s'est produite lors du téléchargement"]);
+                    return json(["success"=>false, "message" => "une erreur s'est produite lors du téléchargement"]);
                 }
             }
         } catch (Exception $e) {
             error_log("Chunk upload failed: " . $e->getMessage());
-            return json(["error" => "une erreur s'est produite lors du téléchargement"]);
+            return json(["success"=>false, "message" => "une erreur s'est produite lors du téléchargement"]);
         }
     }
 
     #[Route("POST", "/admin/action")]
-    #[Roles(array(Role::Admin))]
-    public function handleActions()
+    public function handleActions(ServerRequestInterface $request)
     {
-        if (isset($_POST['action'])) {
-            $action = $_POST['action'];
-            $pseudo = $_POST['pseudo'] ?? null;
-            $topic = $_POST['topic'] ?? null;
-            $podcast = $_POST['podcast'] ?? null;
-            $film = $_POST['film'] ?? null;
+        try {
+            $data = $request->getParsedBody();
+            $action = $data["action"];
+            $slug = $data['slug'] ?? "";
+            $slugs = $data['slugs'] ?? [];
 
             switch ($action) {
                 case 'delete_user':
-                    if ($pseudo) {
-                        $this->adminService->deleteUser($pseudo);
-                        // Redirect or show confirmation
-                    }
+                    $this->adminService->deleteUser($slug);
                     break;
-
+                case 'delete_users':
+                    $this->adminService->deleteUsers($slugs);
+                    break;
                 case 'promote_user':
-                    if ($pseudo) {
-                        $this->adminService->promoteUser($pseudo);
-                        // Redirect or show confirmation
-                    }
+                    $this->adminService->promoteUser($slug);
                     break;
-
                 case 'delete_topic':
-                    if ($topic) {
-                        $this->adminService->deleteTopic($topic);
-                        // Redirect or show confirmation
-                    }
+                    $this->adminService->deleteTopic($slug);
                     break;
-
-                case 'delete_podcast':
-                    if ($podcast) {
-                        $this->adminService->deletePodcast($podcast);
-                        // Redirect or show confirmation
-                    }
+                case 'delete_topics':
+                    $this->adminService->deleteTopics($slugs);
                     break;
-
                 case 'add_topic':
-                    if ($topic) {
-                        $this->adminService->addTopic($topic);  // Appeler la méthode addTopic
-                    }
+                    $this->adminService->addTopic($slug);
                     break;
                 case 'delete_film':
-                    if ($film) {
-                        $this->adminService->deleteFilm($film);
-                        // Redirect or show confirmation
-                    }
+                    $this->adminService->deleteFilm($slug);
                     break;
-
+                case 'delete_films':
+                    $this->adminService->deleteFilms($slugs);
+                    break;
+                case 'delete_podcast':
+                    $this->adminService->deletePodcast($slug);
+                    break;
                 default:
-                    // Handle unknown actions
-                    echo 'Action not found';
-                    break;
+                    return json(["success" => false, "message" => "l'action n'a pas pu aboutir"]);
             }
 
-            return new Response(status: 200,headers: ["location" => "/admin"]);
+            return json(["success" => true, "message" => "action menée avec success"]);
+        } catch (HttpExceptionInterface $e) {
+            return json(["success" => false, "message" => "l'action n'a pas pu aboutir"], $e->getStatusCode());
+        } catch (Exception $e) {
+            error_log("Admin action failed: " . $e->getMessage());
+            return json(["success" => false, "message" => "l'action n'a pas pu aboutir"], 500);
         }
     }
 }

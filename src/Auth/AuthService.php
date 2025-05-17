@@ -28,7 +28,7 @@ class AuthService
         }
         //verify password
 
-        if (sha1($loginUser->mdp) == $user->mdp) {
+        if (password_verify($loginUser->mdp, $user->mdp) || sha1($loginUser->mdp) == $user->mdp) {
             /**
              * 0 ----> PHP_SESSION_DISABLED if sessions are disabled.
              * 1 ----> PHP_SESSION_NONE if sessions are enabled, but none exists.
@@ -42,8 +42,6 @@ class AuthService
             $_SESSION['user_id'] = $user->id;
             $_SESSION['username'] = $user->pseudo;
             $_SESSION['role'] = $user->role;
-
-
             return $user;
         }
         throw new BadRequestException("mauvais pseudo ou mot de passe");
@@ -51,6 +49,12 @@ class AuthService
 
     public function signup(User $signupUser)
     {
+        $user = $this->userService->getUserByPseudo($signupUser->pseudo);
+
+        if ($user !== null) {
+            throw new BadRequestException("mauvais pseudo ou mot de passe");
+
+        }
 
         return $this->userService->createUser($signupUser);
     }
@@ -88,27 +92,5 @@ class AuthService
 
         // Finally, destroy the session.
         session_destroy();
-    }
-
-    public static function getUserSession(): ?User
-    {
-        /**
-         * 0 ----> PHP_SESSION_DISABLED if sessions are disabled.
-         * 1 ----> PHP_SESSION_NONE if sessions are enabled, but none exists.
-         * 2 ----> PHP_SESSION_ACTIVE if sessions are enabled, and one exists.
-         */
-
-        if (session_status() == 1) {
-            session_start();
-        }
-
-        if (empty($_SESSION['auth'])) {
-            return null;
-        }
-
-        $user = (new UserService())->getUserById($_SESSION['auth']);
-
-        return $user;
-
     }
 }

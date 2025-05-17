@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,16 +11,6 @@
 </head>
 
 <body>
-    <main>
-        <?= $content ?>
-    </main>
+    <?= $content ?>
 </body>
-<footer>
-    <?php if (defined('DEBUG_TIME')): ?>
-
-        temps d'affichage: <?= round(1000 * (microtime(true) - DEBUG_TIME)) ?> ms
-
-    <?php endif ?>
-</footer>
-
 </html>
