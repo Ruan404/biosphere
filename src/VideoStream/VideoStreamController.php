@@ -2,15 +2,18 @@
 
 namespace App\VideoStream;
 
+use App\Attributes\Middleware;
 use App\Attributes\Roles;
 use App\Entities\Layout;
+use App\Middleware\IsLoggedInMiddleware;
 use App\VideoStream\VideoStream;
 use App\Attributes\Route;
 use App\Entities\Role;
 use function App\Helpers\view;
+
+#[Middleware(new IsLoggedInMiddleware())]
 class VideoStreamController
 {
-    #[Roles(array(Role::Admin, Role::User))]
     #[Route("GET", "/stream/[*:file]")]
     public function stream($request)
     {

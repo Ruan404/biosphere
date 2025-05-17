@@ -106,7 +106,7 @@ class AuthService
             return null;
         }
 
-        $user = new UserService()->getUserById($_SESSION['auth']);
+        $user = (new UserService())->getUserById($_SESSION['auth']);
 
         return $user;
 

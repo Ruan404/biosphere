@@ -27,7 +27,7 @@ class ChatController
 
     public function __construct()
     {
-        $this->topics = new TopicService()->getAllTopics();
+        $this->topics = (new TopicService())->getAllTopics();
         $this->chatService = new ChatService();
     }
 
@@ -43,7 +43,7 @@ class ChatController
         $params = $request->getAttribute('params');
         try {
             if (isset($params['slug'])) {
-                $topic = new TopicService()->getTopicByName(htmlspecialchars($params['slug']));
+                $topic = (new TopicService())->getTopicByName(htmlspecialchars($params['slug']));
                 //topic does not exists
                 if ($topic == null) {
                     return json(["success"=>false, "message"=>"le topic n'existe pas"], 404);
@@ -70,7 +70,7 @@ class ChatController
 
         try {
             if (isset($params['slug'])) {
-                $topic = new TopicService()->getTopicByName(htmlspecialchars($params['slug']));
+                $topic = (new TopicService())->getTopicByName(htmlspecialchars($params['slug']));
                 //topic does not exists
                 if ($topic === null) {
                     return view("/errors/404", Layout::Error);
@@ -96,7 +96,7 @@ class ChatController
                 $role = $_SESSION["role"];
 
                 if ($user) {
-                    $topic = new TopicService()->getTopicByName($params["slug"]);
+                    $topic = (new TopicService())->getTopicByName($params["slug"]);
 
 
                     if ($topic) {
@@ -130,14 +130,14 @@ class ChatController
 
         try {
             if (!empty($data) && isset($params['slug'])) {
-                $topic = new TopicService()->getTopicByName(htmlspecialchars($params['slug']));
+                $topic = (new TopicService())->getTopicByName(htmlspecialchars($params['slug']));
                 //topic does not exists
                 if ($topic == null) {
                     return json(["success"=>false, "message"=>"le topic n'existe pas"], 404);
                 }
 
                 $timezone = new DateTimeZone('Europe/Paris');
-                $date = new DateTime("now", $timezone)->format('Y-m-d H:i:s');
+                $date = (new DateTime("now", $timezone))->format('Y-m-d H:i:s');
 
                 $chat = new Chat($_SESSION["username"], $date);
                 $chat->message = $data['message'];

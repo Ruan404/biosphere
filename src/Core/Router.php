@@ -1,48 +1,65 @@
 <?php
-
 namespace App\Core;
 
 use AltoRouter;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\MiddlewareInterface;
-use Psr\Http\Server\RequestHandlerInterface;
-use ReflectionClass;
-use ReflectionMethod;
 use App\Attributes\Route;
 use App\Attributes\Middleware;
+use App\Middleware\ControllerMiddleware;
+use Dotenv\Dotenv;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use ReflectionClass;
+use ReflectionMethod;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 
 class Router implements MiddlewareInterface
 {
     private AltoRouter $router;
+    private FilesystemAdapter $cache;
+    private bool $routesCached = false;
+
+    private $cacheItem;
 
     public function __construct()
     {
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/../../');
+
+        $dotenv->load();
+        $cacheDir = $_ENV["CACHE_DIR"];
+        $routesCacheKey = $_ENV["ROUTES_CACHE_KEY"];
+        $routesCacheDuration = $_ENV["ROUTES_CACHE_DURATION"];
+
         $this->router = new AltoRouter();
+
+        $this->cache = new FilesystemAdapter(defaultLifetime: $routesCacheDuration , directory: __DIR__ . '/../../' . $cacheDir);
+        $this->cacheItem = $this->cache->getItem($routesCacheKey);
+        $this->routesCached = $this->cacheItem->isHit();
     }
 
     public function register(object|string $controller): self
     {
+        // Don’t allow dynamic registration once cache is loaded
+        if ($this->routesCached) {
+            return $this;
+        }
+
         $controllerInstance = is_string($controller) ? new $controller() : $controller;
         $reflection = new ReflectionClass($controllerInstance);
 
         $routePrefixAttr = $reflection->getAttributes(Route::class);
         $middlewareAttr = $reflection->getAttributes(Middleware::class);
-        $classMiddlewares = [];
-        $methodMiddlewares = [];
-        $routePrefix = '';
-        $middlewares = [];
 
+        $routePrefix = '';
         if (!empty($routePrefixAttr)) {
             $routePrefix = $routePrefixAttr[0]->newInstance()->path;
-
         }
 
-        if (!empty($classMiddlewares)) {
+        $classMiddlewares = [];
+        if (!empty($middlewareAttr)) {
             $classMiddlewares = $middlewareAttr[0]->newInstance()->middlewares;
         }
-
-
 
         foreach ($reflection->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
             $routeAttr = $method->getAttributes(Route::class)[0] ?? null;
@@ -51,36 +68,23 @@ class Router implements MiddlewareInterface
 
             $route = $routeAttr->newInstance();
 
+            $methodMiddlewares = [];
             $methodMiddlewareAttr = $method->getAttributes(Middleware::class);
-
-            if (!empty($methodMiddlewares)) {
-                $methodMiddlewares = $methodMiddlewareAttr[0]->newInstance()->middlewares ?? [];
+            if (!empty($methodMiddlewareAttr)) {
+                $methodMiddlewares = $methodMiddlewareAttr[0]->newInstance()->middlewares;
             }
 
-            // Final middleware from controller method
-            $controllerMiddleware = new class ($controllerInstance, $method) implements MiddlewareInterface {
-                public function __construct(
-                    private object $controller,
-                    private ReflectionMethod $method
-                ) {
-                }
+            // Final controller as middleware
+            $controllerMiddleware = new ControllerMiddleware($controllerInstance, $method->getName());
 
-                public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
-                {
-                    return $this->method->invoke($this->controller, $request);
-                }
-            };
 
             $middlewares = array_merge($classMiddlewares, $methodMiddlewares, [$controllerMiddleware]);
 
-
-            // Build dispatcher
             $dispatcher = new Dispatcher();
-
             foreach ($middlewares as $middleware) {
                 $dispatcher->pipe($middleware);
             }
-            // Register route with dispatcher
+
             $this->router->map($route->method, $routePrefix . $route->path, $dispatcher);
         }
 
@@ -89,6 +93,16 @@ class Router implements MiddlewareInterface
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
+        if ($this->cacheItem->isHit()) {
+            $routes = $this->cacheItem->get();
+            $this->router->addRoutes($routes);
+
+        } else {
+            $this->cacheItem->set($this->router->getRoutes());
+
+            $this->cache->save($this->cacheItem);
+        }
+
         $match = $this->router->match();
         $target = $match['target'] ?? null;
 

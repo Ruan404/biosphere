@@ -11,6 +11,8 @@ class Middleware
     /**
      * @param \Psr\Http\Server\MiddlewareInterface[] $middlewares
      */
+    public $middlewares = [];
+
     public function __construct(MiddlewareInterface ...$middlewares) {
         $this->middlewares = $middlewares;
     }

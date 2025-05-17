@@ -22,7 +22,7 @@ function view(string $view, Layout $layout = Layout::Preset, array $data = [], i
     ob_start();
     require $layoutPath;
     $html = ob_get_clean();
-
+    
     return new Response($status, ['Content-Type' => 'text/html'], $html);
 }
 

@@ -66,7 +66,7 @@ class MessageController
 
             if (!empty($messageContent)) {
                 $timezone = new DateTimeZone('Europe/Paris');
-                $date = new DateTime("now", $timezone)->format('Y-m-d H:i:s');
+                $date = (new DateTime("now", $timezone))->format('Y-m-d H:i:s');
                 $user = $_SESSION['username'] ?? null;
 
                 if ($user) {
