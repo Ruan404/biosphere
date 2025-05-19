@@ -54,7 +54,7 @@ class AdminController
             $tab = htmlspecialchars($params["tab"]);
             switch ($tab) {
                 case "users":
-                    return json(new UserService()->getUsersExceptOne($_SESSION['user_id']));
+                    return json(new UserService()->adminUsersExceptOne($_SESSION['user_id']));
 
                 case "topics":
                     return json(new TopicService()->adminTopics());

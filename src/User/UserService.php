@@ -123,12 +123,27 @@ class UserService
         }
     }
 
-    public function getUsersExceptOne($userId): array
+    public function adminUsersExceptOne($userId): array
     {
         try {
             $query = Database::getPDO()->prepare('SELECT pseudo, role FROM users WHERE id!= ?');
             $query->execute([htmlspecialchars($userId)]);
             $users = $query->fetchAll(PDO::FETCH_CLASS, UserAdminPanelDto::class);
+
+            return $users;
+
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong.");
+        }
+    }
+
+    public function getUsersExceptOne($userId): array
+    {
+        try {
+            $query = Database::getPDO()->prepare('SELECT pseudo, role FROM users WHERE id!= ?');
+            $query->execute([htmlspecialchars($userId)]);
+            $users = $query->fetchAll(PDO::FETCH_CLASS, User::class);
 
             return $users;
 

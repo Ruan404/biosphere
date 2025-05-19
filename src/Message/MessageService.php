@@ -3,7 +3,11 @@
 namespace App\Message;
 
 use App\Core\Database;
+use App\Message\Dto\GetMessageDto;
+use App\Exceptions\BadRequestException;
+use Exception;
 use PDO;
+use PDOException;
 
 class MessageService
 {
@@ -14,13 +18,6 @@ class MessageService
         }
     }
 
-    // Récupérer la liste des utilisateurs sauf l'utilisateur connecté
-    public function getUsers(): array
-    {
-        $query = Database::getPDO()->prepare("SELECT id, pseudo FROM users WHERE id != ?");
-        $query->execute([$_SESSION['user_id']]);
-        return $query->fetchAll(PDO::FETCH_ASSOC);
-    }
 
     // Récupérer les messages échangés entre deux utilisateurs
     public function getMessages(int $userId): array
@@ -39,48 +36,71 @@ class MessageService
             $userId,
             $_SESSION['user_id']
         ]);
-        return $query->fetchAll(PDO::FETCH_ASSOC);
+        return $query->fetchAll(PDO::FETCH_CLASS, GetMessageDto::class);
     }
 
     // Envoyer un message
-    public function sendMessage(int $recipientId, string $messageContent): bool
+    public function sendMessage(int $recipientId, string $messageContent, int $senderId): bool
     {
-        if (strlen(trim($messageContent)) > 0) {
-            // Nettoyage du contenu du message
-            $messageContent = nl2br(htmlspecialchars($messageContent));
+        try {
 
-            $query = Database::getPDO()->prepare("
+            $message = nl2br(htmlspecialchars(trim($messageContent)));
+
+            if (strlen($message > 0)) {
+                $query = Database::getPDO()->prepare("
                 INSERT INTO messages_privés (message, id_destinataire, id_auteur)
                 VALUES (?, ?, ?)
             ");
-            $query->execute([$messageContent, $recipientId, $_SESSION['user_id']]);
-            return $query->rowCount() > 0;
+                $query->execute([$message, $recipientId, $senderId]);
+
+                return true;
+            }
+
+            throw new BadRequestException("le message est requis");
+
+
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong");
         }
-        return false;
     }
 
     // Supprimer un message
     public function deleteMessage(int $messageId, string $role): bool
     {
-        if ($role === 'admin') {
-            // Un administrateur peut supprimer n'importe quel message
-            $query = Database::getPDO()->prepare("DELETE FROM messages_privés WHERE id = ?");
-            $query->execute([$messageId]);
-        } else {
-            // Un utilisateur normal ne peut supprimer que ses propres messages
-            $query = Database::getPDO()->prepare("DELETE FROM messages_privés WHERE id = ? AND id_auteur = ?");
-            $query->execute([$messageId, $_SESSION['user_id']]);
+        try {
+            if ($role === 'admin') {
+                // Un administrateur peut supprimer n'importe quel message
+                $query = Database::getPDO()->prepare("DELETE FROM messages_privés WHERE id = ?");
+                $query->execute([$messageId]);
+
+            } else {
+                // Un utilisateur normal ne peut supprimer que ses propres messages
+                $query = Database::getPDO()->prepare("DELETE FROM messages_privés WHERE id = ? AND id_auteur = ?");
+                $query->execute([$messageId, $_SESSION['user_id']]);
+            }
+            
+            return $query->rowCount() > 0;
+
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong");
         }
-        return $query->rowCount() > 0;
     }
 
-    // Récupérer un utilisateur par son ID
-    public function getUserById(int $userId): ?array
+    public function getMessageByDate(string $date): ?Message
     {
-        $query = Database::getPDO()->prepare("SELECT id, pseudo FROM users WHERE id = ?");
-        $query->execute([$userId]);
-        $user = $query->fetch(PDO::FETCH_ASSOC);
-        return $user ?: null;
+        try {
+            $query = Database::getPDO()->prepare("SELECT * FROM messages_privés WHERE date = ?");
+            $query->setFetchMode(PDO::FETCH_CLASS, Message::class);
+            $query->execute([$date]);
+            $message = $query->fetch();
+
+            return $message ?: null;
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong");
+        }
     }
 }
 ?>

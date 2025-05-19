@@ -4,6 +4,7 @@ namespace App\Core;
 use AltoRouter;
 use App\Attributes\Route;
 use App\Attributes\Middleware;
+use App\Entities\Layout;
 use App\Middleware\ControllerMiddleware;
 use Dotenv\Dotenv;
 use Psr\Http\Message\ServerRequestInterface;
@@ -13,6 +14,7 @@ use Psr\Http\Server\MiddlewareInterface;
 use ReflectionClass;
 use ReflectionMethod;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use function App\Helpers\view;
 
 class Router implements MiddlewareInterface
 {
@@ -41,9 +43,9 @@ class Router implements MiddlewareInterface
     public function register(object|string $controller): self
     {
         // Don’t allow dynamic registration once cache is loaded
-        if ($this->routesCached) {
-            return $this;
-        }
+        // if ($this->routesCached) {
+        //     return $this;
+        // }
 
         $controllerInstance = is_string($controller) ? new $controller() : $controller;
         $reflection = new ReflectionClass($controllerInstance);
@@ -105,11 +107,15 @@ class Router implements MiddlewareInterface
 
         $match = $this->router->match();
         $target = $match['target'] ?? null;
-
-        if (!empty($match['params'])) {
+        
+        if($target != null){
+             if (!empty($match['params'])) {
             $request = $request->withAttribute('params', $match['params']);
         }
 
         return $target->handle($request);
+        }
+
+        return view('/errors/404', Layout::Error);
     }
 }

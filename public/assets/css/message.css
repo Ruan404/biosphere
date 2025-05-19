@@ -73,13 +73,13 @@ main {
 }
 
 /* Style des bulles de message */
-.bubble {
+.bubble-message {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
   column-gap: 0.875rem;
 }
 
-.bubble.right {
+.bubble-message.right {
   justify-items: end;
 }
 
