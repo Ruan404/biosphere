@@ -1,9 +1,17 @@
 <?php
 
-namespace App\Message;
+namespace App\Message\Dto;
 
-class Message
+class GetMessageDto
 {
+
+    public function __construct()
+    {
+        $this->isAuthor = $_SESSION['user_id'] === $this->id_auteur;
+        $this->canDelete = $this->pseudo === $_SESSION['username'] || $_SESSION["role"] === "admin";
+        $this->options = $this->getOptions($this->pseudo === $_SESSION['username'] || $_SESSION["role"] === "admin");
+    }
+
     public int $id {
         get => $this->id;
     }
@@ -22,6 +30,10 @@ class Message
         set(int $id_auteur) {
             $this->id_auteur = $id_auteur;
         }
+    }
+
+    public string $pseudo {
+        get => $this->pseudo;
     }
 
     public string $message {
@@ -46,11 +58,28 @@ class Message
         get => $this->options;
     }
 
-    public string $date{
+    public string $date {
         get => htmlspecialchars($this->date);
 
-        set(string $date){
+        set(string $date) {
             $this->date = htmlspecialchars($date);
         }
-    }   
+    }
+
+    public bool $canDelete{
+        get => $this->canDelete;
+    }
+    
+    private function getOptions(bool $canDelete): array
+    {
+        $actions = [];
+        if ($canDelete) {
+            array_push($actions, ["label" => "supprimer", 'value' => "delete"]);
+        }
+
+        //future actions
+
+        return $actions;
+    }
+
 }

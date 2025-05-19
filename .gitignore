@@ -21,3 +21,6 @@ tests
 #phpunit
 .phpunit.result.cache
 phpunit.xml
+
+#cache
+cache

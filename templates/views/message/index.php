@@ -1,27 +1,9 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-use App\Message\MessageService;
-use App\Auth\AuthService;
-use App\Helpers\Text;
-
 $style = "message";
-$messageService = new MessageService();
-$authService = new AuthService();
 
-if (!isset($_SESSION['username'], $_SESSION['user_id'])) {
-    header('Location: /login');
-    exit();
-}
-
-$currentUser = $_SESSION['username'];
-$currentUserId = $_SESSION['user_id'];
-$users = $messageService->getUsers();
+$users = $data["users"] ?? null;
+$messages = $data["messages"] ?? [];
 ?>
-
-
 <main>
     <div class="container">
         <sidebar-tab class="sidebar-ctn" id="contact-bar">
@@ -29,31 +11,27 @@ $users = $messageService->getUsers();
             <h2 class="sidebar-title" slot="title">Utilisateurs disponibles</h2>
             <?php foreach ($users as $user): ?>
                 <a slot="menu" class='sidebar-menu-button'
-                    href="?user_id=<?= $user['id'] ?>"><?= htmlspecialchars($user['pseudo']) ?></a>
+                    href="?user=<?= $user->pseudo ?>"><?= htmlspecialchars($user->pseudo) ?></a>
 
             <?php endforeach; ?>
         </sidebar-tab>
         <div class="conversation-container">
-            <?php if (isset($_GET['user_id'])): ?>
-                <?php
-                $recipientId = (int) $_GET['user_id'];
-                $messages = $messageService->getMessages($recipientId);
-                $recipient = $messageService->getUserById($recipientId);
-                ?>
-                <?php if ($recipient): ?>
+            <?php if (isset($_GET["user"])): ?>
+               
+                <?php if ($data["recipient"]): ?>
                     <div class="conversation full-page">
                         <div class="title">
-                            <h2>Conversation avec <?= htmlspecialchars($recipient['pseudo']) ?></h2>
+                            <h2>Conversation avec <?= htmlspecialchars($data["recipient"]) ?></h2>
                         </div>
-                        <div class="messages">
+                        <div class="messages" id="ctn-action-menu">
                             <?php foreach ($messages as $message): ?>
-                                <message-bubble class="<?= $message['id_auteur'] === $currentUserId ? 'bubble right' : 'bubble' ?>"
-                                    content="<?= htmlspecialchars($message['message']) ?>" date="<?= $message['date'] ?>"
-                                    message-id="<?= $message['id'] ?>" <?= $message['id_auteur'] === $currentUserId || $_SESSION['role'] === 'admin' ? 'can-delete' : '' ?>></message-bubble>
+                                <message-bubble recipient="<?= $data["recipient"] ?>" class="<?= $message->isAuthor ? 'bubble-message right' : 'bubble-message' ?>"
+                                    content="<?= $message->message ?>" date="<?= $message->date ?>"
+                                    message-id="<?= $message->id ?>" <?= $message->canDelete ? 'can-delete' : ""  ?>></message-bubble>
                             <?php endforeach; ?>
                         </div>
                     </div>
-                    <form method="POST" action="/message/<?= $recipientId ?>" class="send-message-form">
+                    <form method="POST" action="/message?user=<?= $data["recipient"] ?>" class="send-message-form">
                         <textarea name="message" placeholder="Écrivez votre message..." required></textarea>
                         <button class="primary-btn" type="submit">Envoyer</button>
                     </form>
@@ -67,4 +45,4 @@ $users = $messageService->getUsers();
     </div>
 </main>
 <script src="/assets/js/components/SideBar.js"></script>
-<script src="/assets/js/components/MessageBubble.js"></script>
+<script type="module" src="/assets/js/components/MessageBubble.js"></script>
