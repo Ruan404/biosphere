@@ -22,8 +22,12 @@ function view(string $view, Layout $layout = Layout::Preset, array $data = [], i
     require $layoutPath;
     $html = ob_get_clean();
 
+    ob_start();
     require $viewPath . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . 'footer.php';
-    
+    $footer = ob_get_clean();
+
+    $html .= $footer;
+
     return new Response($status, ['Content-Type' => 'text/html'], $html);
 }
 

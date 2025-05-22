@@ -15,7 +15,6 @@ class RemoveTrailingSlashMiddleware implements MiddlewareInterface
     {
         $uri = $request->getUri();
         $path = $uri->getPath();
-
         
 
         // Ignore root (/) but redirect /something/ -> /something

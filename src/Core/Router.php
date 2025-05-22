@@ -1,93 +1,74 @@
 <?php
 namespace App\Core;
 
-use AltoRouter;
 use App\Attributes\Route;
 use App\Attributes\Middleware;
+use App\Attributes\Group;
 use App\Entities\Layout;
-use App\Middleware\ControllerMiddleware;
 use Dotenv\Dotenv;
-use Psr\Http\Message\ServerRequestInterface;
+use Exception;
+use League\Route\RouteCollectionInterface;
+use League\Route\Router as LeagueRouter;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Server\RequestHandlerInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use ReflectionClass;
 use ReflectionMethod;
-use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use function App\Helpers\view;
 
-class Router implements MiddlewareInterface
+class Router extends LeagueRouter implements MiddlewareInterface
 {
-    private AltoRouter $router;
-    private FilesystemAdapter $cache;
-    private bool $routesCached = false;
-
-    private $cacheItem;
-
     public function __construct()
     {
+        parent::__construct(); // ✅ Required to initialize $routeCollector
+
         $dotenv = Dotenv::createImmutable(__DIR__ . '/../../');
-
         $dotenv->load();
-        $cacheDir = $_ENV["CACHE_DIR"];
-        $routesCacheKey = $_ENV["ROUTES_CACHE_KEY"];
-        $routesCacheDuration = $_ENV["ROUTES_CACHE_DURATION"];
-
-        $this->router = new AltoRouter();
-
-        $this->cache = new FilesystemAdapter(defaultLifetime: $routesCacheDuration , directory: __DIR__ . '/../../' . $cacheDir);
-        $this->cacheItem = $this->cache->getItem($routesCacheKey);
-        $this->routesCached = $this->cacheItem->isHit();
     }
 
     public function register(object|string $controller): self
     {
-        // Don’t allow dynamic registration once cache is loaded
-        // if ($this->routesCached) {
-        //     return $this;
-        // }
-
         $controllerInstance = is_string($controller) ? new $controller() : $controller;
         $reflection = new ReflectionClass($controllerInstance);
 
-        $routePrefixAttr = $reflection->getAttributes(Route::class);
+        $groupAttr = $reflection->getAttributes(Group::class)[0] ?? null;
         $middlewareAttr = $reflection->getAttributes(Middleware::class);
 
-        $routePrefix = '';
-        if (!empty($routePrefixAttr)) {
-            $routePrefix = $routePrefixAttr[0]->newInstance()->path;
-        }
+        $routePrefix = $groupAttr?->newInstance()->prefix ?? null;
 
-        $classMiddlewares = [];
-        if (!empty($middlewareAttr)) {
-            $classMiddlewares = $middlewareAttr[0]->newInstance()->middlewares;
-        }
+        $classMiddlewares = $middlewareAttr ? $middlewareAttr[0]->newInstance()->middlewares : [];
 
-        foreach ($reflection->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
-            $routeAttr = $method->getAttributes(Route::class)[0] ?? null;
-            if (!$routeAttr)
-                continue;
 
-            $route = $routeAttr->newInstance();
+        $registerMethods = function (RouteCollectionInterface $router) use ($controllerInstance, $reflection) {
+            foreach ($reflection->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+                $routeAttr = $method->getAttributes(Route::class)[0] ?? null;
+                if (!$routeAttr)
+                    continue;
 
-            $methodMiddlewares = [];
-            $methodMiddlewareAttr = $method->getAttributes(Middleware::class);
-            if (!empty($methodMiddlewareAttr)) {
-                $methodMiddlewares = $methodMiddlewareAttr[0]->newInstance()->middlewares;
+                $route = $routeAttr->newInstance();
+                $methodMiddlewareAttr = $method->getAttributes(Middleware::class);
+                $methodMiddlewares = $methodMiddlewareAttr ? $methodMiddlewareAttr[0]->newInstance()->middlewares : [];
+
+                $handler = [$controllerInstance, $method->getName()];
+                $routeDef = $router->map($route->method, $route->path, $handler);
+
+                if (!empty($methodMiddlewares)) {
+                    $routeDef->middlewares($methodMiddlewares);
+                }
+            }
+        };
+
+        if ($routePrefix) {
+            $group = $this->group($routePrefix, $registerMethods);
+
+            if ($classMiddlewares) {
+                $group->middlewares($classMiddlewares);
+
             }
 
-            // Final controller as middleware
-            $controllerMiddleware = new ControllerMiddleware($controllerInstance, $method->getName());
-
-
-            $middlewares = array_merge($classMiddlewares, $methodMiddlewares, [$controllerMiddleware]);
-
-            $dispatcher = new Dispatcher();
-            foreach ($middlewares as $middleware) {
-                $dispatcher->pipe($middleware);
-            }
-
-            $this->router->map($route->method, $routePrefix . $route->path, $dispatcher);
+        } else {
+            $registerMethods($this);
         }
 
         return $this;
@@ -95,27 +76,10 @@ class Router implements MiddlewareInterface
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        if ($this->cacheItem->isHit()) {
-            $routes = $this->cacheItem->get();
-            $this->router->addRoutes($routes);
-
-        } else {
-            $this->cacheItem->set($this->router->getRoutes());
-
-            $this->cache->save($this->cacheItem);
+        try {
+            return $this->dispatch($request);
+        } catch (Exception $e) {
+            return view('/errors/404', Layout::Error);
         }
-
-        $match = $this->router->match();
-        $target = $match['target'] ?? null;
-        
-        if($target != null){
-             if (!empty($match['params'])) {
-            $request = $request->withAttribute('params', $match['params']);
-        }
-
-        return $target->handle($request);
-        }
-
-        return view('/errors/404', Layout::Error);
     }
 }

@@ -14,16 +14,15 @@ use function App\Helpers\view;
 #[Middleware(new IsLoggedInMiddleware())]
 class VideoStreamController
 {
-    #[Route("GET", "/stream/[*:file]")]
+    #[Route("GET", "/stream/{file}")]
     public function stream($request)
     {
-        $params = $request->getAttribute("params");
         
         if (empty($_SERVER['HTTP_RANGE'])) {
             return view("/errors/404", Layout::Error);
         }
 
-        if(preg_match("/^[a-zA-Z0-9]+\.(?:mp4|mov|avi)$/", $params['file'])){
+        if(preg_match("/^[a-zA-Z0-9]+\.(?:mp4|mov|avi)$/", $request->getAttribute('file'))){
             $fileName = $params["file"];
            
             $filePath = __DIR__ . '/../../public/uploads/videos/' . basename($fileName);

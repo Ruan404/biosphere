@@ -2,6 +2,7 @@
 
 namespace App\Message;
 
+use App\Attributes\Group;
 use App\Attributes\Middleware;
 use App\Attributes\Route;
 use App\Exceptions\HttpExceptionInterface;
@@ -12,14 +13,12 @@ use DateTime;
 use DateTimeZone;
 use Exception;
 use GuzzleHttp\Psr7\Response;
-use GuzzleHttp\Psr7\ServerRequest;
 use Psr\Http\Message\ServerRequestInterface;
 use function App\Helpers\json;
 use function App\Helpers\view;
 
-
+#[Group("/message")]
 #[Middleware(new IsLoggedInMiddleware())]
-#[Route("GET", "/message")]
 class MessageController
 {
     private $messageService;
@@ -32,8 +31,8 @@ class MessageController
     }
 
     // Afficher la liste des conversations (utilisateurs sauf l'utilisateur connecté)
-    #[Route("GET", "")]
-    public function index(ServerRequest $request)
+    #[Route("GET", "/")]
+    public function index(ServerRequestInterface $request)
     {
         $userParams = $request->getQueryParams()["user"] ?? "";
 
@@ -53,7 +52,7 @@ class MessageController
     }
 
     // Envoyer un message privé
-    #[Route("POST", "")]
+    #[Route("POST", "/")]
     public function sendMessage(ServerRequestInterface $request)
     {
         try {
@@ -79,7 +78,7 @@ class MessageController
 
     // Supprimer un message privé (uniquement pour l'utilisateur ou l'administrateur)
     // Suppression d'un message
-    #[Route("DELETE", "")]
+    #[Route("DELETE", "/")]
     public function deleteMessage($request)
     {
         try {
@@ -120,4 +119,3 @@ class MessageController
     }
 
 }
-?>

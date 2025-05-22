@@ -45,13 +45,11 @@ class AdminController
         return view(view: '/film/upload');
     }
 
-    #[Route("GET", "/admin/[*:tab]")]
+    #[Route("GET", "/admin/{tab}")]
     public function getData($request)
     {
-        $params = $request->getAttribute("params");
-
         try {
-            $tab = htmlspecialchars($params["tab"]);
+            $tab = htmlspecialchars($request->getAttribute("tab"));
             switch ($tab) {
                 case "users":
                     return json(new UserService()->adminUsersExceptOne($_SESSION['user_id']));

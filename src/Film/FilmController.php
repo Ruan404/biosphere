@@ -1,6 +1,7 @@
 <?php
 namespace App\Film;
 
+use App\Attributes\Group;
 use App\Attributes\Middleware;
 use App\Attributes\Route;
 use App\Entities\Layout;
@@ -10,8 +11,8 @@ use Exception;
 use function App\Helpers\view;
 use App\Film\FilmService;
 
-#[Middleware(new IsLoggedInMiddleware())]
-#[Route("GET", "/films")]
+#[Middleware(middlewares: new IsLoggedInMiddleware())]
+#[Group("/films")]
 class FilmController
 {
     private $filmService;
@@ -23,7 +24,7 @@ class FilmController
         $this->filmService = new FilmService();
     }
 
-    #[Route("GET", "")]
+    #[Route("GET", "/")]
     public function index()
     {
         try {
@@ -36,12 +37,11 @@ class FilmController
         }
     }
 
-    #[Route("GET", "/details/[*:token]")]
+    #[Route("GET", "/details/{token}")]
     public function details($request)
     {
-        $params = $request->getAttribute('params');
         try {
-            $video = $this->filmService->getFilmByToken($params['token']);
+            $video = $this->filmService->getFilmByToken($request->getAttribute('token'));
             if ($video === null) {
 
                 return json(["error" => "the video was not found"]);
@@ -53,13 +53,12 @@ class FilmController
         }
     }
 
-    #[Route("GET", "/watch/[*:token]")]
+    #[Route("GET", "/watch/{token}")]
     public function watchVideo($request)
     {
-        $params = $request->getAttribute('params');
 
         try {
-            $video = $this->filmService->getFilmByToken($params["token"]);
+            $video = $this->filmService->getFilmByToken($request->getAttribute('token'));
             if ($video === null) {
                 return view(view: "/errors/404", data: ["error" => "video was not found"]);
             }

@@ -14,9 +14,10 @@ use App\Sensor\SensorController;
 use App\Message\MessageController;
 use App\VideoStream\VideoStreamController;
 use GuzzleHttp\Psr7\Response;
-use GuzzleHttp\Psr7\ServerRequest;
+use Laminas\Diactoros\ServerRequestFactory;
+use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
+use League\Route\Strategy\ApplicationStrategy;
 use Psr\Http\Message\ServerRequestInterface;
-use function App\Helpers\send;
 use Slim\Csrf\Guard;
 use Slim\Psr7\Factory\ResponseFactory;
 
@@ -27,26 +28,28 @@ $whoops->register();
 
 define('DEBUG_TIME', microtime(true));
 
-$request = ServerRequest::fromGlobals();
+
 
 if (session_status() === 1) {
         session_start();
 }
 
-
-$app = new Router();
-
-$guard = new Guard(new ResponseFactory());
-$guard->setFailureHandler(function (ServerRequestInterface $request) {
-        $response = new Response();
-        $response->getBody()->write("Not authorized");
-        return $response->withStatus(403);
-});
-
-$dispatcher = new Dispatcher();
+$request = ServerRequestFactory::fromGlobals(
+    $_SERVER, $_GET, $_POST, $_COOKIE, $_FILES
+);
 
 
-$app->register(HomeController::class)
+$router = new Router();
+$router->setStrategy(new ApplicationStrategy());
+
+// $guard = new Guard(new ResponseFactory());
+// $guard->setFailureHandler(function (ServerRequestInterface $request) {
+//         $response = new Response();
+//         $response->getBody()->write("Not authorized");
+//         return $response->withStatus(403);
+// });
+
+$router->register(HomeController::class)
         ->register(AuthController::class)
         ->register(ChatController::class)
         ->register(FilmController::class)
@@ -56,9 +59,10 @@ $app->register(HomeController::class)
         ->register(VideoStreamController::class)
         ->register(MessageController::class);
 
-$dispatcher->pipe(new RemoveTrailingSlashMiddleware());
-// $dispatcher->pipe($guard);
-$dispatcher->pipe($app);
-$response = $dispatcher->handle($request);
+$dispatch = new Dispatcher();
+$dispatch->pipe(new RemoveTrailingSlashMiddleware());
+$dispatch->pipe($router);
 
-send($response);
+$response = $dispatch->handle($request);
+
+new SapiEmitter()->emit($response);

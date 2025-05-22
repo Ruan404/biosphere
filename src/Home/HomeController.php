@@ -8,7 +8,7 @@ use App\Attributes\Middleware;
 use App\Middleware\IsLoggedInMiddleware;
 use function App\Helpers\view;
 
-#[Middleware(new IsLoggedInMiddleware())]
+#[Middleware(new IsLoggedInMiddleware)]
 class HomeController
 {
     #[Route(method: "GET", path: "/")]

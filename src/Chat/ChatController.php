@@ -2,12 +2,13 @@
 namespace App\Chat;
 
 
+use App\Attributes\Group;
 use App\Attributes\Middleware;
 use App\Attributes\Route;
-use App\Auth\AuthService;
 use App\Entities\Layout;
 use App\Exceptions\BadRequestException;
 use App\Middleware\IsLoggedInMiddleware;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use function App\Helpers\json;
 use App\Topic\TopicService;
@@ -18,7 +19,7 @@ use Exception;
 use function App\Helpers\view;
 
 #[Middleware(new IsLoggedInMiddleware())]
-#[Route("GET", "/chat")]
+#[Group("/chat")]
 class ChatController
 {
     private $topics;
@@ -31,22 +32,22 @@ class ChatController
         $this->chatService = new ChatService();
     }
 
-    #[Route("GET", "")]
+    #[Route("GET", "/")]
     public function index()
     {
         return view(view: '/chat/index', data: ['topics' => $this->topics]);
     }
 
-    #[Route("GET", "/api/[*:slug]")]
+    #[Route("GET", "/api/{slug}")]
     public function getChat($request)
     {
-        $params = $request->getAttribute('params');
+        $slug = $request->getAttribute('slug');
         try {
-            if (isset($params['slug'])) {
-                $topic = (new TopicService())->getTopicByName(htmlspecialchars($params['slug']));
+            if (isset($slug)) {
+                $topic = (new TopicService())->getTopicByName(htmlspecialchars($slug));
                 //topic does not exists
                 if ($topic == null) {
-                    return json(["success"=>false, "message"=>"le topic n'existe pas"], 404);
+                    return json(["success" => false, "message" => "le topic n'existe pas"], 404);
                 }
 
                 $topicId = $topic->id;
@@ -63,40 +64,39 @@ class ChatController
     }
 
 
-    #[Route("GET", "/[*:slug]")]
-    public function viewChat($request)
+    #[Route("GET", "/{slug}")]
+    public function viewChat($request): ResponseInterface
     {
-        $params = $request->getAttribute('params');
+        $slug = $request->getAttribute('slug');
 
         try {
-            if (isset($params['slug'])) {
-                $topic = (new TopicService())->getTopicByName(htmlspecialchars($params['slug']));
-                //topic does not exists
-                if ($topic === null) {
-                    return view("/errors/404", Layout::Error);
-                }
-                return view(view: '/chat/topic', data: ['topics' => $this->topics, 'currentTopic' => $topic->name]);
+            $topic = (new TopicService())->getTopicByName(htmlspecialchars($slug));
+            //topic does not exists
+            if ($topic === null) {
+                return view("/errors/404", Layout::Error);
             }
+            return view(view: '/chat/topic', data: ['topics' => $this->topics, 'currentTopic' => $topic->name]);
+
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());
             return view("/errors/500", Layout::Error);
         }
     }
 
-    #[Route("DELETE", "/[*:slug]")]
+    #[Route("DELETE", "/{slug}")]
     public function deleteMyMessages(ServerRequestInterface $request)
     {
-        $params = $request->getAttribute('params');
+        $slug = $request->getAttribute('slug');
 
         try {
-            if ($request->getMethod() === "DELETE" && isset($params['slug'])) {
+            if ($request->getMethod() === "DELETE" && isset($slug)) {
                 $data = json_decode($request->getBody()->getContents(), true);
 
                 $user = $_SESSION["username"];
                 $role = $_SESSION["role"];
 
                 if ($user) {
-                    $topic = (new TopicService())->getTopicByName($params["slug"]);
+                    $topic = (new TopicService())->getTopicByName($slug);
 
 
                     if ($topic) {
@@ -120,20 +120,20 @@ class ChatController
     }
 
 
-    #[Route("POST", "/[*:slug]")]
+    #[Route("POST", "/{slug}")]
     public function addMessage($request)
     {
-        $params = $request->getAttribute('params');
+        $slug = $request->getAttribute('slug');
 
         $data = $request->getParsedBody();
 
 
         try {
-            if (!empty($data) && isset($params['slug'])) {
-                $topic = (new TopicService())->getTopicByName(htmlspecialchars($params['slug']));
+            if (!empty($data) && isset($slug)) {
+                $topic = (new TopicService())->getTopicByName(htmlspecialchars($slug));
                 //topic does not exists
                 if ($topic == null) {
-                    return json(["success"=>false, "message"=>"le topic n'existe pas"], 404);
+                    return json(["success" => false, "message" => "le topic n'existe pas"], 404);
                 }
 
                 $timezone = new DateTimeZone('Europe/Paris');

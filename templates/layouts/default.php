@@ -5,6 +5,7 @@
     $profile = Text::getFirstStr($_SESSION["username"]);
     $role = $_SESSION["role"];
     $roles = [Role::Admin];
+    
 ?>
 
 <!DOCTYPE html>
