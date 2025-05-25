@@ -92,7 +92,7 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 		})
 			.then(response => response.json())
 			.then(data => {
-				if (data.message) {
+				if (data.htmlMessage) {
 					socket.send(JSON.stringify(data))
 					displayMessages(data)
 					msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: 'smooth' });
@@ -120,7 +120,7 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 		}
 
 		// New chat event
-		if (data.message && data.topic === currentTopic) {
+		if (data.htmlMessage && data.topic === currentTopic) {
 			displayMessages(data, false)
 			msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: 'smooth' });
 		}
@@ -163,13 +163,13 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 			});
 	}
 	function displayMessages(chat, show = true) {
-		const hasOptions = show && Array.isArray(chat.options) && chat.options.length > 0;
+		const hasOptions = show && Array.isArray(chat?.options) && chat?.options?.length > 0;
 
 		const msgBox = document.createElement('message-box');
 
 		msgBox.setAttribute('pseudo', chat.pseudo)
 		msgBox.setAttribute('date', chat.date)
-		msgBox.setAttribute('message', chat.message)
+		msgBox.setAttribute('message', chat.htmlMessage)
 		msgBox.setAttribute('hasOptions', hasOptions)
 		msgBox.setAttribute('options', JSON.stringify(chat.options))
 

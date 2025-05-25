@@ -9,7 +9,9 @@ const prevBtn = document.getElementById("prev-btn");
 const nextBtn = document.getElementById("next-btn");
 const tabs = document.getElementsByClassName("tab");
 
-const submitBtn = document.getElementById("submit-btn")
+const formPrevNextCtn = document.querySelector(".form-progress");
+
+const submitBtn = document.getElementById("submit-btn");
 const totalSteps = tabs.length;
 
 async function fileUpload(ev) {
@@ -23,6 +25,7 @@ async function fileUpload(ev) {
   const statusBox = document.getElementById("upload-status");
 
   document.querySelector(".uploading").style.display = "block";
+  formPrevNextCtn.style.display = "none";
 
   const token = crypto.randomUUID();
   const chunkSize = 5 * 1024 * 1024; // 5MB
@@ -31,11 +34,11 @@ async function fileUpload(ev) {
   let start = 0;
   let step = 0;
 
-//   statusBox.innerHTML = ""; // Clear previous messages
+  //   statusBox.innerHTML = ""; // Clear previous messages
 
   while (start < videoFile.size) {
     const chunk = videoFile.slice(start, start + chunkSize);
-    submitBtn.disabled = true
+    submitBtn.disabled = true;
     try {
       const isLastChunk = step === totalChunks - 1;
       const res = await uploadChunk(
@@ -50,14 +53,14 @@ async function fileUpload(ev) {
         isLastChunk
       );
 
-      if (res.message) {
+      if (res.success === true) {
         statusBox.innerHTML = res.message;
-      } else if (res.error) {
-        statusBox.innerHTML = `${res.error}`;
+      } else if (res.success === false) {
+        statusBox.innerHTML = `${res.message}`;
         return;
       }
     } catch (err) {
-      statusBox.innerHTML = `échec du téléchargement au chunk #${step}: ${err.message}`;
+      statusBox.innerHTML = `échec du téléchargement`;
       return;
     }
 
@@ -75,7 +78,8 @@ async function fileUpload(ev) {
 
     document.getElementById("uploadForm").reset();
     currentTab = 0;
-    tabs[totalSteps - 1].style.display = "none"
+    tabs[totalSteps - 1].style.display = "none";
+    formPrevNextCtn.style.display = "flex";
     showTab(currentTab);
 
     document.querySelector(".uploading").style.display = "none";
@@ -205,7 +209,7 @@ coverInput.addEventListener("change", (event) => {
   let file = event.target.files[0];
 
   let img = URL.createObjectURL(file);
-  
+
   imagePreviewCtn.classList.add("show");
   document.querySelector("#image-preview").src = img;
   document.querySelector("#image-preview-file-name").textContent = file.name;

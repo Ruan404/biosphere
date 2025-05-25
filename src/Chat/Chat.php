@@ -3,30 +3,39 @@
 namespace App\Chat;
 
 use App\Auth\AuthService;
+use App\Markdown\Spoiler\SpoilerExtension;
+use ElGigi\CommonMarkEmoji\EmojiExtension;
+use League\CommonMark\CommonMarkConverter;
 //voir les messages par rapport à un topic
 /**
  * récupérer le topic
  * renvoyer les messages correspondant au topic
  */
+
+
 class Chat
 {
-    private $timezone;
-
-    public function __construct(string $pseudo = "", string $date = "")
+    public function __construct()
     {
-        // $date = new DateTime("now", $timezone )->format('Y-m-d H:i:s');
-        if ($pseudo) {
-            $this->pseudo = $pseudo;
-        }
-        if ($date) {
-            $this->date = $date;
-        }
         if (session_status() === 1) {
             session_start();
         }
-        $this->options = $this->getOptions($this->pseudo === $_SESSION['username'] || $_SESSION["role"] === "admin" );
+        $this->options = $this->getOptions($this->pseudo === $_SESSION['username'] || $_SESSION["role"] === "admin");
+
+        $converter = new CommonMarkConverter(['html_input' => 'strip']);
+        $converter->getEnvironment()->addExtension(new EmojiExtension);
+        $converter->getEnvironment()->addExtension(new SpoilerExtension);
+
+
+
+        $this->htmlMessage = $converter($this->message)->getContent();
     }
-    public int $topic_id = 0 {
+
+    public int $id = 0{
+        get => $this->id;
+    }
+    
+    public int $topic_id = 0{
         get => $this->topic_id;
 
         set(int $topic_id) {
@@ -35,7 +44,7 @@ class Chat
     }
 
 
-    public string $pseudo = "" {
+    public string $pseudo{
         get => $this->pseudo;
 
         set(string $pseudo) {
@@ -43,7 +52,7 @@ class Chat
         }
     }
 
-    public string $date = "" {
+    public string $date{
         get => $this->date;
     }
 
@@ -69,12 +78,15 @@ class Chat
     {
         $actions = [];
         if ($canDelete) {
-            array_push($actions,["label" => "Delete", 'value' => "delete"]);
+            array_push($actions, ["label" => "Delete", 'value' => "delete"]);
         }
 
         //future actions
-        
+
         return $actions;
     }
 
+    public string $htmlMessage {
+        get => $this->htmlMessage;
+    }
 }

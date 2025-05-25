@@ -48,6 +48,10 @@ main {
   flex-grow: 1; /*pour qu'il occupe toute la hauteur*/
 }
 
+.messages a{
+  color: unset;
+}
+
 .msgs-display {
   overflow-y: auto;
   display: grid;

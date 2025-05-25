@@ -4,6 +4,7 @@ namespace App\Message;
 
 use App\Attributes\Route;
 use App\Exceptions\HttpExceptionInterface;
+use App\File\FileService;
 use App\Message\MessageService;
 use App\User\UserService;
 use Exception;
@@ -50,19 +51,21 @@ class MessageController
         try {
             $user = $this->userService->getUserByPseudo(htmlspecialchars($_GET["user"]));
 
-            // $timezone = new DateTimeZone('Europe/Paris');
-            // $date = (new DateTime("now", $timezone))->format('Y-m-d H:i:s');
+            $image = $_FILES["image"] ?? null;
+            $text = $_POST['message'] ?? "";
 
-            $this->messageService->sendMessage($user->id, $_POST['message'], $_SESSION["user_id"]);
+            $newMessage = $this->messageService->sendMessage($image, $user->id, $text, $_SESSION["user_id"]) ?? [];
 
-            header(header: "Location: /message?user={$user->pseudo}");
-            exit();
+            return json(["newMessage" => $newMessage]);
+
         } catch (HttpExceptionInterface $e) {
-            header(header: "Location: /message?user={$user->pseudo}");
-            exit();
+            error_log("send message failed: " . $e->getMessage());
+            return json(["message" => "l'ajout du message n'a pas pu aboutir"]);
+
         } catch (Exception $e) {
-            header(header: "Location: /message?user={$user->pseudo}");
-            exit();
+            error_log("send message failed: " . $e->getMessage());
+            return json(["message" => "l'ajout du message n'a pas pu aboutir"]);
+
         }
     }
 
@@ -92,11 +95,15 @@ class MessageController
             if (!$message) {
                 return json(['success' => false, 'message' => 'Message introuvable.'], 404);
             }
-
+            $fileService = new FileService();
             $this->messageService->deleteMessage($message->id, $role);
 
-            return json(['success' => true]);
+            $image = $fileService->getUploadedFileByAuthorId($message->id);
+            if ($image) {
+                $fileService->deleteUploadedFile($image["path"], $message->id);
+            }
 
+            return json(['success' => true]);
 
         } catch (Exception $e) {
             // Gestion des erreurs inattendues
@@ -108,4 +115,3 @@ class MessageController
     }
 
 }
-?>

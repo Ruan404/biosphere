@@ -7,9 +7,16 @@ use App\Entities\Layout;
 use App\VideoStream\VideoStream;
 use App\Attributes\Route;
 use App\Entities\Role;
+use Dotenv\Dotenv;
 use function App\Helpers\view;
 class VideoStreamController
 {
+     public function __construct()
+    {
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/../../');
+        $dotenv->load();
+    }
+
     #[Roles(array(Role::Admin, Role::User))]
     #[Route("GET", "/stream/[*:file]")]
     public function stream($params)
@@ -21,7 +28,7 @@ class VideoStreamController
         if(preg_match("/^[a-zA-Z0-9]+\.(?:mp4|mov|avi)$/", $params['file'])){
             $fileName = $params["file"];
            
-            $filePath = __DIR__ . '/../../public/uploads/videos/' . basename($fileName);
+            $filePath = __DIR__ . '/../../uploads/videos/' . basename($fileName);
     
             if (!file_exists($filePath)) {
                 http_response_code(404);

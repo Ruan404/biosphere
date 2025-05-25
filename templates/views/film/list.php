@@ -9,7 +9,7 @@ $title = "films";
         <?php foreach ($data as $film): ?>
             <div class="film-card">
                 <div class="film-cover">
-                    <img src=<?= $film->cover_image ?> />
+                    <img src=<?= "/".$film->cover_image ?> />
                 </div>
                 <button class="pop-film-details-btn" onclick='fetchdata("<?= $film->token ?>")'><?= $film->title ?></button>
             </div>

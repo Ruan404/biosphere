@@ -18,9 +18,9 @@ class MessageBubble extends HTMLElement {
 
     const container = document.createElement("div");
     container.classList.add("bubble");
-
+      
     container.innerHTML = `
-      <p class="content">${content}</p>
+      <div class="content">${content}</div>
       <div class="bottom">
           <small>${date}</small>
           ${

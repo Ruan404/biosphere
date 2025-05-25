@@ -73,7 +73,7 @@ class TopicService
             $query = Database::getPDO()->prepare('DELETE FROM topic WHERE id = ?');
             $query->execute([$topicId]);
 
-            return true;
+            return $query->rowCount() > 0;
 
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());
@@ -90,7 +90,7 @@ class TopicService
             $query = Database::getPDO()->prepare('INSERT INTO topic (name) VALUES (?)');
             $query->execute([htmlspecialchars($newTopic)]);
 
-            return true;
+            return $query->rowCount() > 0;
 
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());
@@ -131,7 +131,7 @@ class TopicService
             $query = Database::getPDO()->prepare("DELETE FROM topic WHERE id IN ($in)");
             $query->execute($topics);
 
-            return true;
+            return $query->rowCount() > 0;
 
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());

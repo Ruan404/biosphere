@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Chat;
+use App\Chat\Dto\CreateChatDto;
 use App\Core\Database;
 use App\Exceptions\BadRequestException;
 use App\Topic\TopicService;
@@ -8,7 +9,7 @@ use Exception;
 use PDO;
 use PDOException;
 
-class ChatService extends Chat
+class ChatService
 {
     private $topicService;
 
@@ -16,14 +17,15 @@ class ChatService extends Chat
     {
         $this->topicService = new TopicService();
     }
-    public function addMessage(Chat $chat, int $topicId): bool
+    public function addMessage(CreateChatDto $chat, int $topicId)
     {
         try {
+            $pdo = Database::getPDO();
             if (strlen($chat->message) != 0) {
-                $query = Database::getPDO()->prepare('INSERT INTO chat(pseudo, message, topic_id) VALUES(?,?,?)');
+                $query = $pdo->prepare('INSERT INTO chat(pseudo, message, topic_id) VALUES(?,?,?)');
                 $query->execute([$chat->pseudo, $chat->message, $topicId]);
 
-                return true;
+                return $this->getChatById($pdo->lastInsertId());
             }
 
             throw new BadRequestException("enter a valid message");
@@ -46,6 +48,7 @@ class ChatService extends Chat
             $messages = $query->fetchAll(PDO::FETCH_CLASS, Chat::class);
 
             return $messages ?: null;
+
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());
             throw new Exception("Something went wrong");
@@ -55,27 +58,34 @@ class ChatService extends Chat
     //supprimer tous mes messages
     public function deleteMyMessages(string $pseudo, int $topicId, array $dates): bool
     {
+        try {
+            $in = str_repeat('?,', count($dates) - 1) . '?';
 
-        // $in_array = explode(',', $dates[0]);
+            $query = Database::getPDO()->prepare("DELETE FROM chat WHERE pseudo=? AND topic_id=? AND date IN ($in)");
+            $query->execute(array_merge([$pseudo, $topicId], $dates));
 
-        $in = str_repeat('?,', count($dates) - 1) . '?';
+            return $query->rowCount() > 0;
 
-        $query = Database::getPDO()->prepare("DELETE FROM chat WHERE pseudo=? AND topic_id=? AND date IN ($in)");
-
-        $query->execute(array_merge([$pseudo, $topicId], $dates));
-
-        return $query->rowCount() > 0;
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong");
+        }
     }
 
     public function deleteMessagesAsAdmin(int $topicId, array $dates): bool
     {
-        //$in_array = explode(',', $dates[0]);
-        $in = str_repeat('?,', count($dates) - 1) . '?';
+        try {
+            $in = str_repeat('?,', count($dates) - 1) . '?';
 
-        $query = Database::getPDO()->prepare("DELETE FROM chat WHERE topic_id=? AND date IN ($in)");
-        $query->execute(array_merge([$topicId], $dates));
+            $query = Database::getPDO()->prepare("DELETE FROM chat WHERE topic_id=? AND date IN ($in)");
+            $query->execute(array_merge([$topicId], $dates));
 
-        return $query->rowCount() > 0;
+            return $query->rowCount() > 0;
+
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong");
+        }
     }
 
 
@@ -86,10 +96,29 @@ class ChatService extends Chat
                 $query = Database::getPDO()->prepare('DELETE FROM chat WHERE topic_id = ?');
                 $query->execute([$topicId]);
 
-                return true;
+                return $query->rowCount() > 0;
             }
 
             throw new BadRequestException("invalid parameter");
+
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong");
+        }
+    }
+
+
+    public function getChatById($id): ?Chat
+    {
+        try {
+           
+            $query = Database::getPDO()->prepare('SELECT pseudo, message, date FROM chat WHERE id = ?');
+            $query->setFetchMode(PDO::FETCH_CLASS, Chat::class);
+            $query->execute([$id]);
+            
+            $chat = $query->fetch();
+          
+            return $chat ?: null;
 
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());

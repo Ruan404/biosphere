@@ -8,6 +8,7 @@ use App\Admin\AdminService;
 use App\Entities\Layout;
 use App\Entities\Role;
 use App\Exceptions\HttpExceptionInterface;
+use App\Film\Dto\FilmChunkUploadDto;
 use App\Film\FilmService;
 use App\Helpers\Response;
 use App\Topic\TopicService;
@@ -77,34 +78,29 @@ class AdminController
             $totalChunks = (int) ($_POST['totalChunks']);
             $filename = $_POST['filename'];
         } catch (Exception) {
-            return new Response()->json(["error" => "Invalid upload data."], 400);
+            return new Response()->json(["success" => false, "message" => "Invalid upload data."], 400);
         }
 
         try {
-            $result = $this->filmService->chunkedUpload($videoFile, $chunkNumber, $totalChunks, $filename, $token);
+            $message = $this->filmService->upload(
+                    new FilmChunkUploadDto(
+                    $videoFile,
+                    $chunkNumber,
+                    $totalChunks,
+                    $filename,
+                    $token,
+                    $_POST['title'] ?? "",
+                    $_POST['description'] ?? "",
+                    $_FILES['cover'] ?? []
+                )
+            );
 
-            if ($result["state"] !== "done") {
-                return new Response()->json(["message" => "chunk $chunkNumber téléchargé avec success."]);
-            } else {
-                try {
-                    $title = $_POST['title'];
-                    $description = $_POST['description'];
-                    $coverFile = $_FILES['cover'];
+            return new Response()->json(["success" => true, "message" => $message]);
 
-                    $cover = $this->filmService->uploadImage($coverFile, $result["token"]);
 
-                    if ($cover) {
-                        $this->filmService->addFilm($title, $description, $result["path"], 'playlistPath', $cover, $result["token"]);
-                        return new Response()->json(["message" => "téléchargement terminé"]);
-                    }
-                } catch (Exception $e) {
-                    error_log("Video upload failed: " . $e->getMessage());
-                    return new Response()->json(["error" => "une erreur s'est produite lors du téléchargement"]);
-                }
-            }
         } catch (Exception $e) {
             error_log("Chunk upload failed: " . $e->getMessage());
-            return new Response()->json(["error" => "une erreur s'est produite lors du téléchargement"]);
+            return new Response()->json(["success"=>false, "message" => "une erreur s'est produite lors du téléchargement"]);
         }
     }
 
@@ -127,9 +123,9 @@ class AdminController
                     $this->adminService->promoteUser($slug);
                     break;
                 case 'delete_topic':
-                    $this->adminService->deleteTopic( $slug);
+                    $this->adminService->deleteTopic($slug);
                     break;
-                 case 'delete_topics':
+                case 'delete_topics':
                     $this->adminService->deleteTopics($slugs);
                     break;
                 case 'add_topic':
@@ -141,7 +137,7 @@ class AdminController
                 case 'delete_films':
                     $this->adminService->deleteFilms($slugs);
                     break;
-                 case 'delete_podcast':
+                case 'delete_podcast':
                     $this->adminService->deletePodcast($slug);
                     break;
                 default:

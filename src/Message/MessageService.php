@@ -3,8 +3,8 @@
 namespace App\Message;
 
 use App\Core\Database;
-use App\Message\Dto\GetMessageDto;
 use App\Exceptions\BadRequestException;
+use App\File\FileService;
 use Exception;
 use PDO;
 use PDOException;
@@ -23,7 +23,7 @@ class MessageService
     public function getMessages(int $userId): array
     {
         $query = Database::getPDO()->prepare("
-            SELECT mp.*, u.pseudo 
+            SELECT mp.date, mp.message, u.pseudo 
             FROM messages_privés mp
             JOIN users u ON u.id = mp.id_auteur
             WHERE (mp.id_auteur = ? AND mp.id_destinataire = ?)
@@ -36,28 +36,54 @@ class MessageService
             $userId,
             $_SESSION['user_id']
         ]);
-        return $query->fetchAll(PDO::FETCH_CLASS, GetMessageDto::class);
+        return $query->fetchAll(PDO::FETCH_CLASS, Message::class);
     }
 
     // Envoyer un message
-    public function sendMessage(int $recipientId, string $messageContent, int $senderId): bool
+    public function sendMessage(?array $image, int $recipientId, string $messageContent, int $senderId)
     {
         try {
+            if (!$recipientId || !$senderId || empty($messageContent) && !$image) {
+                throw new BadRequestException("requête invalide");
+            }
 
-            $message = nl2br(htmlspecialchars(trim($messageContent)));
+            $imageMarkdown = "";
+            if ($image) {
+                $upload = new FileService();
+                $upload->validate(["png", "jpg", "jpeg"], $image["name"]);
+                $imagePath = "/" . $upload->generatePath($image["name"], "images/"); //the slash issue must be fixed
 
-            if (strlen($message > 0)) {
-                $query = Database::getPDO()->prepare("
+                $imageMarkdown = "![alt]({$imagePath})";
+            }
+
+            $pdo = Database::getPDO();
+            $message = htmlspecialchars(trim("{$imageMarkdown}\n\n{$messageContent}"));
+
+            $query = $pdo->prepare("
                 INSERT INTO messages_privés (message, id_destinataire, id_auteur)
                 VALUES (?, ?, ?)
             ");
-                $query->execute([$message, $recipientId, $senderId]);
+            $query->execute([$message, $recipientId, $senderId]);
 
-                return true;
+
+            $newMessage = $this->getMessageById($pdo->lastInsertId());
+
+            if ($newMessage) {
+                if ($image) {
+                    $upload->uploadAndSaveFile(
+                        $image["tmp_name"],
+                        $image["name"],
+                        $imagePath,
+                        $image["size"],
+                        $image["type"],
+                        $newMessage->id
+                    );
+                }
+                return ["canDelete" => $newMessage->canDelete, "htmlMessage" => $newMessage->htmlMessage, "isAuthor" => $newMessage->isAuthor, "date" => $newMessage->date, "pseudo" => $newMessage->pseudo];
+
             }
 
-            throw new BadRequestException("le message est requis");
-
+            return null;
 
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());
@@ -79,7 +105,7 @@ class MessageService
                 $query = Database::getPDO()->prepare("DELETE FROM messages_privés WHERE id = ? AND id_auteur = ?");
                 $query->execute([$messageId, $_SESSION['user_id']]);
             }
-            
+
             return $query->rowCount() > 0;
 
         } catch (PDOException $e) {
@@ -91,9 +117,34 @@ class MessageService
     public function getMessageByDate(string $date): ?Message
     {
         try {
-            $query = Database::getPDO()->prepare("SELECT * FROM messages_privés WHERE date = ?");
+            $query = Database::getPDO()->prepare("
+                SELECT mp.*, u.pseudo 
+                FROM messages_privés mp
+                JOIN users u ON u.id = mp.id_auteur
+                WHERE mp.date = ?
+                ORDER BY mp.id ASC");
             $query->setFetchMode(PDO::FETCH_CLASS, Message::class);
             $query->execute([$date]);
+            $message = $query->fetch();
+
+            return $message ?: null;
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong");
+        }
+    }
+
+    public function getMessageById(int $id): ?Message
+    {
+        try {
+            $query = Database::getPDO()->prepare("
+                SELECT mp.*, u.pseudo 
+                FROM messages_privés mp
+                JOIN users u ON u.id = mp.id_auteur
+                WHERE mp.id = ?
+                ORDER BY mp.id ASC");
+            $query->setFetchMode(PDO::FETCH_CLASS, Message::class);
+            $query->execute([$id]);
             $message = $query->fetch();
 
             return $message ?: null;

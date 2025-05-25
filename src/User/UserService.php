@@ -24,7 +24,7 @@ class UserService
                 $query = Database::getPDO()->prepare('INSERT INTO users(pseudo, mdp)VALUES(?, ?)');
                 $query->execute([htmlspecialchars($newUser->pseudo), $hashedPassword]);
                
-                return true;
+                return $query->rowCount() > 0;
             }
             throw new BadRequestException("user already exist");
 
@@ -77,7 +77,7 @@ class UserService
             $query = Database::getPDO()->prepare('UPDATE users SET role = ? WHERE id = ?');
             $query->execute(['admin', $userId]);
 
-            return true;
+            return $query->rowCount() > 0;
 
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());
@@ -98,7 +98,7 @@ class UserService
             $query = Database::getPDO()->prepare('DELETE FROM users WHERE id = ?');
             $query->execute([$userId]);
 
-            return true;
+            return $query->rowCount() > 0;
 
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());

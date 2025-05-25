@@ -12,6 +12,7 @@ wss1.on("connection", function connection(ws, req) {
 
   ws.on("message", (data) => {
     const received = JSON.parse(data)
+    console.log(received)
    
     if(received.action === "delete" && received.messages){
       wss1.clients.forEach((client) => {

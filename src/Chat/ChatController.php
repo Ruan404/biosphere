@@ -4,6 +4,7 @@ namespace App\Chat;
 
 use App\Attributes\Route;
 use App\Auth\AuthService;
+use App\Chat\Dto\CreateChatDto;
 use App\Entities\Layout;
 use App\Exceptions\BadRequestException;
 use App\Exceptions\HttpExceptionInterface;
@@ -47,9 +48,9 @@ class ChatController
                 }
                 $topicId = $topic->id;
 
-
                 // récupère l'id du dernier message affiché
                 $messages = new ChatService()->getChatMessages($topicId);
+
                 return new Response()->json(["messages" => $messages]);
             }
         } catch (Exception $e) {
@@ -93,7 +94,7 @@ class ChatController
 
                 if ($user) {
                     $topic = new TopicService()->getTopicByName($params["slug"]);
-                    
+
 
                     if ($topic) {
                         if ($role === "admin") {
@@ -102,9 +103,9 @@ class ChatController
                             // Sinon, ne supprime que ses propres messages
                             $response = new ChatService()->deleteMyMessages($user, $topic->id, [$data["messages"]]);
                         }
-                        
+
                         if ($response) {
-                            return new Response()->json(["success" => "deletion succeeded", "action" => "delete",...$data]);
+                            return new Response()->json(["success" => "deletion succeeded", "action" => "delete", ...$data]);
                         }
                     }
                 }
@@ -132,16 +133,15 @@ class ChatController
                 if (session_status() === 1) {
                     session_start();
                 }
-                $timezone = new DateTimeZone('Europe/Paris');
-                $date = new DateTime("now", $timezone)->format('Y-m-d H:i:s');
 
-                $chat = new Chat($_SESSION["username"], $date);
-                $chat->message = $_POST['message'];
+                $chat = new CreateChatDto($_SESSION["username"], $_POST["message"]);
 
-                $result = new chatService()->addMessage($chat, $topicId);
+                $newChat = new chatService()->addMessage($chat, $topicId);
 
-                return new Response()->json([...$chat, 'topic'=>$topic->name]);
-
+                if ($newChat) {
+                    return new Response()->json(["pseudo" => $newChat->pseudo, "date" => $newChat->date, "options" => $newChat->options, "htmlMessage" => $newChat->htmlMessage, 'topic' => $topic->name]);
+                }
+                
             }
             return new Response()->json(["error" => "enter required fields"], 400);
         } catch (BadRequestException $e) {

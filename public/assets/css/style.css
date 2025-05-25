@@ -197,6 +197,10 @@ footer {
   display: none;
 }
 
+chat-input{
+  flex-grow: 1;
+}
+
 /**=== responsiveness ===**/
 
 @media (min-width: 1440px) {

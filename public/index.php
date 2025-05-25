@@ -3,6 +3,7 @@ require '../vendor/autoload.php';
 
 use App\Auth\AuthController;
 use App\Chat\ChatController;
+use App\File\FileController;
 use App\Film\FilmController;
 use App\Core\Router;
 use App\Home\HomeController;
@@ -47,4 +48,5 @@ $router->registerController(AdminController::class)
         ->registerController(SensorController::class)
         ->registerController(VideoStreamController::class)
         ->registerController(MessageController::class)
+        ->registerController(FileController::class)
         ->run();

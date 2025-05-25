@@ -28,10 +28,11 @@ class Message extends HTMLElement {
                 <p class="msg-pseudo">${this.pseudo}</p>
                 <p class="msg-date">${this.date}</p>
             </div>
-            <p>${this.message}</p>
+            ${this.message}
         </div>
     </div>
     `;
+   
     if (this.hasOptions) {
       const actionMenu = document.createElement("action-menu");
       actionMenu.setAttribute("item-id", this.date);

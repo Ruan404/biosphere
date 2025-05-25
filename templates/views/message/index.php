@@ -17,7 +17,7 @@ $messages = $data["messages"] ?? [];
         </sidebar-tab>
         <div class="conversation-container">
             <?php if (isset($_GET["user"])): ?>
-               
+
                 <?php if ($data["recipient"]): ?>
                     <div class="conversation full-page">
                         <div class="title">
@@ -25,14 +25,15 @@ $messages = $data["messages"] ?? [];
                         </div>
                         <div class="messages" id="ctn-action-menu">
                             <?php foreach ($messages as $message): ?>
-                                <message-bubble recipient="<?= $data["recipient"] ?>" class="<?= $message->isAuthor ? 'bubble-message right' : 'bubble-message' ?>"
-                                    content="<?= $message->message ?>" date="<?= $message->date ?>"
-                                    message-id="<?= $message->id ?>" <?= $message->canDelete ? 'can-delete' : ""  ?>></message-bubble>
+                                <message-bubble recipient="<?= $data["recipient"] ?>"
+                                    class="<?= $message->isAuthor ? 'bubble-message right' : 'bubble-message' ?>"
+                                    content='<?= $message->htmlMessage ?>' date="<?= $message->date ?>"
+                                    <?= $message->canDelete ? 'can-delete' : "" ?>></message-bubble>
                             <?php endforeach; ?>
                         </div>
                     </div>
-                    <form method="POST" action="/message?user=<?= $data["recipient"] ?>" class="send-message-form">
-                        <textarea name="message" placeholder="Écrivez votre message..." required></textarea>
+                    <form id="form" method="POST" class="send-message-form">
+                         <chat-input></chat-input>
                         <button class="primary-btn" type="submit">Envoyer</button>
                     </form>
                 <?php else: ?>
@@ -46,3 +47,31 @@ $messages = $data["messages"] ?? [];
 </main>
 <script src="/assets/js/components/SideBar.js"></script>
 <script type="module" src="/assets/js/components/MessageBubble.js"></script>
+<script type="module" src="/assets/js/components/ChatInput.js"></script>
+<script>
+    
+    const form = document.getElementById('form')
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const formData = new FormData(form);
+    
+      // Send formData to server via fetch
+      fetch("/message?user=<?= htmlspecialchars($data["recipient"] ?? "") ?>", {
+        method: 'POST',
+        body: formData
+      }).then(response => response.json())
+        .then(result => {
+            const newMessage = result["newMessage"];
+            let message = document.createElement("message-bubble");
+            message.setAttribute("recipient", "<?= htmlspecialchars($data["recipient"] ?? "") ?>")
+            message.setAttribute("date", newMessage.date)
+            message.setAttribute("content", newMessage.htmlMessage)
+            message.setAttribute("class", "bubble-message")
+            message.classList.add("right")
+            message.setAttribute("can-delete", newMessage.canDelete)
+            document.querySelector(".messages").appendChild(message)
+
+        })
+        .catch(err => console.error(err));
+    });
+</script>
