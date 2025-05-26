@@ -54,6 +54,10 @@ class MessageBubble extends HTMLElement {
         grid-column: span 8 / -1;
         background: rgb(var(--bg-4));
       }
+      .content img{
+        width : 100%;
+        height: auto;
+      }
       .bottom {
         display: flex;
         justify-content: space-between;

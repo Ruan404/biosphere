@@ -19,14 +19,15 @@ main {
 
 /* Conteneur de conversation */
 .conversation-container {
-  width: calc(100% - 2rem);
   display: grid;
   grid-template-rows: auto min-content;
+  width: calc(100% - 2rem);
   height: 100%;
   border-radius: 0.5rem 0.5rem 0 0;
   overflow: hidden;
   background: rgb(var(--bg-2));
   margin-inline: 1rem;
+  grid-template-columns: 100%;
 }
 
 /* Quand aucun utilisateur n'est sélectionné */
@@ -37,11 +38,10 @@ main {
   color: rgb(var(--fg-1), 0.35);
 }
 
-.full-page {
+.conversation {
   display: flex;
-  flex-direction: column;
-  height: 100%;
   overflow: hidden; /* pour éviter un scroll externe */
+  flex-direction: column;
 }
 
 /* Le style des messages dans la conversation */

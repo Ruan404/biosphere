@@ -19,7 +19,7 @@ $messages = $data["messages"] ?? [];
             <?php if (isset($_GET["user"])): ?>
 
                 <?php if ($data["recipient"]): ?>
-                    <div class="conversation full-page">
+                    <div class="conversation">
                         <div class="title">
                             <h2>Conversation avec <?= htmlspecialchars($data["recipient"]) ?></h2>
                         </div>

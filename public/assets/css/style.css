@@ -135,7 +135,7 @@ textarea {
   outline-color: rgb(var(--accent-blue));
 }
 
-button:disabled{
+button:disabled {
   background: rgb(var(--bg-3), 0.8);
   color: rgb(var(--fg-2));
   pointer-events: none;
@@ -169,7 +169,7 @@ footer {
 }
 
 /*=== side bar ===*/
-.sidebar-ctn{
+.sidebar-ctn {
   max-width: 360px;
   flex-basis: 25%;
 }
@@ -178,7 +178,7 @@ footer {
   text-transform: uppercase;
 }
 
-.sidebar-title{
+.sidebar-title {
   padding-bottom: 0.875rem;
   position: sticky;
   top: 0;
@@ -197,8 +197,9 @@ footer {
   display: none;
 }
 
-chat-input{
+chat-input {
   flex-grow: 1;
+  min-width: 0;
 }
 
 /**=== responsiveness ===**/
@@ -215,11 +216,11 @@ chat-input{
     width: calc(100% - 2rem);
   }
 
-  .sidebar-ctn{
+  .sidebar-ctn {
     flex-basis: auto;
   }
 
-  .black-mask::after{
+  .black-mask::after {
     display: inline-block;
   }
 }
