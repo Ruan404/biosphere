@@ -3,7 +3,6 @@ namespace App\Admin;
 
 use App\Chat\ChatService;
 use App\Exceptions\BadRequestException;
-use App\Exceptions\NotFoundException;
 use App\Topic\TopicService;
 use App\User\UserService;
 use App\Film\FilmService;

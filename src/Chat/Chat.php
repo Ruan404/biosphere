@@ -78,7 +78,7 @@ class Chat
     {
         $actions = [];
         if ($canDelete) {
-            array_push($actions, ["label" => "Delete", 'value' => "delete"]);
+           $actions[] = ["label" => "Delete", 'value' => "delete"];
         }
 
         //future actions

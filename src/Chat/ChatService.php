@@ -221,7 +221,6 @@ class ChatService
            
 
             $query = Database::getPDO()->prepare("SELECT * FROM chat WHERE date IN ($in)");
-            
             $query->execute($dates);
 
             $chats = $query->fetchAll(PDO::FETCH_ASSOC);

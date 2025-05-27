@@ -3,8 +3,8 @@ namespace App\Film;
 
 use App\Attributes\Route;
 use App\Entities\Layout;
-use App\Helpers\Response;
 use Exception;
+use function App\Helpers\json;
 use function App\Helpers\view;
 use App\Film\FilmService;
 
@@ -40,9 +40,9 @@ class FilmController
             $video = $this->filmService->getFilmByToken($token['token']);
             if ($video === null) {
 
-                return new Response()->json(["error" => "the video was not found"]);
+                return json(["error" => "the video was not found"]);
             }
-            return new Response()->json($video, 200);
+            return json($video, 200);
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());
             return view("/errors/500", Layout::Error);

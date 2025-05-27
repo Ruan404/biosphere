@@ -8,12 +8,10 @@ use App\Chat\Dto\AddMessageDto;
 use App\Entities\Layout;
 use App\Exceptions\BadRequestException;
 use App\Exceptions\HttpExceptionInterface;
-use App\Helpers\Response;
 use App\Topic\TopicService;
 use App\Chat\ChatService;
-use DateTime;
-use DateTimeZone;
 use Exception;
+use function App\Helpers\json;
 use function App\Helpers\view;
 
 
@@ -51,7 +49,7 @@ class ChatController
                 // récupère l'id du dernier message affiché
                 $messages = new ChatService()->getChatMessages($topicId);
 
-                return new Response()->json(["messages" => $messages]);
+                return json(["messages" => $messages]);
             }
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());
@@ -93,10 +91,10 @@ class ChatController
 
             $result = (new ChatService())->handleDeletion($params["slug"],$data,$username,$role);
 
-            return (new Response())->json($result);
+            return json($result);
             
         } catch (HttpExceptionInterface $e) {
-            return new Response()->json(["error" => $e->getMessage()], $e->getCode());
+            return json(["error" => $e->getMessage()], $e->getCode());
 
         } catch (Exception $e) {
             error_log("Unexpected error: " . $e->getMessage());
@@ -118,14 +116,13 @@ class ChatController
             $image = $_FILES["image"] ?? null;
 
             $chat = new AddMessageDto($_SESSION["username"], $_POST["message"], htmlspecialchars($params['slug']), $image);
-
             $newChat = new chatService()->addMessage($chat);
 
-            return new Response()->json($newChat);
+            return json($newChat);
 
 
         } catch (HttpExceptionInterface $e) {
-            return new Response()->json(["error" => $e->getMessage()], $e->getCode());
+            return json(["error" => $e->getMessage()], $e->getCode());
 
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());

@@ -95,7 +95,7 @@ class Message
     {
         $actions = [];
         if ($canDelete) {
-            array_push($actions, ["label" => "supprimer", 'value' => "delete"]);
+            $actions[] = ["label" => "supprimer", 'value' => "delete"];
         }
 
         //future actions

@@ -32,10 +32,10 @@ class UserAdminPanelDto
         {
                 $actions = [];
 
-                array_push($actions, ["type" => "delete_user", "label" => "Supprimer", "confirm" => true]);
+                $actions[] =  ["type" => "delete_user", "label" => "Supprimer", "confirm" => true];
 
                 if ($role !== "admin") {
-                        array_push($actions, ["type" => "promote_user", "label" => "Promouvoir"]);
+                        $actions[] = ["type" => "promote_user", "label" => "Promouvoir"];
                 }
 
                 return $actions;
