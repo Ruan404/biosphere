@@ -198,7 +198,7 @@ class ChatService
     {
         try {
 
-            $query = Database::getPDO()->prepare('SELECT pseudo, message, date FROM chat WHERE id = ?');
+            $query = Database::getPDO()->prepare('SELECT * FROM chat WHERE id = ?');
             $query->setFetchMode(PDO::FETCH_CLASS, Chat::class);
             $query->execute([$id]);
 
