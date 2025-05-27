@@ -104,6 +104,11 @@ main {
   opacity: 0.5;
 }
 
+.msg-info-ctn img {
+    width: 100%;
+    height: auto;
+}
+
 /*===formulaire pour envoyer un message===*/
 .send-msg-form {
   padding: 0.875rem 1rem;

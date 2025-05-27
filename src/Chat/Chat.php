@@ -63,10 +63,10 @@ class Chat
          * 3. remove spaces
          * 4. nl2br permet à l'utilisateur de sauter des lignes
          */
-        get => nl2br(rtrim(strip_tags(htmlspecialchars_decode(trim($this->message)))));
+        get => $this->message;
 
         set(string $message) {
-            $this->message = nl2br(rtrim(strip_tags(htmlspecialchars_decode(trim($message)))));
+            $this->message = $message;
         }
     }
 

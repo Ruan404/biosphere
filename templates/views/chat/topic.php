@@ -26,7 +26,7 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 				<div></div>
 			</div>
 			<form class="send-msg-form">
-				<textarea name="message" required autocomplete="off" placeholder="Entrez votre message"></textarea>
+				<chat-input></chat-input>
 				<input class="primary-btn" type="submit" name="valider" value="envoyer">
 			</form>
 		</div>
@@ -34,6 +34,7 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 </main>
 <script type="module" src="/assets/js/components/Message.js"></script>
 <script src="/assets/js/components/SideBar.js"></script>
+<script type="module" src="/assets/js/components/ChatInput.js"></script>
 
 <script>
 	const msgsDisplayCtn = document.querySelector(".msgs-display")
@@ -152,7 +153,7 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 	function deleteMessage(message) {
 		fetch(`/chat/${currentTopic}`, {
 			method: 'DELETE',
-			body: JSON.stringify({ "messages": message })
+			body: JSON.stringify({ "messages": [message] })
 		})
 			.then(response => response.text())
 			.then(data => {

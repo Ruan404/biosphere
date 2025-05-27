@@ -4,7 +4,7 @@ namespace App\Chat;
 
 use App\Attributes\Route;
 use App\Auth\AuthService;
-use App\Chat\Dto\CreateChatDto;
+use App\Chat\Dto\AddMessageDto;
 use App\Entities\Layout;
 use App\Exceptions\BadRequestException;
 use App\Exceptions\HttpExceptionInterface;
@@ -80,71 +80,51 @@ class ChatController
     }
 
     #[Route("DELETE", "/[*:slug]")]
-    public function deleteMyMessages($params)
+    public function deleteMyMessages(array $params)
     {
         try {
-            if ($_SERVER['REQUEST_METHOD'] === "DELETE" && isset($params['slug'])) {
-                $data = json_decode(file_get_contents('php://input'), true);
-
-                if (session_status() === 1) {
-                    session_start();
-                }
-                $user = $_SESSION["username"];
-                $role = $_SESSION["role"];
-
-                if ($user) {
-                    $topic = new TopicService()->getTopicByName($params["slug"]);
-
-
-                    if ($topic) {
-                        if ($role === "admin") {
-                            $response = new ChatService()->deleteMessagesAsAdmin($topic->id, [$data["messages"]]);
-                        } else {
-                            // Sinon, ne supprime que ses propres messages
-                            $response = new ChatService()->deleteMyMessages($user, $topic->id, [$data["messages"]]);
-                        }
-
-                        if ($response) {
-                            return new Response()->json(["success" => "deletion succeeded", "action" => "delete", ...$data]);
-                        }
-                    }
-                }
+            if (session_status() !== PHP_SESSION_ACTIVE) {
+                session_start();
             }
+
+            $username = $_SESSION['username'] ?? null;
+            $role = $_SESSION['role'] ?? 'user';
+            $data = json_decode(file_get_contents('php://input'), true);
+
+            $result = (new ChatService())->handleDeletion($params["slug"],$data,$username,$role);
+
+            return (new Response())->json($result);
+            
+        } catch (HttpExceptionInterface $e) {
+            return new Response()->json(["error" => $e->getMessage()], $e->getCode());
+
         } catch (Exception $e) {
-            error_log("Something wrong happened: " . $e->getMessage());
+            error_log("Unexpected error: " . $e->getMessage());
             return view("/errors/500", Layout::Error);
         }
     }
+
 
 
     #[Route("POST", "/[*:slug]")]
     public function addMessage($params)
     {
         try {
-            if (!empty($_POST) && isset($params['slug'])) {
-                $topic = new TopicService()->getTopicByName(htmlspecialchars($params['slug']));
-                //topic does not exists
-                if ($topic == null) {
-                    return $this->index();
-                }
-                $topicId = $topic->id;
-
-                //create a new chat
-                if (session_status() === 1) {
-                    session_start();
-                }
-
-                $chat = new CreateChatDto($_SESSION["username"], $_POST["message"]);
-
-                $newChat = new chatService()->addMessage($chat, $topicId);
-
-                if ($newChat) {
-                    return new Response()->json(["pseudo" => $newChat->pseudo, "date" => $newChat->date, "options" => $newChat->options, "htmlMessage" => $newChat->htmlMessage, 'topic' => $topic->name]);
-                }
-                
+            //create a new chat
+            if (session_status() === 1) {
+                session_start();
             }
-            return new Response()->json(["error" => "enter required fields"], 400);
-        } catch (BadRequestException $e) {
+
+            $image = $_FILES["image"] ?? null;
+
+            $chat = new AddMessageDto($_SESSION["username"], $_POST["message"], htmlspecialchars($params['slug']), $image);
+
+            $newChat = new chatService()->addMessage($chat);
+
+            return new Response()->json($newChat);
+
+
+        } catch (HttpExceptionInterface $e) {
             return new Response()->json(["error" => $e->getMessage()], $e->getCode());
 
         } catch (Exception $e) {
