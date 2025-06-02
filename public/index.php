@@ -39,6 +39,7 @@ if (session_status() == 1) {
         session_start();
 }
 
+
 $router->registerController(AdminController::class)
         ->registerController(HomeController::class)
         ->registerController(AuthController::class)

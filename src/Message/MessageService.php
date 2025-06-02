@@ -4,36 +4,49 @@ namespace App\Message;
 
 use App\Core\Database;
 use App\Exceptions\BadRequestException;
+use App\Exceptions\NotFoundException;
 use App\File\FileService;
+use App\User\UserService;
 use Exception;
 use PDO;
 use PDOException;
 
 class MessageService
 {
+    private $fileService;
     public function __construct()
     {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
+
+        $this->fileService = new FileService();
     }
 
 
     // Récupérer les messages échangés entre deux utilisateurs
-    public function getMessages(int $userId): array
+    public function getMessagesByUser(string $pseudo): array
     {
+        $user = new UserService()->getUserByPseudo($pseudo) ?: throw new NotFoundException("l'utilisateur n'existe pas");
+
+
         $query = Database::getPDO()->prepare("
-            SELECT mp.date, mp.message, u.pseudo 
+           SELECT 
+                mp.date, 
+                mp.message, 
+                u_sender.pseudo AS sender, 
+                u_recipient.pseudo AS recipient
             FROM messages_privés mp
-            JOIN users u ON u.id = mp.id_auteur
+            JOIN users u_sender ON u_sender.id = mp.id_auteur
+            JOIN users u_recipient ON u_recipient.id = mp.id_destinataire
             WHERE (mp.id_auteur = ? AND mp.id_destinataire = ?)
-               OR (mp.id_auteur = ? AND mp.id_destinataire = ?)
-            ORDER BY mp.id ASC
+            OR (mp.id_auteur = ? AND mp.id_destinataire = ?)
+            ORDER BY mp.id ASC;
         ");
         $query->execute([
             $_SESSION['user_id'],
-            $userId,
-            $userId,
+            $user->id,
+            $user->id,
             $_SESSION['user_id']
         ]);
         return $query->fetchAll(PDO::FETCH_CLASS, Message::class);
@@ -57,7 +70,7 @@ class MessageService
             }
 
             $pdo = Database::getPDO();
-            $message = htmlspecialchars(trim("{$imageMarkdown}\n\n{$messageContent}"));
+            $message = trim("{$imageMarkdown}\n\n{$messageContent}");
 
             $query = $pdo->prepare("
                 INSERT INTO messages_privés (message, id_destinataire, id_auteur)
@@ -79,7 +92,7 @@ class MessageService
                         $newMessage->id
                     );
                 }
-                return ["canDelete" => $newMessage->canDelete, "htmlMessage" => $newMessage->htmlMessage, "isAuthor" => $newMessage->isAuthor, "date" => $newMessage->date, "pseudo" => $newMessage->pseudo];
+                return ["canDelete" => $newMessage->canDelete, "htmlMessage" => $newMessage->htmlMessage, "isAuthor" => $newMessage->isAuthor, "date" => $newMessage->date, "recipient" => $newMessage->recipient, "sender" => $_SESSION["username"]];
 
             }
 
@@ -92,21 +105,29 @@ class MessageService
     }
 
     // Supprimer un message
-    public function deleteMessage(int $messageId, string $role): bool
+    public function deleteMessage(string $date, string $role = "user"): bool
     {
+        $message = $this->getMessageByDate($date) ?: throw new NotFoundException("Message introuvable.");
+        
         try {
             if ($role === 'admin') {
                 // Un administrateur peut supprimer n'importe quel message
                 $query = Database::getPDO()->prepare("DELETE FROM messages_privés WHERE id = ?");
-                $query->execute([$messageId]);
+                $query->execute([$message->id]);
 
             } else {
                 // Un utilisateur normal ne peut supprimer que ses propres messages
                 $query = Database::getPDO()->prepare("DELETE FROM messages_privés WHERE id = ? AND id_auteur = ?");
-                $query->execute([$messageId, $_SESSION['user_id']]);
+                $query->execute([$message->id, $_SESSION['user_id']]);
             }
 
-            return $query->rowCount() > 0;
+            $image = $this->fileService->getUploadedFileByAuthorId($message->id);
+
+            if ($image) {
+                $this->fileService->deleteUploadedFile($image["path"], $message->id);
+            }
+
+            return $query->rowCount() > 0 ?: throw new NotFoundException("Aucun message supprimé");
 
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());
@@ -118,11 +139,16 @@ class MessageService
     {
         try {
             $query = Database::getPDO()->prepare("
-                SELECT mp.*, u.pseudo 
+                SELECT 
+                    mp.*, 
+                    sender.pseudo AS sender,
+                    recipient.pseudo AS recipient
                 FROM messages_privés mp
-                JOIN users u ON u.id = mp.id_auteur
+                JOIN users sender ON sender.id = mp.id_auteur
+                JOIN users recipient ON recipient.id = mp.id_destinataire
                 WHERE mp.date = ?
-                ORDER BY mp.id ASC");
+                ORDER BY mp.id ASC
+            ");
             $query->setFetchMode(PDO::FETCH_CLASS, Message::class);
             $query->execute([$date]);
             $message = $query->fetch();
@@ -138,11 +164,16 @@ class MessageService
     {
         try {
             $query = Database::getPDO()->prepare("
-                SELECT mp.*, u.pseudo 
+                SELECT 
+                    mp.*, 
+                    u_sender.pseudo AS sender, 
+                    u_recipient.pseudo AS recipient
                 FROM messages_privés mp
-                JOIN users u ON u.id = mp.id_auteur
+                JOIN users u_sender ON u_sender.id = mp.id_auteur
+                JOIN users u_recipient ON u_recipient.id = mp.id_destinataire
                 WHERE mp.id = ?
-                ORDER BY mp.id ASC");
+                ORDER BY mp.id ASC;
+                ");
             $query->setFetchMode(PDO::FETCH_CLASS, Message::class);
             $query->execute([$id]);
             $message = $query->fetch();

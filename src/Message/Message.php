@@ -10,13 +10,13 @@ class Message
 {
     public function __construct()
     {
-        $this->isAuthor = $_SESSION['username'] === $this->pseudo;
-        $this->canDelete = $this->pseudo === $_SESSION['username'] || $_SESSION["role"] === "admin";
-        $this->options = $this->getOptions($this->pseudo === $_SESSION['username'] || $_SESSION["role"] === "admin");
+        $this->isAuthor = $_SESSION['username'] === $this->sender;
+        $this->canDelete = $this->sender === $_SESSION['username'] || $_SESSION["role"] === "admin";
+        $this->options = $this->getOptions($this->recipient === $_SESSION['username'] || $_SESSION["role"] === "admin");
 
 
         $converter = new CommonMarkConverter([
-            'html_input' => 'strip',
+            'html_input' => 'escape',
             'allow_unsafe_links' => false,
             'renderer' => [
                 'soft_break' => "<br />\n",
@@ -29,8 +29,12 @@ class Message
         $this->htmlMessage = $converter($this->message)->getContent();
     }
 
-    public string $pseudo = "" {
-        get => $this->pseudo;
+    public string $recipient = "" {
+        get => $this->recipient;
+    }
+
+    public string $sender = "" {
+        get => $this->sender;
     }
 
     public int $id = 0 {
@@ -72,10 +76,10 @@ class Message
     }
 
     public string $date {
-        get => htmlspecialchars($this->date);
+        get => $this->date;
 
         set(string $date) {
-            $this->date = htmlspecialchars($date);
+            $this->date = $date;
         }
     }
 

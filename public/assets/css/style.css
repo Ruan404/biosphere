@@ -69,6 +69,11 @@ svg {
   fill: currentColor;
 }
 
+.hidden{
+  display: none !important;
+}
+
+/*===buttons===*/
 .primary-btn,
 .shadow-btn {
   padding: 0.5rem 0.625rem;

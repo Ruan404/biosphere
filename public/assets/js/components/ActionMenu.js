@@ -1,3 +1,5 @@
+import styles from '/assets/css/actionMenu.css' with { type: 'css' }
+
 let currentlyOpenMenu = null;
 
 export default class ActionMenu extends HTMLElement {
@@ -8,54 +10,11 @@ export default class ActionMenu extends HTMLElement {
     this.button = null;
     this.visible = false;
     this._rafId = null;
+    this.shadow.adoptedStyleSheets = [styles];
+    
   }
 
   connectedCallback() {
-    const style = document.createElement("style");
-    style.textContent = `
-		*{
-			padding: 0;
-			margin: 0;
-		}
-
-		button {
-			cursor: pointer;
-			transition: all 300ms ease-in;
-			appearance: none;
-			border: none;
-			background: transparent;
-			color: inherit;
-			height: fit-content;
-			font-family: "Outfit", sans-serif;
-
-		}
-
-		.action-menu{
-			position: absolute;
-			display: none;
-			z-index: 1000;
-			background: rgb(var(--bg-2));
-			border: 1px solid rgb(var(--bg-3), 0.35);
-			padding: 0.5rem;
-			border-radius: 0.875rem;
-			gap: 0.25rem;
-			font-size: 0.75rem;
-		}
-
-		.menu-btn {
-			display: block;
-			text-align: left;
-			width: 100%;
-			padding: 0.5rem;
-			border-radius: 0.375rem;
-		}
-
-		.menu-btn:hover {
-			background: rgb(var(--bg-3), 0.14);
-		}
-	`;
-    this.shadow.appendChild(style);
-
     const options = JSON.parse(this.getAttribute("options") || "[]");
     if (options.length === 0) return;
 
@@ -89,11 +48,12 @@ export default class ActionMenu extends HTMLElement {
         this.dispatchEvent(
           new CustomEvent("selected", {
             bubbles: true,
-            detail: { action: opt.value, itemId },
+            composed: true,
+            detail: { action: opt.value, itemId: itemId },
           })
         );
-        this.toggle(false);
       });
+
       this.menu.appendChild(btn);
     });
 

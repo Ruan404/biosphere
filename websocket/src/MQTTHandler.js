@@ -16,7 +16,6 @@ class MQTTHandler {
       // Send the latest values on client connect
       if (Object.keys(this.latestValues).length > 0) {
         ws.send(JSON.stringify(this.latestValues));
-        console.log("Sent latest values to new client.");
       }
 
       ws.on("close", () => {
@@ -31,7 +30,7 @@ class MQTTHandler {
     const topicToSubscribe = `${process.env.MQTT_TOPIC}/#`;
     this.mqttClient.subscribe(topicToSubscribe, (err) => {
       if (err) {
-        console.error("Error subscribing to MQTT topic", err);
+        console.error("Error subscribing to MQTT topic");
       } else {
         console.log(`Subscribed to topic: ${topicToSubscribe}`);
       }

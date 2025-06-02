@@ -6,7 +6,6 @@ use App\Attributes\Route;
 use App\Auth\AuthService;
 use App\Chat\Dto\AddMessageDto;
 use App\Entities\Layout;
-use App\Exceptions\BadRequestException;
 use App\Exceptions\HttpExceptionInterface;
 use App\Topic\TopicService;
 use App\Chat\ChatService;
@@ -20,60 +19,56 @@ class ChatController
 {
     private $authService;
     private $topics;
+    private $chatService;
+    private $topicService;
 
     public function __construct()
     {
         $this->authService = new AuthService();
-        $this->topics = new TopicService()->getAllTopics();
+        $this->chatService = new chatService();
+        $this->topicService = new TopicService();
     }
 
     #[Route("GET", "")]
     public function index()
     {
-        return view(view: '/chat/index', data: ['topics' => $this->topics]);
+        $topics = $this->topicService->getAllTopics();
+        return view(view: '/chat/index', data: ['topics' => $topics]);
     }
-
-    #[Route("GET", "/api/[*:slug]")]
-    public function getChat($params)
-    {
-        try {
-            if (isset($params['slug'])) {
-                $topic = new TopicService()->getTopicByName(htmlspecialchars($params['slug']));
-                //topic does not exists
-                if ($topic == null) {
-                    header('Location: /chat');
-                    exit();
-                }
-                $topicId = $topic->id;
-
-                // récupère l'id du dernier message affiché
-                $messages = new ChatService()->getChatMessages($topicId);
-
-                return json(["messages" => $messages]);
-            }
-        } catch (Exception $e) {
-            error_log("Something wrong happened: " . $e->getMessage());
-            return view("/errors/500", Layout::Error);
-        }
-    }
-
 
     #[Route("GET", "/[*:slug]")]
     public function viewChat($params)
     {
+        $accept = strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false;
+
         try {
-            if (isset($params['slug'])) {
-                $topic = new TopicService()->getTopicByName(htmlspecialchars($params['slug']));
-                //topic does not exists
+            if ($accept) {
+                $messages = $this->chatService->getChatMessages($params['slug']);
+                return json(["messages" => $messages]);
+
+            } else {
+                $topics = $this->topicService->getAllTopics();
+                $topic = $this->topicService->getTopicByName($params['slug']);
+
                 if ($topic === null) {
                     header('Location: /chat');
                     exit();
                 }
-                return view(view: '/chat/topic', data: ['topics' => $this->topics, 'currentTopic' => $topic->name]);
+
+                return view(view: '/chat/index', data: ['topics' => $topics, 'currentTopic' => $topic->name]);
             }
+
+        } catch (HttpExceptionInterface) {
+            header('Location: /chat');
+            exit();
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());
-            return view("/errors/500", Layout::Error);
+
+            if ($accept) {
+                return json(["success" => false, "message" => "impossible de recupérer les messages"]);
+            } else {
+                return view("/errors/500", Layout::Error);
+            }
         }
     }
 
@@ -86,13 +81,13 @@ class ChatController
             }
 
             $username = $_SESSION['username'] ?? null;
-            $role = $_SESSION['role'] ?? 'user';
+            $role = $_SESSION['role'];
             $data = json_decode(file_get_contents('php://input'), true);
 
-            $result = (new ChatService())->handleDeletion($params["slug"],$data,$username,$role);
-
-            return json($result);
+            $result = $this->chatService->handleDeletion($params["slug"], $data, $username, $role);
             
+            return json($result);
+
         } catch (HttpExceptionInterface $e) {
             return json(["error" => $e->getMessage()], $e->getCode());
 
@@ -115,8 +110,8 @@ class ChatController
 
             $image = $_FILES["image"] ?? null;
 
-            $chat = new AddMessageDto($_SESSION["username"], $_POST["message"], htmlspecialchars($params['slug']), $image);
-            $newChat = new chatService()->addMessage($chat);
+            $chat = new AddMessageDto($_SESSION["username"], $_POST["message"], $params['slug'], $image);
+            $newChat = $this->chatService->addMessage($chat);
 
             return json($newChat);
 

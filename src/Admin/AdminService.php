@@ -3,6 +3,7 @@ namespace App\Admin;
 
 use App\Chat\ChatService;
 use App\Exceptions\BadRequestException;
+use App\Exceptions\NotFoundException;
 use App\Topic\TopicService;
 use App\User\UserService;
 use App\Film\FilmService;
@@ -32,7 +33,7 @@ class AdminService
         if ($user) {
             return $this->userService->deleteUser($user->id);
         }
-        throw new BadRequestException("l'utilisateur n'existe pas");
+        throw new NotFoundException("l'utilisateur n'existe pas");
     }
 
     public function deleteUsers(array $users): bool
@@ -46,7 +47,7 @@ class AdminService
         if ($user) {
             return $this->userService->promoteToAdmin($user->id);
         }
-        throw new BadRequestException("l'utilisateur n'existe pas");
+        throw new NotFoundException("l'utilisateur n'existe pas");
     }
 
 
@@ -58,14 +59,13 @@ class AdminService
     public function deleteTopic(string $topic): bool
     {
         $topicId = $this->topicService->getTopicByName($topic)->id;
-
         if ($topicId) {
             $this->chatService->deleteChat($topicId);
 
             return $this->topicService->deleteTopic($topicId);
 
         }
-        throw new BadRequestException("le topic n'existe pas");
+        throw new NotFoundException("le topic n'existe pas");
     }
 
 
@@ -85,16 +85,14 @@ class AdminService
         for ($i = 0; $i < count($topics); $i++) {
             $topicsIds[] = $topics[$i]["id"];
         }
-        ;
 
         if ($topicsIds) {
 
             $this->chatService->deleteChats($topicsIds);
-
             return $this->topicService->deleteTopics($topicsIds);
 
         }
-        throw new BadRequestException("le(s) topic(s) n'existent pas");
+        throw new NotFoundException("Aucun topic trouvé");
     }
 
     public function deletePodcast($podcastTitle)
@@ -106,34 +104,34 @@ class AdminService
         }
     }
 
-    public function deleteFilm($token)
+    public function deleteFilm(string|array $token)
     {
         $film = $this->filmService->getFilmByToken($token);
 
         if ($film === null) {
-            throw new BadRequestException("Le film n'existe déjà.");
+            throw new NotFoundException("Le film n'existe pas.");
         }
 
-        return $this->filmService->deleteFilm(video: $film);
+        return $this->filmService->deleteFilm($film);
     }
 
     public function deleteFilms(array $tokens)
     {
         $films = $this->filmService->getFilmsByTokens($tokens);
 
-        $filmsGrouped = ["file_path" => [], "cover_image" => [], "token" => []];
-
         if ($films === null) {
-            throw new BadRequestException("Les films n'existent déjà.");
+            throw new NotFoundException("Aucun film trouvé.");
         }
 
+        $filmsGrouped = ["files" => [], "token" => []];
+
         for ($i = 0; $i < count($films); $i++) {
-            $filmsGrouped["file_path"][] = $films[$i]["file_path"];
-            $filmsGrouped["cover_image"][] = $films[$i]["cover_image"];
+            $filmsGrouped["files"][] = $films[$i]["file_path"];
+            $filmsGrouped["files"][] = $films[$i]["cover_image"];
             $filmsGrouped["token"][] = $films[$i]["token"];
         }
 
-        return $this->filmService->deleteFilms($filmsGrouped["file_path"], $filmsGrouped["cover_image"], $filmsGrouped["token"]);
+        return $this->filmService->deleteFilms($filmsGrouped["files"], $filmsGrouped["token"]);
     }
 
     public function addTopic($name)

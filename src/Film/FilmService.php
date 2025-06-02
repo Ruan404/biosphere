@@ -47,45 +47,34 @@ class FilmService
 
     public function upload(FilmChunkUploadDto $data): string
     {
-        $uploadService = new FileService();
+        try {
+            $uploadService = new FileService();
 
-        $result = $uploadService->chunkedUpload(
-            $data->file["tmp_name"],
-            $data->chunkNumber,
-            $data->totalChunks,
-            $data->filename,
-            $data->token,
-            ['mp4', 'mov', 'webm']
-        );
-        $message = "chunk $data->chunkNumber téléchargé avec success.";
-
-        if ($result['state'] === 'done' && $data->title && $data->description && $data->coverFile) {
-            $uploadService->validate(["jpg", "jpeg", "png"], $data->coverFile["name"]);
-            $coverPath = $uploadService->save($_ENV['COVER_DIR'], $data->coverFile["name"], $data->coverFile["tmp_name"]);
-
-            $this->addFilm(
-                $data->title,
-                $data->description,
-                $result['path'],
-                'playlistPath',
-                $coverPath,
-                $result['token']
+            $result = $uploadService->chunkedUpload(
+                $data->file["tmp_name"],
+                $data->chunkNumber,
+                $data->totalChunks,
+                $data->filename,
+                $data->token,
+                ['mp4', 'mov', 'webm']
             );
 
-            $message = "téléchargement terminé";
-        }
+            if ($result['state'] === 'done' && $data->title && $data->description && $data->coverFile) {
+                $uploadService->validate(["jpg", "jpeg", "png"], $data->coverFile["name"]);
+                $coverPath = $uploadService->save($_ENV['COVER_DIR'], $data->coverFile["name"], $data->coverFile["tmp_name"]);
 
-        return $message;
-    }
+                $query = Database::getPDO()->prepare("INSERT INTO film (title, description, file_path, playlist_path, cover_image, token) VALUES (?, ?, ?, ?, ?, ?)");
+                $query->execute([$data->title, $data->description, $result['path'], 'playlistPath', $coverPath, $result['token']]);
 
 
-    public function addFilm(string $title, string $description, string $filePath, string $playlistPath, string $coverPath, string $token): bool
-    {
-        try {
-            $query = Database::getPDO()->prepare("INSERT INTO film (title, description, file_path, playlist_path, cover_image, token) VALUES (?, ?, ?, ?, ?, ?)");
-            $query->execute([$title, $description, $filePath, $playlistPath, $coverPath, $token]);
+                if ($query->rowCount() > 0) {
+                    return "téléchargement terminé";
+                } else {
+                    return "le téléchargement a échoué";
+                }
+            }
 
-            return $query->rowCount() > 0;
+            return "chunk $data->chunkNumber téléchargé avec success.";
 
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());
@@ -141,23 +130,14 @@ class FilmService
      * @param array $films
      * @return bool
      */
-    public function deleteFilms(array $files_paths, array $covers_images, array $tokens)
+    public function deleteFilms(array $relative_paths, array $tokens)
     {
-
-        for ($i = 0; $i < count($files_paths); $i++) {
-            $videoFilePath = $_ENV["UPLOAD_BASE_DIR"] . $files_paths[$i];
-            if ($videoFilePath && file_exists($videoFilePath)) {
-                unlink($videoFilePath);
+        for ($i = 0; $i < count(value: $relative_paths); $i++) {
+            $file = $_ENV["UPLOAD_BASE_DIR"] . $relative_paths[$i];
+            if ($file && file_exists($file)) {
+                unlink($file);
             }
         }
-
-        for ($i = 0; $i < count($covers_images); $i++) {
-            $coverFilePath = $_ENV["UPLOAD_BASE_DIR"] . $covers_images[$i];
-            if ($coverFilePath && file_exists($coverFilePath)) {
-                unlink($coverFilePath);
-            }
-        }
-
 
         $in = str_repeat('?,', count($tokens) - 1) . '?';
 

@@ -9,9 +9,9 @@ class UserAdminPanelDto
                 $this->slug = $this->pseudo;
         }
         public string $pseudo {
-                get => htmlspecialchars(string: $this->pseudo);
+                get => $this->pseudo;
                 set(string $pseudo) {
-                        $this->pseudo = htmlspecialchars(string: $pseudo);
+                        $this->pseudo = $pseudo;
                 }
         }
 

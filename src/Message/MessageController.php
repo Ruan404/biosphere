@@ -27,21 +27,34 @@ class MessageController
     #[Route("GET", "")]
     public function index()
     {
-        $user = htmlspecialchars($_GET["user"] ?? "");
+        $accept = strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false;
 
-        // Récupérer la liste des utilisateurs sauf celui connecté
-        $users = $this->userService->getUsersExceptOne($_SESSION["user_id"]);
-
-        if ($user) {
-            $user = $this->userService->getUserByPseudo($user);
+        try {
+            $user = $_GET["user"] ?? "";
+            // Récupérer la liste des utilisateurs sauf celui connecté
+            $users = $this->userService->getUsersExceptOne($_SESSION["user_id"]);
 
             if ($user) {
-                $messages = $this->messageService->getMessages($user->id);
-
-                return view(view: '/message/index', data: ['messages' => $messages, 'users' => $users, 'recipient' => $user->pseudo]);
+                if ($accept) {
+                    $messages = $this->messageService->getMessagesByUser($user);
+                    return json(["messages" => $messages]);
+                } else {
+                    return view(view: '/message/index', data: ['users' => $users, 'recipient' => $user]);
+                }
+            } else {
+                return view(view: '/message/index', data: ['users' => $users, 'recipient' => $user]);
+            }
+        } catch (HttpExceptionInterface) {
+            header('Location: /message');
+            exit();
+        } catch (Exception $e) {
+            error_log("Something wrong happened: " . $e->getMessage());
+            if ($accept) {
+                return json(['users' => $users, 'messages' => []], 500);
+            } else {
+                return view(view: '/message/index', data: ['users' => $users, 'messages' => []]);
             }
         }
-        return view(view: '/message/index', data: ['users' => $users, 'messages' => []]);
     }
 
     // Envoyer un message privé
@@ -49,7 +62,7 @@ class MessageController
     public function sendMessage()
     {
         try {
-            $user = $this->userService->getUserByPseudo(htmlspecialchars($_GET["user"]));
+            $user = $this->userService->getUserByPseudo($_GET["user"]);
 
             $image = $_FILES["image"] ?? null;
             $text = $_POST['message'] ?? "";
@@ -60,11 +73,11 @@ class MessageController
 
         } catch (HttpExceptionInterface $e) {
             error_log("send message failed: " . $e->getMessage());
-            return json(["message" => "l'ajout du message n'a pas pu aboutir"]);
+            return json(["message" => "l'ajout du message n'a pas pu aboutir"], $e->getCode());
 
         } catch (Exception $e) {
             error_log("send message failed: " . $e->getMessage());
-            return json(["message" => "l'ajout du message n'a pas pu aboutir"]);
+            return json(["message" => "l'ajout du message n'a pas pu aboutir"], 500);
 
         }
     }
@@ -76,41 +89,19 @@ class MessageController
     {
         try {
 
-            if ($_SERVER['REQUEST_METHOD'] !== "DELETE" && !isset($_GET['user'])) {
-                return json(['success' => false, 'message' => 'Requête invalide.'], 400);
-            }
-
             $data = json_decode(file_get_contents('php://input'), true); // Récupère les données envoyées en POST
+            $role = $_SESSION["role"];
+            $date = $data["message"];
 
-            $user = $_SESSION["username"] ?? "";
-            $role = $_SESSION["role"] ?? "user";
-            $date = $data["message"] ?? "";
+            $this->messageService->deleteMessage($date, $role);
 
-            if (!$user || !$date) {
-                return json(['success' => false, 'message' => 'Données invalides.'], 400);
-            }
+            return json(['success' => true, "action" => "delete", "messages" => [$date]]);
 
-            $message = $this->messageService->getMessageByDate($date);
-
-            if (!$message) {
-                return json(['success' => false, 'message' => 'Message introuvable.'], 404);
-            }
-            $fileService = new FileService();
-            $this->messageService->deleteMessage($message->id, $role);
-
-            $image = $fileService->getUploadedFileByAuthorId($message->id);
-            if ($image) {
-                $fileService->deleteUploadedFile($image["path"], $message->id);
-            }
-
-            return json(['success' => true]);
-
+        } catch (HttpExceptionInterface $e) {
+            return json(['success' => false, 'message' => 'Échec de la suppression du message. '], $e->getCode());
         } catch (Exception $e) {
-            // Gestion des erreurs inattendues
-            return json([
-                'success' => false,
-                'message' => 'Échec de la suppression du message. '
-            ], 500);
+            error_log("delete message failed: " . $e->getMessage());
+            return json(['success' => false, 'message' => 'Échec de la suppression du message. '], 500);
         }
     }
 

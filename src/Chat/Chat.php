@@ -17,16 +17,17 @@ class Chat
 {
     public function __construct()
     {
-        if (session_status() === 1) {
-            session_start();
-        }
         $this->options = $this->getOptions($this->pseudo === $_SESSION['username'] || $_SESSION["role"] === "admin");
 
-        $converter = new CommonMarkConverter(['html_input' => 'strip']);
+        $converter = new CommonMarkConverter([
+            'html_input' => 'escape',
+            'allow_unsafe_links' => false,
+            'renderer' => [
+                'soft_break' => "<br />\n",
+            ]
+        ]);
         $converter->getEnvironment()->addExtension(new EmojiExtension);
         $converter->getEnvironment()->addExtension(new SpoilerExtension);
-
-
 
         $this->htmlMessage = $converter($this->message)->getContent();
     }
@@ -48,7 +49,7 @@ class Chat
         get => $this->pseudo;
 
         set(string $pseudo) {
-            $this->pseudo = htmlspecialchars($pseudo);
+            $this->pseudo = $pseudo;
         }
     }
 
@@ -78,7 +79,7 @@ class Chat
     {
         $actions = [];
         if ($canDelete) {
-           $actions[] = ["label" => "Delete", 'value' => "delete"];
+           $actions[] = ["label" => "Supprimer", 'value' => "delete"];
         }
 
         //future actions

@@ -65,7 +65,3 @@ function image_resize($file_name, $width, $height, $crop = FALSE) {
     imagecopyresampled($dst, $source, 0, 0, 0, 0, $new_width, $new_height, $wid, $ht);
     return $dst;
 }
-
-function trimEscapeStrip(string $input){
-    return nl2br(rtrim(strip_tags(htmlspecialchars_decode(trim($input)))));
-}

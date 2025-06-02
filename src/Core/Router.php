@@ -9,7 +9,6 @@ use App\Attributes\{
     Route,
     Roles
 };
-use App\Auth\AuthService;
 use function App\Helpers\view;
 
 class Router

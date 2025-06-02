@@ -1,89 +1,17 @@
-import "https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js";
+import "/assets/js/emoji-picker-element/picker.js";
+import styles from '/assets/css/chatInput.css' with { type: 'css' }
+
 
 class ChatInput extends HTMLElement {
   constructor() {
     super();
     this.shadow = this.attachShadow({ mode: "closed", delegatesFocus: true });
+    this.shadow.adoptedStyleSheets = [styles];
     this._form = null;
     this._handleFormData = this.handleFormData.bind(this);
   }
 
   connectedCallback() {
-    const style = document.createElement("style");
-    style.textContent = `
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        color: rgb(var(--fg-1));
-      }
-      textarea {
-        padding: 0.25rem;
-        flex-grow: 1;
-        font: inherit;
-        background: transparent;
-        border: none;
-      }
-      textarea:focus-visible {
-        outline-color: rgb(var(--accent-blue));
-        border-radius: 0.25rem;
-      }
-      .container {
-        position: relative;
-        width: 100%;
-        border: 1px solid rgb(var(--bg-3), 0.35);
-        background: rgb(var(--bg-1));
-        border-radius: 0.75rem;
-      }
-      .controls {
-        display: flex;
-        gap: 0.5rem;
-        height: 100%;
-      }
-      svg {
-        opacity: 60%;
-      }
-      .input-area {
-        padding: 0.5rem;
-        border-radius: 0.75rem;
-        width: 100%;
-        display: flex;
-        gap: 0.5rem;
-        font-size: 0.875rem;
-        align-items: center;
-      }
-      #emojiBtn,
-      #imageBtn {
-        display: flex;
-      }
-      button {
-        appearance: none;
-        border: none;
-        background: transparent;
-        display: flex;
-        align-items: center;
-        cursor: pointer;
-      }
-      emoji-picker {
-        position: absolute;
-        left: 0;
-        bottom: 100%;
-        z-index: 10;
-      }
-      .image-preview {
-        width: 100%;
-        height: auto;
-        aspect-ratio: 1;
-        display: none;
-        border: 1px solid rgb(var(--accent-blue));
-        border-radius: 0.75rem;
-      }
-      .images-preview-ctn {
-        width: 100px;
-        position: absolute;
-        bottom: calc(100% + 0.5rem);
-      }`;
-
     const container = document.createElement("div");
     container.classList.add("container");
     container.innerHTML = `
@@ -108,13 +36,12 @@ class ChatInput extends HTMLElement {
           </button>
           <input type="file" id="fileInput" name="image" accept="image/*" style="display:none;">
         </div>
-        <emoji-picker style="display: none;"></emoji-picker>
+        <emoji-picker locale="fr" i18n="fr" data-source="/assets/js/emoji-picker-element/data.json" style="display: none;"></emoji-picker>
         <textarea name="message" placeholder="Écrivez votre message..."></textarea>
       </div>
     `;
 
     this.shadow.innerHTML = "";
-    this.shadow.appendChild(style);
     this.shadow.appendChild(container);
 
     this.textarea = this.shadow.querySelector("textarea");

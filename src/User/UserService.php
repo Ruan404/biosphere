@@ -22,7 +22,7 @@ class UserService
 
             if ($user === null) {
                 $query = Database::getPDO()->prepare('INSERT INTO users(pseudo, mdp)VALUES(?, ?)');
-                $query->execute([htmlspecialchars($newUser->pseudo), $hashedPassword]);
+                $query->execute([$newUser->pseudo, $hashedPassword]);
                
                 return $query->rowCount() > 0;
             }
@@ -55,7 +55,7 @@ class UserService
         try {
             //get user
             $query = Database::getPDO()->prepare('SELECT * FROM users WHERE pseudo = ?');
-            $query->execute([htmlspecialchars($pseudo)]);
+            $query->execute([$pseudo]);
             $user = $query->fetchObject(User::class);
 
             return $user ?: null;
@@ -127,7 +127,7 @@ class UserService
     {
         try {
             $query = Database::getPDO()->prepare('SELECT pseudo, role FROM users WHERE id!= ?');
-            $query->execute([htmlspecialchars($userId)]);
+            $query->execute([$userId]);
             $users = $query->fetchAll(PDO::FETCH_CLASS, UserAdminPanelDto::class);
 
             return $users;

@@ -49,7 +49,7 @@ class AdminController
     public function getData(array $params)
     {
         try {
-            $tab = htmlspecialchars($params["tab"] ?? "");
+            $tab = $params["tab"] ?? "";
 
             return match ($tab) {
                 "users"  => json($this->userService->getUsersExceptOne($_SESSION['user_id'] ?? 0)),

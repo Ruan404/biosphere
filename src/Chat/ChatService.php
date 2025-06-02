@@ -23,7 +23,7 @@ class ChatService
     {
         try {
 
-            $topic = new TopicService()->getTopicByName(htmlspecialchars($chat->topicName));
+            $topic = $this->topicService->getTopicByName($chat->topicName);
             //topic does not exists
             if ($topic === null) {
                 throw new BadRequestException("impossible d'ajouter un message");
@@ -40,7 +40,7 @@ class ChatService
             }
 
             $pdo = Database::getPDO();
-            $htmlMessage = htmlspecialchars(trim("{$imageMarkdown}\n\n{$chat->message}"));
+            $htmlMessage = trim("{$imageMarkdown}\n\n{$chat->message}");
 
             if (strlen($htmlMessage) != 0) {
                 $query = $pdo->prepare('INSERT INTO chat(pseudo, message, topic_id) VALUES(?,?,?)');
@@ -59,7 +59,7 @@ class ChatService
                             $newChat->id
                         );
                     }
-                   
+
                     return ["pseudo" => $newChat->pseudo, "date" => $newChat->date, "options" => $newChat->options, "htmlMessage" => $newChat->htmlMessage, 'topic' => $topic->name];
 
                 }
@@ -75,10 +75,19 @@ class ChatService
         }
     }
 
-    public function getChatMessages(int $topicId): ?array
+    public function getChatMessages(string $topicName): ?array
     {
 
         try {
+
+            $topic = $this->topicService->getTopicByName($topicName);
+            //topic does not exists
+            if ($topic === null) {
+                throw new NotFoundException("le topic n'existe pas");
+            }
+            
+            $topicId = $topic->id;
+
             $query = Database::getPDO()->prepare('SELECT chat.pseudo, chat.message, chat.date FROM chat WHERE topic_id = :topic ORDER BY chat.id ASC LIMIT 50');
 
             $query->bindParam(':topic', $topicId, PDO::PARAM_STR);
@@ -96,7 +105,7 @@ class ChatService
 
     public function handleDeletion(string $topicName, array $data, ?string $username, string $role = 'user'): array
     {
-        $topic = (new TopicService())->getTopicByName($topicName);
+        $topic = $this->topicService->getTopicByName($topicName);
         if (!$topic) {
             throw new NotFoundException("Le topic n'existe pas");
         }
@@ -112,7 +121,7 @@ class ChatService
         }
 
         if (empty($chatIds)) {
-            throw new BadRequestException("Aucun message trouvé");
+            throw new NotFoundException("Aucun message trouvé");
         }
 
         // 3. Delete from DB
@@ -216,9 +225,9 @@ class ChatService
     public function getChatsByDates($dates)
     {
         try {
-           
+
             $in = str_repeat('?,', count($dates) - 1) . '?';
-           
+
 
             $query = Database::getPDO()->prepare("SELECT * FROM chat WHERE date IN ($in)");
             $query->execute($dates);
