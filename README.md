@@ -31,7 +31,7 @@ DB_HOST = nom de l'hôte
 DB_PSWD = mot de passe
 UPLOAD_DIR= sous_dossier_videos/
 COVER_DIR= dossier_images/
-UPLOAD_BASE_DIR = C:/.../dossier_uploads/
+UPLOAD_BASE_DIR = dossier_uploads/
 TEMP_UPLOAD_DIR= sous_dossier_chunks/
 ```
 ### Créer un fichier ***env*** à la racine du dossier wbesocket

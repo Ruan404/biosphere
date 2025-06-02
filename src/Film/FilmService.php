@@ -13,10 +13,14 @@ use PDOException;
 
 class FilmService
 {
+    private $uploadBaseDir;
+    
     public function __construct()
     {
         $dotenv = Dotenv::createImmutable(__DIR__ . '/../../');
         $dotenv->load();
+
+        $this->uploadBaseDir = $_SERVER["DOCUMENT_ROOT"]."/".$_ENV["UPLOAD_BASE_DIR"];
     }
 
     public function getAllFilms(): ?array
@@ -109,12 +113,12 @@ class FilmService
     public function deleteFilm(array $video)
     {
 
-        $videoFilePath = $_ENV["UPLOAD_BASE_DIR"] . $video["file_path"];
+        $videoFilePath = $this->uploadBaseDir . $video["file_path"];
         if ($videoFilePath && file_exists($videoFilePath)) {
             unlink($videoFilePath);
         }
 
-        $coverFilePath = $_ENV["UPLOAD_BASE_DIR"] . $video["cover_image"];
+        $coverFilePath = $this->uploadBaseDir . $video["cover_image"];
         if ($coverFilePath && file_exists($coverFilePath)) {
             unlink($coverFilePath);
         }
@@ -133,7 +137,7 @@ class FilmService
     public function deleteFilms(array $relative_paths, array $tokens)
     {
         for ($i = 0; $i < count(value: $relative_paths); $i++) {
-            $file = $_ENV["UPLOAD_BASE_DIR"] . $relative_paths[$i];
+            $file = $this->uploadBaseDir . $relative_paths[$i];
             if ($file && file_exists($file)) {
                 unlink($file);
             }
