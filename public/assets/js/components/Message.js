@@ -36,7 +36,7 @@ class Message extends HTMLElement {
     </div>
     `;
    
-    if (this.hasOptions) {
+    if (this.hasOptions == "true") {
       const actionMenu = document.createElement("action-menu");
       actionMenu.setAttribute("item-id", this.date);
       actionMenu.setAttribute("options", JSON.stringify(this.options));
