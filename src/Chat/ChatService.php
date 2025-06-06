@@ -60,7 +60,7 @@ class ChatService
                         );
                     }
 
-                    return ["pseudo" => $newChat->pseudo, "date" => $newChat->date, "options" => $newChat->options, "htmlMessage" => $newChat->htmlMessage, 'topic' => $topic->name];
+                    return ["pseudo" => $newChat->pseudo, "date" => $newChat->date, "htmlMessage" => $newChat->htmlMessage, 'topic' => $topic->name];
 
                 }
 

@@ -23,7 +23,7 @@ class UserService
             if ($user === null) {
                 $query = Database::getPDO()->prepare('INSERT INTO users(pseudo, mdp)VALUES(?, ?)');
                 $query->execute([$newUser->pseudo, $hashedPassword]);
-               
+
                 return $query->rowCount() > 0;
             }
             throw new BadRequestException("user already exist");
@@ -137,4 +137,18 @@ class UserService
             throw new Exception("Something went wrong.");
         }
     }
+
+
+    public function getUserActions(string $pseudo): array
+    {
+        $actions = [];
+
+        // If the current logged-in user is the author or an admin
+        if ($pseudo === $_SESSION['username'] || $_SESSION['role'] === 'admin') {
+            $actions[] = ["label" => "Supprimer", "value" => "delete"];
+        }
+
+        return $actions;
+    }
+
 }

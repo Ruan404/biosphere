@@ -9,6 +9,7 @@ use App\Entities\Layout;
 use App\Exceptions\HttpExceptionInterface;
 use App\Topic\TopicService;
 use App\Chat\ChatService;
+use App\User\UserService;
 use Exception;
 use function App\Helpers\json;
 use function App\Helpers\view;
@@ -34,6 +35,15 @@ class ChatController
     {
         $topics = $this->topicService->getAllTopics();
         return view(view: '/chat/index', data: ['topics' => $topics]);
+    }
+
+    #[Route("GET", "/actions/[*:slug]")]
+    public function actions($params)
+    {
+        $pseudo = $params["slug"];
+        
+        $userActions = new UserService()->getUserActions($pseudo);
+        return json([$userActions]);
     }
 
     #[Route("GET", "/[*:slug]")]

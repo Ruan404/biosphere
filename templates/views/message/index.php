@@ -112,11 +112,25 @@ $recipient = htmlspecialchars($data["recipient"] ?? "");
                 });
             });
         }
-        if (data.newMessage && data.newMessage.sender === currentRecipient && data.newMessage.recipient === "<?= $_SESSION["username"] ?>") {
 
-            displayMessage(data.newMessage, show = false);
-            scrollToBottom();
-        }
+        if (data.newMessage && data.newMessage.sender === currentRecipient && data.newMessage.recipient === "<?= $_SESSION["username"] ?>") {
+			fetch(`/message/actions/${data.pseudo}`)
+				.then(response => response.json())
+				.then(actions => {
+					console.log(data)
+					
+					data.options = actions[0] || [];
+					console.log(data)
+					displayMessage(data);
+					msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: 'smooth' });
+				})
+				.catch(err => {
+					console.error("Failed to fetch actions", err);
+					data.options = [];
+					displayMessage(data);
+					scrollToBottom();
+				});
+		}
     }
 
     function fetchMessages(user) {

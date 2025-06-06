@@ -36,7 +36,12 @@ $title = $currentTopic ?? "chat";
 <script type="module" src="/assets/js/components/Message.js"></script>
 <script src="/assets/js/components/SideBar.js"></script>
 <script type="module" src="/assets/js/components/ChatInput.js"></script>
-
+<script>
+	function fetchActions(url) {
+		const data = fetch(url).then((response) => response.json()).then((data) => data);
+		return data;
+	}
+</script>
 <script>
 	const msgsDisplayCtn = document.querySelector(".msgs-display")
 	const messagesCtn = document.querySelector(".messages")
@@ -63,7 +68,7 @@ $title = $currentTopic ?? "chat";
 			document.querySelector(`[data-slug=${topic}]`).classList.add("current")
 			fetchData(currentTopic)
 		}
-		history.pushState({ topic }, `chat ${topic}`, topic ? `/chat/${topic}` : "/chat");		
+		history.pushState({ topic }, `chat ${topic}`, topic ? `/chat/${topic}` : "/chat");
 		updateView(topic)
 	})
 
@@ -109,7 +114,7 @@ $title = $currentTopic ?? "chat";
 			.then(data => {
 				if (data.htmlMessage) {
 					socket.send(JSON.stringify(data))
-					displayMessage(data)
+					// displayMessage(data)
 					msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: 'smooth' });
 				}
 			})
@@ -119,9 +124,11 @@ $title = $currentTopic ?? "chat";
 			});
 	})
 
+
 	// When a message is received from the WebSocket server
 	socket.onmessage = function (event) {
 		const data = JSON.parse(event.data);
+
 		if (data.action === "delete" && data.messages) {
 			const items = document.querySelectorAll('message-box');
 			items.forEach((msgBox) => {
@@ -129,12 +136,27 @@ $title = $currentTopic ?? "chat";
 				if (data.messages.includes(itemId)) msgBox.remove();
 			});
 		}
-		// New chat event
+
 		if (data.htmlMessage && data.topic === currentTopic) {
-			displayMessage(data, false)
-			msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: 'smooth' });
+			fetch(`/chat/actions/${data.pseudo}`)
+				.then(response => response.json())
+				.then(actions => {
+					console.log(data)
+					
+					data.options = actions[0] || [];
+					console.log(data)
+					displayMessage(data);
+					msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: 'smooth' });
+				})
+				.catch(err => {
+					console.error("Failed to fetch actions", err);
+					data.options = [];
+					displayMessage(data);
+					msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: 'smooth' });
+				});
 		}
-	}
+	};
+
 
 	function fetchData(topic) {
 		fetch(`/chat/${topic}`, {

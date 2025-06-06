@@ -4,6 +4,7 @@ namespace App\Chat;
 
 use App\Auth\AuthService;
 use App\Markdown\Spoiler\SpoilerExtension;
+use App\User\UserService;
 use ElGigi\CommonMarkEmoji\EmojiExtension;
 use League\CommonMark\CommonMarkConverter;
 //voir les messages par rapport à un topic
@@ -17,7 +18,7 @@ class Chat
 {
     public function __construct()
     {
-        $this->options = $this->getOptions($this->pseudo === $_SESSION['username'] || $_SESSION["role"] === "admin");
+        $this->options = new UserService()->getUserActions($this->pseudo);
 
         $converter = new CommonMarkConverter([
             'html_input' => 'escape',
@@ -74,19 +75,7 @@ class Chat
     public array $options {
         get => $this->options;
     }
-
-    private function getOptions(bool $canDelete): array
-    {
-        $actions = [];
-        if ($canDelete) {
-           $actions[] = ["label" => "Supprimer", 'value' => "delete"];
-        }
-
-        //future actions
-
-        return $actions;
-    }
-
+    
     public string $htmlMessage {
         get => $this->htmlMessage;
     }
