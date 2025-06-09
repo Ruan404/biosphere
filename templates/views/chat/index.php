@@ -37,23 +37,59 @@ $title = $currentTopic ?? "chat";
 <script src="/assets/js/components/SideBar.js"></script>
 <script type="module" src="/assets/js/components/ChatInput.js"></script>
 <script>
-	function fetchActions(url) {
-		const data = fetch(url).then((response) => response.json()).then((data) => data);
-		return data;
-	}
-</script>
-<script>
-	const msgsDisplayCtn = document.querySelector(".msgs-display")
-	const messagesCtn = document.querySelector(".messages")
-	const form = document.querySelector(".send-msg-form")
-	var currentTopic = "<?= $currentTopic ?>";
-	const socket = new WebSocket(`${WEBSOCKET_URL}/chat/${currentTopic}`);
-	const noTopicCtn = document.querySelector(".no-topic")
+	const msgsDisplayCtn = document.querySelector(".msgs-display");
+	const messagesCtn = document.querySelector(".messages");
+	const form = document.querySelector(".send-msg-form");
+	const noTopicCtn = document.querySelector(".no-topic");
 
-	/**
-	 * met à jour la vue
-	 * @param {string} topic
-	 */
+	let currentTopic = "<?= $currentTopic ?>";
+	let currentUser = null;
+	let permissions = [];
+	let socket = null;
+
+	function openSocket(topic) {
+		if (socket) {
+			socket.close();
+		}
+		socket = new WebSocket(`${WEBSOCKET_URL}/chat/${topic}`);
+
+		socket.onmessage = (event) => {
+			const data = JSON.parse(event.data);
+
+			if (data.action === "delete" && Array.isArray(data.messages)) {
+				const items = document.querySelectorAll("message-box");
+				items.forEach((msgBox) => {
+					const itemId = msgBox.getAttribute("date");
+					if (data.messages.includes(itemId)) msgBox.remove();
+				});
+			}
+
+			if (data.htmlMessage) {
+				data.options = deriveOptions(data);
+				displayMessage(data);
+				msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: "smooth" });
+			}
+		};
+
+		socket.onerror = (err) => {
+			console.error("WebSocket error:", err);
+		};
+
+		socket.onclose = () => {
+			console.warn("WebSocket closed");
+		};
+	}
+
+	window.addEventListener("DOMContentLoaded", () => {
+		if (currentTopic) {
+			document.querySelector(`[data-slug=${currentTopic}]`)?.classList.add("current");
+			openSocket(currentTopic);
+			fetchData(currentTopic);
+		}
+		history.replaceState({ topic: currentTopic }, `chat ${currentTopic}`, currentTopic ? `/chat/${currentTopic}` : "/chat");
+		updateView(currentTopic);
+	});
+
 	function updateView(topic) {
 		document.title = topic || "chat";
 		const hasTopic = Boolean(topic);
@@ -61,144 +97,108 @@ $title = $currentTopic ?? "chat";
 		noTopicCtn.classList.toggle("hidden", hasTopic);
 	}
 
-	//au chargement de la page
-	window.addEventListener("DOMContentLoaded", () => {
-		let topic = currentTopic;
-		if (currentTopic) {
-			document.querySelector(`[data-slug=${topic}]`).classList.add("current")
-			fetchData(currentTopic)
-		}
-		history.pushState({ topic }, `chat ${topic}`, topic ? `/chat/${topic}` : "/chat");
-		updateView(topic)
-	})
-
 	function viewChat(ev, topic) {
 		ev.preventDefault();
-
-		if (topic != currentTopic) {
-			document.querySelector(".sidebar-menu-button.current")?.classList.remove("current")
-
-			ev.target.classList.add("current")
-			history.pushState({ topic }, `chat ${topic}`, `/chat/${topic}`)
-			fetchData(topic)
-			updateView(topic)
+		if (topic !== currentTopic) {
+			document.querySelector(".sidebar-menu-button.current")?.classList.remove("current");
+			ev.target.classList.add("current");
+			history.pushState({ topic }, `chat ${topic}`, `/chat/${topic}`);
+			currentTopic = topic;
+			openSocket(topic);
+			fetchData(topic);
+			updateView(topic);
 		}
 	}
 
-	// This event listener will capture when the user navigates forward or backward
-	window.addEventListener('popstate', function (event) {
+	window.addEventListener("popstate", (event) => {
 		if (event.state) {
 			const topic = event.state.topic;
-
 			if (topic !== currentTopic) {
 				currentTopic = topic;
-				document.querySelector(".sidebar-menu-button.current")?.classList?.remove("current");
+				document.querySelector(".sidebar-menu-button.current")?.classList.remove("current");
 				if (topic) {
-					document.querySelector(`[data-slug=${topic}]`)?.classList?.add("current");
+					document.querySelector(`[data-slug=${topic}]`)?.classList.add("current");
+					openSocket(topic);
 					fetchData(topic);
+				} else {
+					msgsDisplayCtn.innerHTML = "";
 				}
-				else msgsDisplayCtn.innerHTML = ""
-				updateView(topic)
+				updateView(topic);
 			}
-		} else console.log('No state associated with this entry');
+		}
 	});
-
 
 	form.addEventListener("submit", (ev) => {
 		ev.preventDefault();
 		fetch(`/chat/${currentTopic}`, {
-			method: 'POST',
-			body: new FormData(form)
-		})
-			.then(response => response.json())
-			.then(data => {
-				if (data.htmlMessage) {
-					socket.send(JSON.stringify(data))
-					// displayMessage(data)
-					msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: 'smooth' });
-				}
-			})
-			.catch(error => console.error("Error submitting the form"))
-			.finally(() => {
-				form.reset()
-			});
-	})
-
-
-	// When a message is received from the WebSocket server
-	socket.onmessage = function (event) {
-		const data = JSON.parse(event.data);
-
-		if (data.action === "delete" && data.messages) {
-			const items = document.querySelectorAll('message-box');
-			items.forEach((msgBox) => {
-				const itemId = msgBox.getAttribute('date');
-				if (data.messages.includes(itemId)) msgBox.remove();
-			});
-		}
-
-		if (data.htmlMessage && data.topic === currentTopic) {
-			fetch(`/chat/actions/${data.pseudo}`)
-				.then(response => response.json())
-				.then(actions => {
-					console.log(data)
-					
-					data.options = actions[0] || [];
-					console.log(data)
-					displayMessage(data);
-					msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: 'smooth' });
-				})
-				.catch(err => {
-					console.error("Failed to fetch actions", err);
-					data.options = [];
-					displayMessage(data);
-					msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: 'smooth' });
-				});
-		}
-	};
-
-
-	function fetchData(topic) {
-		fetch(`/chat/${topic}`, {
-			headers: { 'Accept': 'application/json' }
+			method: "POST",
+			body: new FormData(form),
 		})
 			.then((response) => response.json())
 			.then((data) => {
-				msgsDisplayCtn.innerHTML = "";
-				data?.messages.forEach(chat => displayMessage(chat));
-
-				msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: 'smooth' });
-				currentTopic = topic;
-				document.querySelector('[slot="current-label"]').textContent = currentTopic
+				if (data.htmlMessage) {
+					socket.send(JSON.stringify(data));
+					msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: "smooth" });
+				}
 			})
-			.catch((err) => console.error("Error fetching data"));
+			.catch(() => console.error("Error submitting the form"))
+			.finally(() => form.reset());
+	});
+
+	function fetchData(topic) {
+		fetch(`/chat/${topic}`, { headers: { Accept: "application/json" } })
+			.then((response) => response.json())
+			.then((data) => {
+				currentUser = data.currentUser;
+				permissions = data.permissions;
+
+				msgsDisplayCtn.innerHTML = "";
+				data.messages.forEach((chat) => {
+					chat.options = deriveOptions(chat);
+					displayMessage(chat);
+				});
+
+				msgsDisplayCtn.scroll({ top: msgsDisplayCtn.scrollHeight, behavior: "smooth" });
+				document.querySelector('[slot="current-label"]').textContent = topic;
+			})
+			.catch((err) => console.error("Error fetching data:", err));
 	}
 
-	function deleteMessage(message) {
+	function deriveOptions(message) {
+		const opts = [];
+		const isOwner = message.pseudo === currentUser;
+		if (permissions.includes("delete_any_chat")) {
+			opts.push({ label: "Supprimer", value: "delete" });
+		} else if (permissions.includes("delete_own_chat") && isOwner) {
+			opts.push({ label: "Supprimer", value: "delete" });
+		}
+		return opts;
+	}
+
+	function deleteMessage(messageId) {
 		fetch(`/chat/${currentTopic}`, {
-			method: 'DELETE',
-			body: JSON.stringify({ "messages": [message] })
+			method: "DELETE",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ messages: [messageId] }),
 		})
-			.then(response => response.json())
-			.then(data => socket.send(JSON.stringify(data)))
-			.catch(error => console.error("Error submitting the form"));
+			.then((response) => response.json())
+			.then((data) => socket.send(JSON.stringify(data)))
+			.catch(() => console.error("Error deleting message"));
 	}
 
 	function displayMessage(chat, show = true) {
-		const hasOptions = show && Array.isArray(chat?.options) && chat?.options?.length > 0;
+		const hasOptions = show && Array.isArray(chat.options) && chat.options.length > 0;
 
-		const msgBox = document.createElement('message-box');
+		const msgBox = document.createElement("message-box");
+		msgBox.setAttribute("pseudo", chat.pseudo);
+		msgBox.setAttribute("date", chat.date);
+		msgBox.setAttribute("message", chat.htmlMessage);
+		msgBox.setAttribute("hasOptions", hasOptions);
+		msgBox.setAttribute("options", JSON.stringify(chat.options));
 
-		msgBox.setAttribute('pseudo', chat.pseudo)
-		msgBox.setAttribute('date', chat.date)
-		msgBox.setAttribute('message', chat.htmlMessage)
-		msgBox.setAttribute('hasOptions', hasOptions)
-		msgBox.setAttribute('options', JSON.stringify(chat.options))
-
-		msgsDisplayCtn.appendChild(msgBox)
+		msgsDisplayCtn.appendChild(msgBox);
 	}
-</script>
-<script>
+
 	msgsDisplayCtn.addEventListener("selected", (e) => {
 		const { action, itemId } = e.detail;
 		if (action === "delete") {
@@ -206,3 +206,4 @@ $title = $currentTopic ?? "chat";
 		}
 	});
 </script>
+

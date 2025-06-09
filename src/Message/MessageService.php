@@ -2,6 +2,7 @@
 
 namespace App\Message;
 
+use App\Auth\AuthService;
 use App\Core\Database;
 use App\Exceptions\BadRequestException;
 use App\Exceptions\NotFoundException;
@@ -14,6 +15,7 @@ use PDOException;
 class MessageService
 {
     private $fileService;
+    private $authService;
     public function __construct()
     {
         if (session_status() === PHP_SESSION_NONE) {
@@ -21,6 +23,7 @@ class MessageService
         }
 
         $this->fileService = new FileService();
+        $this->authService = new AuthService();
     }
 
 
@@ -92,7 +95,7 @@ class MessageService
                         $newMessage->id
                     );
                 }
-                return ["canDelete" => $newMessage->canDelete, "htmlMessage" => $newMessage->htmlMessage, "isAuthor" => $newMessage->isAuthor, "date" => $newMessage->date, "recipient" => $newMessage->recipient, "sender" => $_SESSION["username"]];
+                return ["htmlMessage" => $newMessage->htmlMessage, "date" => $newMessage->date, "recipient" => $newMessage->recipient, "sender" => $_SESSION["username"]];
 
             }
 
@@ -105,20 +108,24 @@ class MessageService
     }
 
     // Supprimer un message
-    public function deleteMessage(string $date, string $role = "user"): bool
+    public function deleteMessage(string $date, string $username, string $role = "guest"): bool
     {
         $message = $this->getMessageByDate($date) ?: throw new NotFoundException("Message introuvable.");
         
         try {
-            if ($role === 'admin') {
+            $sub = (object)[
+                "Role" => $role,
+                "Name" => $username,
+                "Owner" => $message->sender
+            ];
+           
+            if ($this->authService->canPerform($sub, "message", "delete")) {
                 // Un administrateur peut supprimer n'importe quel message
                 $query = Database::getPDO()->prepare("DELETE FROM messages_privés WHERE id = ?");
                 $query->execute([$message->id]);
 
             } else {
-                // Un utilisateur normal ne peut supprimer que ses propres messages
-                $query = Database::getPDO()->prepare("DELETE FROM messages_privés WHERE id = ? AND id_auteur = ?");
-                $query->execute([$message->id, $_SESSION['user_id']]);
+               throw new Exception("impossible de supprimer le message");
             }
 
             $image = $this->fileService->getUploadedFileByAuthorId($message->id);

@@ -2,23 +2,23 @@
 namespace App\Core;
 
 use AltoRouter;
+use App\Auth\AuthService;
 use App\Entities\Layout;
-use App\Entities\Role;
 use ReflectionClass;
 use App\Attributes\{
-    Route,
-    Roles
+    Route
 };
 use function App\Helpers\view;
 
 class Router
 {
     private AltoRouter $router;
-
+    private $authService;
 
     public function __construct()
     {
         $this->router = new AltoRouter();
+        $this->authService = new AuthService();
     }
 
     private function handle($target, $match)
@@ -43,37 +43,29 @@ class Router
 
         $routeAttributes = $reflection->getAttributes(Route::class);
 
-        $roleAttributes = $reflection->getAttributes(Roles::class);
-
-        $classRoles = [];
-
         $prefix = '';
 
         if (!empty($routeAttributes)) {
             $prefix = $routeAttributes[0]->newInstance()->path;
         }
 
-        if (!empty($roleAttributes)) {
-            $classRoles = $roleAttributes[0]->newInstance()->roles;
-        }
-
         foreach ($reflection->getMethods() as $method) {
 
             $attributes = $method->getAttributes(Route::class);
-            $rolesAttributes = $method->getAttributes(Roles::class);
 
             if (empty($attributes)) {
                 continue; //reviens au début de la boucle sans exécuter la suite
             }
 
             foreach ($attributes as $attribute) {
-                $roles = $rolesAttributes ? $rolesAttributes[0]->newInstance()->roles : [];
                 $route = $attribute->newInstance();
-
-                $this->router->map($route->method, $prefix . $route->path, [
+                $fullRoute = $prefix . $route->path;
+                $httpMethod = $route->method;
+                $this->router->map($httpMethod, $fullRoute, [
                     'controller' => $controller, //controller class
                     'action' => $method->getName(), //method name,
-                    'roles' => array_merge($classRoles, $roles)
+                    "route" => $fullRoute,
+                    "method" => $httpMethod
                 ]);
             }
         }
@@ -85,34 +77,27 @@ class Router
     {
         $match = $this->router->match();
         $target = $match['target'] ?? null;
-
-        if($target === null){
+        
+        if (!$target) {
             return view("/errors/404", Layout::Error);
         }
+        $role = $_SESSION["role"] ?? "guest";
 
-        $roles = $target["roles"] ?? [];
-
-        if (!empty($roles)) {
-            if(session_status() === 1){
-                session_start();
-            }
-            if (empty($_SESSION)) {
-                header("Location: /login");
-                exit;
-            }
-          
-            if (in_array(Role::tryFrom($_SESSION['role']), $roles)) {
-
-                $this->handle($target, $match);
-            }
-            else{
-                header("Location: /");
-                exit;
-            }
-        } elseif (empty($roles)) {
-            $this->handle($target, $match);
+        $sub = (object)[
+            "Role" => $role
+        ];
+        
+        if($sub->Role === "guest"){
+            return $this->handle($target, $match); 
+        }
+        
+        if (!$this->authService->canAccessRoute($sub, $target["route"], $target["method"])) {
+            header("HTTP/1.1 403 Forbidden");
+            echo "Access denied";
+            exit;
         }
 
-        return $this;
+        return $this->handle($target, $match);
     }
+
 }

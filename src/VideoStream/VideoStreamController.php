@@ -2,13 +2,12 @@
 
 namespace App\VideoStream;
 
-use App\Attributes\Roles;
 use App\Entities\Layout;
 use App\VideoStream\VideoStream;
 use App\Attributes\Route;
-use App\Entities\Role;
 use Dotenv\Dotenv;
 use function App\Helpers\view;
+
 class VideoStreamController
 {
      public function __construct()
@@ -17,7 +16,6 @@ class VideoStreamController
         $dotenv->load();
     }
 
-    #[Roles(array(Role::Admin, Role::User))]
     #[Route("GET", "/stream/[*:file]")]
     public function stream($params)
     {

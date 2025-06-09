@@ -20,7 +20,7 @@ class FileService
         $dotenv = Dotenv::createImmutable(__DIR__ . '/../../');
         $dotenv->load();
 
-        $this->uploadBaseDir = $_SERVER["DOCUMENT_ROOT"]."/".$_ENV["UPLOAD_BASE_DIR"];
+        $this->uploadBaseDir = $_SERVER["DOCUMENT_ROOT"]."/../".$_ENV["UPLOAD_BASE_DIR"];
         $this->tempChunkDir = $_ENV['TEMP_UPLOAD_DIR'];
         $this->uploadSubDir = $_ENV['UPLOAD_DIR'];
     }

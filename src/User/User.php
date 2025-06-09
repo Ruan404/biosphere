@@ -25,7 +25,7 @@ class User
         }
 
         public string $mdp {
-                get =>  $this->mdp;
+                get => $this->mdp;
                 set(string $mdp) {
                         $this->mdp = $mdp;
                 }

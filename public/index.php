@@ -1,32 +1,52 @@
 <?php
+require '../vendor/autoload.php';
 
-require_once '../vendor/autoload.php';
+use App\Auth\AuthController;
+use App\Chat\ChatController;
+use App\File\FileController;
+use App\Film\FilmController;
+use App\Core\Router;
+use App\Home\HomeController;
+use App\Podcast\PodcastController;
+use App\Admin\AdminController;
+use App\Sensor\SensorController;
+use App\Message\MessageController;
+use App\VideoStream\VideoStreamController;
 
-use Casbin\Enforcer;
-use Casbin\Util\Log;
-use CasbinAdapter\Database\Adapter as DatabaseAdapter;
 
-$config = [
-        'type' => 'mysql', // mysql,pgsql,sqlite,sqlsrv
-        'hostname' => '127.0.0.1',
-        'database' => 'new_bdd',
-        'username' => 'root',
-        'password' => '',
-        'hostport' => '3306',
-];
+$whoops = new \Whoops\Run;
+$whoops->pushHandler(new \Whoops\Handler\PrettyPageHandler);
+$whoops->register();
 
-$adapter = DatabaseAdapter::newAdapter($config);
+define('DEBUG_TIME', microtime(true));
 
-$e = new Enforcer('../src/Auth/casbin.conf', $adapter);
+// Redirect if URL has a trailing slash (but is not just "/")
+if ($_SERVER['REQUEST_URI'] !== '/' && str_ends_with($_SERVER['REQUEST_URI'], '/')) {
+        // Keep query string intact
+        $uri = rtrim($_SERVER['REQUEST_URI'], '/');
+        if (!empty($_SERVER['QUERY_STRING'])) {
+                $uri .= '?' . $_SERVER['QUERY_STRING'];
+        }
 
-$sub = json_encode(["name" => "julien", "role" => "admin"]); // the user that wants to access a resource.
-$obj = json_encode(["name" => "chat", "owner" => "julien"]); // the resource that is going to be accessed.
-$act = "delete"; // the operation that the user performs on the resource.
-$attr = "domain1";
-if ($e->enforce($sub, $obj, $act, $attr) === true) {
-        // permit alice to read data1
-        echo "ok";
-} else {
-        echo "denied";
-        // deny the request, show an error
+        header("Location: $uri", true, 301);
+        exit;
 }
+
+
+$router = new Router();
+
+if (session_status() == 1) {
+        session_start();
+}
+
+$router->registerController(AdminController::class)
+        ->registerController(HomeController::class)
+        ->registerController(AuthController::class)
+        ->registerController(ChatController::class)
+        ->registerController(FilmController::class)
+        ->registerController(PodcastController::class)
+        ->registerController(SensorController::class)
+        ->registerController(VideoStreamController::class)
+        ->registerController(MessageController::class)
+        ->registerController(FileController::class)
+        ->run();

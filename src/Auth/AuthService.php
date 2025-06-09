@@ -1,96 +1,111 @@
 <?php
 
 namespace App\Auth;
-use \App\User\{
-    User,
-    UserService
-};
 
+use App\User\User;
+use App\User\UserService;
 use App\Exceptions\BadRequestException;
 
+use Casbin\Enforcer;
+use CasbinAdapter\Database\Adapter;
+use App\Core\Database;
 
 class AuthService
 {
-    private $userService;
+    private UserService $userService;
+
+    private Enforcer $routeEnforcer;
+    private Enforcer $permissionEnforcer;
 
     public function __construct()
     {
         $this->userService = new UserService();
+
+        $config = Database::getDBConfig();
+        $adapter = Adapter::newAdapter($config);
+
+        // Load Casbin enforcers with separate models
+        $this->routeEnforcer = new Enforcer(__DIR__ . '/../Core/route_model.conf', $adapter);
+        $this->permissionEnforcer = new Enforcer(__DIR__ . '/../Core/permission_model.conf', $adapter);
     }
 
     public function login(User $loginUser): ?User
     {
         $user = $this->userService->getUserByPseudo($loginUser->pseudo);
 
-        if ($user === null) {
+        if (!$user || !(password_verify($loginUser->mdp, $user->mdp) || sha1($loginUser->mdp) === $user->mdp)) {
             throw new BadRequestException("mauvais pseudo ou mot de passe");
-
         }
-        //verify password
 
-        if (password_verify($loginUser->mdp, $user->mdp) || sha1($loginUser->mdp) == $user->mdp) {
-            /**
-             * 0 ----> PHP_SESSION_DISABLED if sessions are disabled.
-             * 1 ----> PHP_SESSION_NONE if sessions are enabled, but none exists.
-             * 2 ----> PHP_SESSION_ACTIVE if sessions are enabled, and one exists.
-             */
-            if (session_status() == PHP_SESSION_NONE) {
-                session_start();
-            }
-
-            $_SESSION['auth'] = $user->id;
-            $_SESSION['user_id'] = $user->id;
-            $_SESSION['username'] = $user->pseudo;
-            $_SESSION['role'] = $user->role;
-            return $user;
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
         }
-        throw new BadRequestException("mauvais pseudo ou mot de passe");
+
+        $_SESSION['auth'] = $user->id;
+        $_SESSION['user_id'] = $user->id;
+        $_SESSION['username'] = $user->pseudo;
+        $_SESSION['role'] = $user->role;
+
+        return $user;
     }
 
     public function signup(User $signupUser)
     {
         $user = $this->userService->getUserByPseudo($signupUser->pseudo);
-
         if ($user !== null) {
-            throw new BadRequestException("mauvais pseudo ou mot de passe");
-
+            throw new BadRequestException("Pseudo déjà utilisé");
         }
 
         return $this->userService->createUser($signupUser);
     }
 
-    /**
-     * la fonction est statique pour ne pas avoir à instancier la classe
-     * instancier signifie créer un nouvel objet à partir d'une classe
-     * exemple : $auth = new Auth();
-     */
     public static function logout()
     {
-        // Initialize the session.
-        // If you are using session_name("something"), don't forget it now!
-        if (session_status() === 1) {
-            session_start();
-        }
+        $_SESSION = [];
 
-        // Unset all of the session variables.
-        $_SESSION = array();
-
-        // If it's desired to kill the session, also delete the session cookie.
-        // Note: This will destroy the session, and not just the session data!
         if (ini_get("session.use_cookies")) {
             $params = session_get_cookie_params();
             setcookie(
-                session_name(),
-                '',
-                time() - 42000,
-                $params["path"],
-                $params["domain"],
-                $params["secure"],
-                $params["httponly"]
+                session_name(), '', time() - 42000,
+                $params["path"], $params["domain"],
+                $params["secure"], $params["httponly"]
             );
         }
 
-        // Finally, destroy the session.
         session_destroy();
+    }
+
+    /**
+     * Check route access using route enforcer.
+     */
+    public function canAccessRoute(object $sub, string $path, string $method): bool
+    {
+        return $this->routeEnforcer->enforce($sub, $path, strtoupper($method));
+    }
+
+    /**
+     * Check if the subject can perform a given action on a resource.
+     */
+    public function canPerform(object $sub, string $resource, string $action): bool
+    {
+        return $this->permissionEnforcer->enforce($sub, $resource, $action);
+    }
+
+    /**
+     * Get a list of permissions the given role has on a resource.
+     */
+    public function getPermissions(string $role, string $resource = 'message'): array
+    {
+        $actions = ['delete_own', 'delete_any'];
+        $sub = (object) ['Role' => $role];
+        $permissions = [];
+
+        foreach ($actions as $action) {
+            if ($this->permissionEnforcer->enforce($sub, $resource, $action)) {
+                $permissions[] = "{$action}_{$resource}";
+            }
+        }
+
+        return $permissions;
     }
 }

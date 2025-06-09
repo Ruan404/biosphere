@@ -16,20 +16,28 @@ class MessageBubble extends HTMLElement {
   render() {
     const content = this.getAttribute("content") || "";
     const date = this.getAttribute("date") || "";
-    const canDelete = this.hasAttribute("can-delete");
+    const options = this.getAttribute("options");
+
+    let menuHTML = "";
+    if (options) {
+      try {
+        const opts = JSON.parse(options);
+        if (Array.isArray(opts) && opts.length > 0) {
+          menuHTML = `<action-menu item-id="${date}" options='${JSON.stringify(opts)}'></action-menu>`;
+        }
+      } catch (err) {
+        console.error("Invalid JSON in message-bubble options:", err);
+      }
+    }
 
     const container = document.createElement("div");
     container.classList.add("bubble");
-      
+
     container.innerHTML = `
       <div class="content">${content}</div>
       <div class="bottom">
-          <small>${date}</small>
-          ${
-            canDelete
-              ? `<action-menu item-id="${date}" options='[{"label":"Supprimer","value":"delete"}]'></action-menu>`
-              : ""
-          }
+        <small>${date}</small>
+        ${menuHTML}
       </div>
     `;
 

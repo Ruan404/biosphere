@@ -18,8 +18,6 @@ class Chat
 {
     public function __construct()
     {
-        $this->options = new UserService()->getUserActions($this->pseudo);
-
         $converter = new CommonMarkConverter([
             'html_input' => 'escape',
             'allow_unsafe_links' => false,
@@ -33,11 +31,11 @@ class Chat
         $this->htmlMessage = $converter($this->message)->getContent();
     }
 
-    public int $id = 0{
+    public int $id = 0 {
         get => $this->id;
     }
-    
-    public int $topic_id = 0{
+
+    public int $topic_id = 0 {
         get => $this->topic_id;
 
         set(int $topic_id) {
@@ -46,7 +44,7 @@ class Chat
     }
 
 
-    public string $pseudo{
+    public string $pseudo {
         get => $this->pseudo;
 
         set(string $pseudo) {
@@ -54,7 +52,7 @@ class Chat
         }
     }
 
-    public string $date{
+    public string $date {
         get => $this->date;
     }
 
@@ -70,10 +68,6 @@ class Chat
         set(string $message) {
             $this->message = $message;
         }
-    }
-
-    public array $options {
-        get => $this->options;
     }
     
     public string $htmlMessage {

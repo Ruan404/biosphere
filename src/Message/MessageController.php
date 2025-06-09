@@ -3,8 +3,8 @@
 namespace App\Message;
 
 use App\Attributes\Route;
+use App\Auth\AuthService;
 use App\Exceptions\HttpExceptionInterface;
-use App\File\FileService;
 use App\Message\MessageService;
 use App\User\UserService;
 use Exception;
@@ -16,93 +16,89 @@ class MessageController
 {
     private $messageService;
     private $userService;
+    private $authService;
 
     public function __construct()
     {
         $this->messageService = new MessageService();
         $this->userService = new UserService();
+        $this->authService = new AuthService();
     }
 
-    // Afficher la liste des conversations (utilisateurs sauf l'utilisateur connecté)
     #[Route("GET", "")]
     public function index()
     {
         $accept = strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false;
-
+        $recipient = $_GET["user"] ?? "";
         try {
-            $user = $_GET["user"] ?? "";
-            // Récupérer la liste des utilisateurs sauf celui connecté
+
             $users = $this->userService->getUsersExceptOne($_SESSION["user_id"]);
 
-            if ($user) {
-                if ($accept) {
-                    $messages = $this->messageService->getMessagesByUser($user);
-                    return json(["messages" => $messages]);
-                } else {
-                    return view(view: '/message/index', data: ['users' => $users, 'recipient' => $user]);
-                }
-            } else {
-                return view(view: '/message/index', data: ['users' => $users, 'recipient' => $user]);
+            if ($accept && $recipient) {
+                $messages = $this->messageService->getMessagesByUser($recipient);
+
+                return json([
+                    "messages" => $messages
+                ]);
             }
+
+            return view(view: '/message/index', data: [
+                'users' => $users,
+                'recipient' => $recipient
+            ]);
         } catch (HttpExceptionInterface) {
             header('Location: /message');
             exit();
         } catch (Exception $e) {
-            error_log("Something wrong happened: " . $e->getMessage());
-            if ($accept) {
-                return json(['users' => $users, 'messages' => []], 500);
-            } else {
-                return view(view: '/message/index', data: ['users' => $users, 'messages' => []]);
-            }
+            error_log("Message index error: " . $e->getMessage());
+            return $accept
+                ? json(['messages' => []], 500)
+                : view(view: '/message/index', data: ['users' => $users ?? [], 'messages' => []]);
         }
     }
 
-    // Envoyer un message privé
     #[Route("POST", "")]
     public function sendMessage()
     {
         try {
-            $user = $this->userService->getUserByPseudo($_GET["user"]);
-
+            $recipientUser = $this->userService->getUserByPseudo($_GET["user"]);
             $image = $_FILES["image"] ?? null;
             $text = $_POST['message'] ?? "";
 
-            $newMessage = $this->messageService->sendMessage($image, $user->id, $text, $_SESSION["user_id"]) ?? [];
+            $newMessage = $this->messageService->sendMessage(
+                $image,
+                $recipientUser->id,
+                $text,
+                $_SESSION["user_id"]
+            );
 
-            return json(["newMessage" => $newMessage]);
-
+            return json(["action" => "add", ...$newMessage]);
         } catch (HttpExceptionInterface $e) {
-            error_log("send message failed: " . $e->getMessage());
-            return json(["message" => "l'ajout du message n'a pas pu aboutir"], $e->getCode());
-
+            return json(["message" => "L'envoi du message a échoué."], $e->getCode());
         } catch (Exception $e) {
-            error_log("send message failed: " . $e->getMessage());
-            return json(["message" => "l'ajout du message n'a pas pu aboutir"], 500);
-
+            error_log("Send message failed: " . $e->getMessage());
+            return json(["message" => "Erreur serveur lors de l'envoi du message."], 500);
         }
     }
 
-    // Supprimer un message privé (uniquement pour l'utilisateur ou l'administrateur)
-    // Suppression d'un message
     #[Route("DELETE", "")]
     public function deleteMessage()
     {
         try {
+            $payload = json_decode(file_get_contents('php://input'), true);
+            $messageId = $payload["message"] ?? null;
 
-            $data = json_decode(file_get_contents('php://input'), true); // Récupère les données envoyées en POST
             $role = $_SESSION["role"];
-            $date = $data["message"];
+            $username = $_SESSION["username"];
 
-            $this->messageService->deleteMessage($date, $role);
+            $this->messageService->deleteMessage($messageId, $username, $role);
 
-            return json(['success' => true, "action" => "delete", "messages" => [$date]]);
-
+            return json(['success' => true,"action" => "delete", "messages" => [$messageId]]);
         } catch (HttpExceptionInterface $e) {
-            return json(['success' => false, 'message' => 'Échec de la suppression du message. '], $e->getCode());
+            return json(['success' => false, 'message' => 'Erreur de suppression.'], $e->getCode());
         } catch (Exception $e) {
-            error_log("delete message failed: " . $e->getMessage());
-            return json(['success' => false, 'message' => 'Échec de la suppression du message. '], 500);
+            error_log("Delete message failed: " . $e->getMessage());
+            return json(['success' => false, 'message' => 'Erreur serveur.'], 500);
         }
     }
-
 }

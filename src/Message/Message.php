@@ -10,11 +10,6 @@ class Message
 {
     public function __construct()
     {
-        $this->isAuthor = $_SESSION['username'] === $this->sender;
-        $this->canDelete = $this->sender === $_SESSION['username'] || $_SESSION["role"] === "admin";
-        $this->options = $this->getOptions($this->recipient === $_SESSION['username'] || $_SESSION["role"] === "admin");
-
-
         $converter = new CommonMarkConverter([
             'html_input' => 'escape',
             'allow_unsafe_links' => false,
@@ -82,29 +77,4 @@ class Message
             $this->date = $date;
         }
     }
-
-    public array $options {
-        get => $this->options;
-    }
-
-    public bool $isAuthor {
-        get => $this->isAuthor;
-    }
-
-    public bool $canDelete {
-        get => $this->canDelete;
-    }
-
-    private function getOptions(bool $canDelete): array
-    {
-        $actions = [];
-        if ($canDelete) {
-            $actions[] = ["label" => "supprimer", 'value' => "delete"];
-        }
-
-        //future actions
-
-        return $actions;
-    }
-
 }

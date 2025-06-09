@@ -2,6 +2,7 @@
 
 namespace App\User;
 
+use App\Auth\AuthService;
 use App\Core\Database;
 use App\Exceptions\BadRequestException;
 use App\User\Dto\UserAdminPanelDto;
@@ -138,13 +139,15 @@ class UserService
         }
     }
 
-
-    public function getUserActions(string $pseudo): array
+    public function getUserActions($name, $role, $owner, $resource): array
     {
         $actions = [];
+        $authService = new AuthService();
+        $sub = (object) ["Name" => $name, "Owner" => $owner, "Role" => $role];
 
-        // If the current logged-in user is the author or an admin
-        if ($pseudo === $_SESSION['username'] || $_SESSION['role'] === 'admin') {
+        $canDelete = $authService->canPerform($sub, $resource, "DELETE");
+
+        if ($canDelete) {
             $actions[] = ["label" => "Supprimer", "value" => "delete"];
         }
 

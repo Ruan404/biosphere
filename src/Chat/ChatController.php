@@ -9,7 +9,6 @@ use App\Entities\Layout;
 use App\Exceptions\HttpExceptionInterface;
 use App\Topic\TopicService;
 use App\Chat\ChatService;
-use App\User\UserService;
 use Exception;
 use function App\Helpers\json;
 use function App\Helpers\view;
@@ -36,15 +35,7 @@ class ChatController
         $topics = $this->topicService->getAllTopics();
         return view(view: '/chat/index', data: ['topics' => $topics]);
     }
-
-    #[Route("GET", "/actions/[*:slug]")]
-    public function actions($params)
-    {
-        $pseudo = $params["slug"];
-        
-        $userActions = new UserService()->getUserActions($pseudo);
-        return json([$userActions]);
-    }
+    
 
     #[Route("GET", "/[*:slug]")]
     public function viewChat($params)
@@ -53,9 +44,19 @@ class ChatController
 
         try {
             if ($accept) {
-                $messages = $this->chatService->getChatMessages($params['slug']);
-                return json(["messages" => $messages]);
+                $username = $_SESSION['username'] ?? null;
+                $role = $_SESSION['role'] ?? 'guest';
 
+                // Fetch messages
+                $messages = $this->chatService->getChatMessages($params['slug']);
+               
+                $permissions = $this->authService->getPermissions($role, "chat");
+               
+                return json([
+                    "messages" => $messages,
+                    "permissions" => $permissions,
+                    "currentUser" => $username
+                ]);
             } else {
                 $topics = $this->topicService->getAllTopics();
                 $topic = $this->topicService->getTopicByName($params['slug']);
@@ -67,13 +68,11 @@ class ChatController
 
                 return view(view: '/chat/index', data: ['topics' => $topics, 'currentTopic' => $topic->name]);
             }
-
         } catch (HttpExceptionInterface) {
             header('Location: /chat');
             exit();
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());
-
             if ($accept) {
                 return json(["success" => false, "message" => "impossible de recupérer les messages"]);
             } else {
@@ -82,20 +81,17 @@ class ChatController
         }
     }
 
+
     #[Route("DELETE", "/[*:slug]")]
     public function deleteMyMessages(array $params)
     {
         try {
-            if (session_status() !== PHP_SESSION_ACTIVE) {
-                session_start();
-            }
-
             $username = $_SESSION['username'] ?? null;
             $role = $_SESSION['role'];
             $data = json_decode(file_get_contents('php://input'), true);
 
             $result = $this->chatService->handleDeletion($params["slug"], $data, $username, $role);
-            
+
             return json($result);
 
         } catch (HttpExceptionInterface $e) {
@@ -113,17 +109,13 @@ class ChatController
     public function addMessage($params)
     {
         try {
-            //create a new chat
-            if (session_status() === 1) {
-                session_start();
-            }
-
             $image = $_FILES["image"] ?? null;
 
-            $chat = new AddMessageDto($_SESSION["username"], $_POST["message"], $params['slug'], $image);
-            $newChat = $this->chatService->addMessage($chat);
-
-            return json($newChat);
+            $addChat = new AddMessageDto($_SESSION["username"], $_POST["message"], $params['slug'], $image);
+            
+            $newChat = $this->chatService->addMessage($addChat);
+           
+            return json(["action" => "add", ...$newChat]);
 
 
         } catch (HttpExceptionInterface $e) {

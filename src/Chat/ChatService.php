@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Chat;
+use App\Auth\AuthService;
 use App\Chat\Dto\AddMessageDto;
 use App\Core\Database;
 use App\Exceptions\BadRequestException;
@@ -14,10 +15,13 @@ use PDOException;
 class ChatService
 {
     private $topicService;
+    private $authService;
 
     public function __construct()
     {
         $this->topicService = new TopicService();
+
+        $this->authService = new AuthService();
     }
     public function addMessage(AddMessageDto $chat)
     {
@@ -60,11 +64,9 @@ class ChatService
                         );
                     }
 
-                    return ["pseudo" => $newChat->pseudo, "date" => $newChat->date, "htmlMessage" => $newChat->htmlMessage, 'topic' => $topic->name];
+                   return ["pseudo" => $newChat->pseudo, "date" => $newChat->date, "htmlMessage" => $newChat->htmlMessage, 'topic' => $topic->name];
 
-                }
-
-                return [];
+                }else throw new BadRequestException("impossible d'ajouter un message");
             }
 
             throw new BadRequestException("enter a valid message");
@@ -110,32 +112,41 @@ class ChatService
             throw new NotFoundException("Le topic n'existe pas");
         }
 
-        // 1. Cast messages to chat objects
+        //Cast messages to chat objects
         $chats = (array) $this->getChatsByDates($data['messages']);
-
-        // 2. Extract chat IDs
-        $chatIds = [];
-        for ($i = 0; $i < count($chats); $i++) {
-            $chatIds[] = $chats[$i]["id"];
-
-        }
-
-        if (empty($chatIds)) {
+        if (empty($chats)) {
             throw new NotFoundException("Aucun message trouvé");
         }
 
-        // 3. Delete from DB
-        $success = ($role === 'admin')
-            ? $this->deleteMessagesAsAdmin($topic->id, $chatIds)
-            : $this->deleteMyMessages($username, $topic->id, $chatIds);
+        $allowedChatIds = [];
 
+        foreach ($chats as $chat) {
+            // Prepare the subject for Casbin: include Role, Name, Owner fields
+            $sub = (object) [
+                'Role' => $role,
+                'Name' => $username,
+                'Owner' => $chat['pseudo'] ?? '',
+            ];
+           
+            // Check permission with Casbin
+            if ($this->authService->canPerform($sub, "chat", "delete")) {
+                $allowedChatIds[] = $chat['id'];
+            }
+        }
+       
+        if (empty($allowedChatIds)) {
+            throw new BadRequestException("impossible de supprimer le message");
+        }
+        
+        // 3. Delete allowed messages from DB
+        $success = $this->deleteMessagesByIds($topic->id, $allowedChatIds);
         if (!$success) {
             throw new BadRequestException('Aucun message supprimé');
         }
 
         // 4. Delete associated files
         $fileService = new FileService();
-        foreach ($chatIds as $id) {
+        foreach ($allowedChatIds as $id) {
             $image = $fileService->getUploadedFileByAuthorId($id);
             if ($image) {
                 $fileService->deleteUploadedFile($image['path'], $id);
@@ -146,29 +157,11 @@ class ChatService
             'success' => 'Deletion succeeded',
             'action' => 'delete',
             'messages' => $data["messages"],
+            'topic' => $topic->name
         ];
     }
 
-
-
-    //supprimer tous mes messages
-    private function deleteMyMessages(string $pseudo, int $topicId, array $ids): bool
-    {
-        try {
-            $in = str_repeat('?,', count($ids) - 1) . '?';
-
-            $query = Database::getPDO()->prepare("DELETE FROM chat WHERE pseudo=? AND topic_id=? AND id IN ($in)");
-            $query->execute(array_merge([$pseudo, $topicId], $ids));
-
-            return $query->rowCount() > 0;
-
-        } catch (PDOException $e) {
-            error_log("Database error: " . $e->getMessage());
-            throw new Exception("Something went wrong");
-        }
-    }
-
-    private function deleteMessagesAsAdmin(int $topicId, array $ids): bool
+    private function deleteMessagesByIds(int $topicId, array $ids): bool
     {
         try {
             $in = str_repeat('?,', count($ids) - 1) . '?';
@@ -241,7 +234,6 @@ class ChatService
             throw new Exception("Something went wrong");
         }
     }
-
 
     public function deleteChats($topicsIds): bool
     {

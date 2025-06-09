@@ -10,8 +10,10 @@
   },
   "author": "",
   "dependencies": {
+    "cookie": "^1.0.2",
     "dotenv": "^16.4.7",
     "mqtt": "^5.10.4",
+    "php-unserialize": "^0.0.1",
     "ws": "^8.18.1"
   },
   "description": "",

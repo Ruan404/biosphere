@@ -2,10 +2,8 @@
 
 namespace App\Admin;
 
-use App\Attributes\Roles;
 use App\Attributes\Route;
 use App\Entities\Layout;
-use App\Entities\Role;
 use App\Exceptions\HttpExceptionInterface;
 use App\Film\Dto\FilmChunkUploadDto;
 use App\Film\FilmService;
@@ -17,7 +15,6 @@ use function App\Helpers\view;
 
 ini_set('max_execution_time', 300);
 
-#[Roles([Role::Admin])]
 class AdminController
 {
     private AdminService $adminService;
