@@ -43,7 +43,7 @@ $recipient = htmlspecialchars($data["recipient"] ?? "");
 	const noUserCtn = document.querySelector('.no-user');
 
 	let currentRecipient = "<?= $recipient ?>";
-	const currentUser = "<?=htmlspecialchars($_SESSION["username"])?>";
+	const currentUser = "<?=htmlspecialchars($_SESSION["username"]??"")?>";
 
 	const socket = new WebSocket(`${WEBSOCKET_URL}/message`);
 

@@ -16,7 +16,6 @@ server.on("upgrade", function upgrade(request, socket, head) {
   const { pathname } = new URL(request.url, process.env.SOCKET_BASE);
 
   if (request.headers.origin !== process.env.CLIENT) {
-    console.log("Invalid origin:", request.headers.origin);
     socket.destroy();
     return;
   }

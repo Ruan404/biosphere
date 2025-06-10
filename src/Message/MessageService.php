@@ -119,8 +119,8 @@ class MessageService
                 "Owner" => $message->sender
             ];
            
+            // verify si l'utilisateur peut effectuer l'action
             if ($this->authService->canPerform($sub, "message", "delete")) {
-                // Un administrateur peut supprimer n'importe quel message
                 $query = Database::getPDO()->prepare("DELETE FROM messages_privés WHERE id = ?");
                 $query->execute([$message->id]);
 

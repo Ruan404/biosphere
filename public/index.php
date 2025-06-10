@@ -14,9 +14,9 @@ use App\Message\MessageController;
 use App\VideoStream\VideoStreamController;
 
 
-$whoops = new \Whoops\Run;
-$whoops->pushHandler(new \Whoops\Handler\PrettyPageHandler);
-$whoops->register();
+// $whoops = new \Whoops\Run;
+// $whoops->pushHandler(new \Whoops\Handler\PrettyPageHandler);
+// $whoops->register();
 
 define('DEBUG_TIME', microtime(true));
 

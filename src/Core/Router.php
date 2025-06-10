@@ -77,24 +77,26 @@ class Router
     {
         $match = $this->router->match();
         $target = $match['target'] ?? null;
-        
+
         if (!$target) {
             return view("/errors/404", Layout::Error);
         }
-        $role = $_SESSION["role"] ?? "guest";
 
-        $sub = (object)[
-            "Role" => $role
-        ];
-        
-        if($sub->Role === "guest"){
-            return $this->handle($target, $match); 
-        }
-        
-        if (!$this->authService->canAccessRoute($sub, $target["route"], $target["method"])) {
-            header("HTTP/1.1 403 Forbidden");
-            echo "Access denied";
+        if (empty($_SESSION["role"]) && $_SERVER["REQUEST_URI"] !== "/login" && $_SERVER["REQUEST_URI"] !== "/signup") {
+            header("Location: /login");
             exit;
+        }
+
+        if (!empty($_SESSION["role"])) {
+            $sub = (object) [
+                "Role" => $_SESSION["role"]
+            ];
+
+            if (!$this->authService->canAccessRoute($sub, $target["route"], $target["method"])) {
+                header("HTTP/1.1 403 Forbidden");
+                echo "Access denied";
+                exit;
+            }
         }
 
         return $this->handle($target, $match);
