@@ -27,7 +27,10 @@
         "league/container": "^5.0",
         "laminas/laminas-httphandlerrunner": "^2.12",
         "league/commonmark": "^2.7",
-        "laminas/laminas-stratigility": "^4.2"
+        "laminas/laminas-stratigility": "^4.2",
+        "elgigi/commonmark-emoji": "^2.0",
+        "casbin/casbin": "^4.0",
+        "casbin/database-adapter": "^2.1"
     },
     "require-dev": {
         "filp/whoops": "^2.17",

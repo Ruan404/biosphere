@@ -10,10 +10,10 @@ class Text
         return mb_substr($text, 0, 1);
     }
 
-    public static function removeUnderscore(string $text): string
+    public static function escapeAndRemoveUnderscore(string $text): string
     {
         //&nbsp; is non breaking space html special character
-        return str_replace("_", "&nbsp;", $text);
+        return str_replace("_", "&nbsp;", htmlspecialchars($text));
     }
 
 }

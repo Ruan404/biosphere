@@ -10,18 +10,18 @@ namespace App\Film;
 class Film
 {
     public string $cover_image {
-        get => htmlspecialchars($this->cover_image);
+        get => $this->cover_image;
 
         set(string $cover_image) {
-            $this->cover_image = htmlspecialchars($cover_image);
+            $this->cover_image = $cover_image;
         }
     }
 
     public string $video {
-        get => htmlspecialchars($this->video);
+        get => $this->video;
 
         set(string $video) {
-            $this->video = htmlspecialchars($video);
+            $this->video = $video;
         }
     }
     public int $id = 0{
@@ -33,32 +33,32 @@ class Film
     }
 
     public string $title {
-        get => htmlspecialchars($this->title);
+        get => $this->title;
 
         set(string $title) {
-            $this->title = htmlspecialchars($title);
+            $this->title = $title;
         }
     }
 
     public string $token{
-        get => htmlspecialchars($this->token);
+        get => $this->token;
 
         set(string $token) {
-            $this->token = htmlspecialchars($token);
+            $this->token = $token;
         }
     }
     public string $description {
-        get => htmlspecialchars($this->description);
+        get => $this->description;
 
         set(string $description) {
-            $this->description = htmlspecialchars($description);
+            $this->description = $description;
         }
     }
 
     public string $file_path {
-        get => htmlspecialchars($this->file_path);
+        get => $this->file_path;
     }
     public string $playlist_path {
-        get => htmlspecialchars($this->playlist_path);
+        get => $this->playlist_path;
     }
 }

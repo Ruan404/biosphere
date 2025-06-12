@@ -19,13 +19,10 @@ function showTab(tab, force = false) {
     ?.classList.add("current");
 
   fetch(`/admin/${tab}`)
-    .then((res) => {
-      if (!res.ok) throw new Error(`Erreur HTTP: ${res.status}`);
-      return res.json();
-    })
+    .then((res) => res.json())
     .then((data) => renderTab(data))
-    .catch((err) => {
-      console.error(err);
+    .catch(() => {
+      console.log;
     });
 }
 

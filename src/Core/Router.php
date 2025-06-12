@@ -21,7 +21,7 @@ class Router extends LeagueRouter implements MiddlewareInterface
 {
     public function __construct()
     {
-        parent::__construct(); // ✅ Required to initialize $routeCollector
+        parent::__construct();
 
         $dotenv = Dotenv::createImmutable(__DIR__ . '/../../');
         $dotenv->load();
@@ -36,15 +36,14 @@ class Router extends LeagueRouter implements MiddlewareInterface
         $middlewareAttr = $reflection->getAttributes(Middleware::class);
 
         $routePrefix = $groupAttr?->newInstance()->prefix ?? null;
-
         $classMiddlewares = $middlewareAttr ? $middlewareAttr[0]->newInstance()->middlewares : [];
-
 
         $registerMethods = function (RouteCollectionInterface $router) use ($controllerInstance, $reflection) {
             foreach ($reflection->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
                 $routeAttr = $method->getAttributes(Route::class)[0] ?? null;
-                if (!$routeAttr)
+                if (!$routeAttr) {
                     continue;
+                }
 
                 $route = $routeAttr->newInstance();
                 $methodMiddlewareAttr = $method->getAttributes(Middleware::class);
@@ -60,15 +59,20 @@ class Router extends LeagueRouter implements MiddlewareInterface
         };
 
         if ($routePrefix) {
+            // Use group with prefix and apply class middlewares if present
             $group = $this->group($routePrefix, $registerMethods);
-
-            if ($classMiddlewares) {
+            if (!empty($classMiddlewares)) {
                 $group->middlewares($classMiddlewares);
-
             }
-
         } else {
-            $registerMethods($this);
+            // Use empty prefix group to apply class middleware
+            if (!empty($classMiddlewares)) {
+                $this->group('', function (RouteCollectionInterface $router) use ($registerMethods) {
+                    $registerMethods($router);
+                })->middlewares($classMiddlewares);
+            } else {
+                $registerMethods($this);
+            }
         }
 
         return $this;
@@ -77,8 +81,9 @@ class Router extends LeagueRouter implements MiddlewareInterface
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         try {
-            return $this->dispatch($request);
+            return $handler->handle($request);
         } catch (Exception $e) {
+            error_log("load route failed: " . $e->getMessage());
             return view('/errors/404', Layout::Error);
         }
     }

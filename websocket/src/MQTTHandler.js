@@ -11,27 +11,22 @@ class MQTTHandler {
     this.mqttClient.on("message", this.onMessage.bind(this));
 
     this.wss.on("connection", (ws) => {
-      console.log("WebSocket client connected");
-
       // Send the latest values on client connect
       if (Object.keys(this.latestValues).length > 0) {
         ws.send(JSON.stringify(this.latestValues));
-        console.log("Sent latest values to new client.");
       }
 
       ws.on("close", () => {
-        console.log("WebSocket client disconnected");
+        console.log
       });
     });
   }
 
   onConnect() {
-    console.log("Connected to MQTT broker");
-
     const topicToSubscribe = `${process.env.MQTT_TOPIC}/#`;
     this.mqttClient.subscribe(topicToSubscribe, (err) => {
       if (err) {
-        console.error("Error subscribing to MQTT topic", err);
+        console.error("Error subscribing to MQTT topic");
       } else {
         console.log(`Subscribed to topic: ${topicToSubscribe}`);
       }
@@ -43,8 +38,6 @@ class MQTTHandler {
     const value = this.parseValue(message.toString());
 
     this.latestValues[subtopic] = value;
-
-    console.log(`Updated ${subtopic}: ${value}`);
 
     // Send updated values to all WebSocket clients
     const payload = JSON.stringify(this.latestValues);

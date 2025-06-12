@@ -7,27 +7,27 @@ class User
         public function __construct(string $pseudo = "", string $mdp = "")
         {
                 if ($pseudo) {
-                        $this->pseudo = htmlspecialchars($pseudo);
+                        $this->pseudo = $pseudo;
                 }
                 if ($mdp) {
-                        $this->mdp = htmlspecialchars($mdp);
+                        $this->mdp = $mdp;
                 }
         }
         public string $pseudo {
-                get => htmlspecialchars(string: $this->pseudo);
+                get => $this->pseudo;
                 set(string $pseudo) {
-                        $this->pseudo = htmlspecialchars(string: $pseudo);
+                        $this->pseudo = $pseudo;
                 }
         }
 
-        public int $id {
+        public int $id = 0{
                 get => $this->id;
         }
 
-        public string $mdp {
-                get => htmlspecialchars(string: $this->mdp);
+        public string $mdp = "" {
+                get => $this->mdp;
                 set(string $mdp) {
-                        $this->mdp = htmlspecialchars($mdp);
+                        $this->mdp = $mdp;
                 }
         }
 

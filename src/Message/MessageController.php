@@ -3,119 +3,104 @@
 namespace App\Message;
 
 use App\Attributes\Group;
-use App\Attributes\Middleware;
 use App\Attributes\Route;
+use App\Auth\AuthService;
 use App\Exceptions\HttpExceptionInterface;
 use App\Message\MessageService;
-use App\Middleware\IsLoggedInMiddleware;
 use App\User\UserService;
-use DateTime;
-use DateTimeZone;
 use Exception;
-use GuzzleHttp\Psr7\Response;
-use Psr\Http\Message\ServerRequestInterface;
 use function App\Helpers\json;
 use function App\Helpers\view;
 
 #[Group("/message")]
-#[Middleware(new IsLoggedInMiddleware())]
 class MessageController
 {
     private $messageService;
     private $userService;
+    private $authService;
 
     public function __construct()
     {
         $this->messageService = new MessageService();
         $this->userService = new UserService();
+        $this->authService = new AuthService();
     }
 
-    // Afficher la liste des conversations (utilisateurs sauf l'utilisateur connecté)
     #[Route("GET", "/")]
-    public function index(ServerRequestInterface $request)
+    public function index()
     {
-        $userParams = $request->getQueryParams()["user"] ?? "";
+        $accept = strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false;
+        $recipient = $_GET["user"] ?? "";
+       
+        try {
 
-        // Récupérer la liste des utilisateurs sauf celui connecté
-        $users = $this->userService->getUsersExceptOne($_SESSION["user_id"]);
+            $users = $this->userService->getUsersExceptOne($_SESSION["user_id"]);
 
-        if ($userParams) {
-            $user = $this->userService->getUserByPseudo(htmlspecialchars($userParams));
+            if ($accept && $recipient) {
+                $messages = $this->messageService->getMessagesByUser($recipient);
 
-            if ($user) {
-                $messages = $this->messageService->getMessages($user->id);
-
-                return view(view: '/message/index', data: ['messages' => $messages, 'users' => $users, 'recipient' => $user->pseudo]);
+                return json([
+                    "messages" => $messages
+                ]);
             }
+
+            return view(view: '/message/index', data: [
+                'users' => $users,
+                'recipient' => $recipient
+            ]);
+        } catch (HttpExceptionInterface) {
+            header('Location: /message');
+            exit();
+        } catch (Exception $e) {
+            error_log("Message index error: " . $e->getMessage());
+            return $accept
+                ? json(['messages' => []], 500)
+                : view(view: '/message/index', data: ['users' => $users ?? [], 'messages' => []]);
         }
-        return view(view: '/message/index', data: ['users' => $users, 'messages' => []]);
     }
 
-    // Envoyer un message privé
     #[Route("POST", "/")]
-    public function sendMessage(ServerRequestInterface $request)
+    public function sendMessage()
     {
         try {
-            $userParams = $request->getQueryParams()["user"];
-            
-            $user = $this->userService->getUserByPseudo($userParams);
-            $payload = $request->getParsedBody();
+            $recipientUser = $this->userService->getUserByPseudo($_GET["user"]);
+            $image = $_FILES["image"] ?? null;
+            $text = $_POST['message'] ?? "";
 
-            // $timezone = new DateTimeZone('Europe/Paris');
-            // $date = (new DateTime("now", $timezone))->format('Y-m-d H:i:s');
+            $newMessage = $this->messageService->sendMessage(
+                $image,
+                $recipientUser->id,
+                $text,
+                $_SESSION["user_id"]
+            );
 
-            $this->messageService->sendMessage($user->id, $payload['message'], $_SESSION["user_id"]);
-
-            return new Response(301, ["location" => "/message?user={$user->pseudo}"]);
-
+            return json(["action" => "add", ...$newMessage]);
         } catch (HttpExceptionInterface $e) {
-            return new Response(301, ["location" => "/message?user={$user->pseudo}"]);
-
+            return json(["message" => "L'envoi du message a échoué."], $e->getCode());
         } catch (Exception $e) {
-            return new Response(301, ["location" => "/message?user={$user->pseudo}"]);
+            error_log("Send message failed: " . $e->getMessage());
+            return json(["message" => "Erreur serveur lors de l'envoi du message."], 500);
         }
     }
 
-    // Supprimer un message privé (uniquement pour l'utilisateur ou l'administrateur)
-    // Suppression d'un message
     #[Route("DELETE", "/")]
-    public function deleteMessage($request)
+    public function deleteMessage()
     {
         try {
-            $userParams = $request->getQueryParams()["user"] ?? "";
+            $payload = json_decode(file_get_contents('php://input'), true);
+            $messageId = $payload["message"] ?? null;
 
-            if ($request->getMethod() !== "DELETE" || !$userParams) {
-                return json(['success' => false, 'message' => 'Requête invalide.'], 400);
-            }
+            $role = $_SESSION["role"];
+            $username = $_SESSION["username"];
 
-            $data = json_decode($request->getBody()->getContents(), true);
+            $this->messageService->deleteMessage($messageId, $username, $role);
 
-            $user = $_SESSION["username"] ?? "";
-            $role = $_SESSION["role"] ?? "user";
-            $date = $data["message"] ?? "";
-
-            if (!$user || !$date) {
-                return json(['success' => false, 'message' => 'Données invalides.'], 400);
-            }
-
-            $message = $this->messageService->getMessageByDate($date);
-
-            if (!$message) {
-                return json(['success' => false, 'message' => 'Message introuvable.'], 404);
-            }
-
-            $this->messageService->deleteMessage($message->id, $role);
-
-            return json(['success' => true]);
-
-
+            return json(['success' => true,"action" => "delete", "messages" => [$messageId]]);
+        } catch (HttpExceptionInterface $e) {
+            return json(['success' => false, 'message' => 'Erreur de suppression.'], $e->getCode());
         } catch (Exception $e) {
-            // Gestion des erreurs inattendues
-            return json([
-                'success' => false,
-                'message' => 'Échec de la suppression du message. '
-            ], 500);
+            error_log("Delete message failed: " . $e->getMessage());
+            return json(['success' => false, 'message' => 'Erreur serveur.'], 500);
         }
     }
-
 }

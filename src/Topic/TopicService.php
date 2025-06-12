@@ -13,7 +13,7 @@ class TopicService
     {
         try {
             $query = Database::getPDO()->prepare('SELECT * FROM topic WHERE name = ?');
-            $query->execute([htmlspecialchars($name)]);
+            $query->execute([$name]);
             $topic = $query->fetchObject(Topic::class);
 
             return $topic ?: null;
@@ -28,7 +28,7 @@ class TopicService
     {
         try {
             $query = Database::getPDO()->prepare('SELECT * FROM topic WHERE id = ?');
-            $query->execute([htmlspecialchars($id)]);
+            $query->execute([$id]);
             $topic = $query->fetchObject(Topic::class);
 
             return $topic ?: null;
@@ -73,7 +73,7 @@ class TopicService
             $query = Database::getPDO()->prepare('DELETE FROM topic WHERE id = ?');
             $query->execute([$topicId]);
 
-            return true;
+            return $query->rowCount() > 0;
 
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());
@@ -88,9 +88,9 @@ class TopicService
 
             // On insère le nouveau topic
             $query = Database::getPDO()->prepare('INSERT INTO topic (name) VALUES (?)');
-            $query->execute([htmlspecialchars($newTopic)]);
+            $query->execute([$newTopic]);
 
-            return true;
+            return $query->rowCount() > 0;
 
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());
@@ -122,16 +122,16 @@ class TopicService
         }
     }
 
-    public function deleteTopics(array $topics): bool
+    public function deleteTopics(array $topicIds): bool
     {
 
         try {
-            $in = str_repeat('?,', count($topics) - 1) . '?';
+            $in = str_repeat('?,', count($topicIds) - 1) . '?';
 
             $query = Database::getPDO()->prepare("DELETE FROM topic WHERE id IN ($in)");
-            $query->execute($topics);
+            $query->execute($topicIds);
 
-            return true;
+            return $query->rowCount() > 0;
 
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());

@@ -1,3 +1,7 @@
+<?php
+$style = "admin"
+    ?>
+
 <!-- Tab content head templates -->
 <template id="table-users-head">
     <h3>Utilisateurs</h3>
@@ -99,3 +103,6 @@
         </div>
     </div>
 </main>
+<script src="/assets/js/components/Sidebar.js"></script>
+<script type="module" src="/assets/js/components/ActionMenu.js"></script>
+<script src="/assets/js/adminPanel.js"></script>

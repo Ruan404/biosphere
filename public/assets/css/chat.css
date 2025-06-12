@@ -1,14 +1,7 @@
 /* flex box */
 .container,
-.msg-pseudo-date-ctn,
-.msg-ctn,
 .send-msg-form {
   display: flex;
-}
-
-.msg-info-ctn {
-  display: flex;
-  flex-direction: column;
 }
 
 /*===hidden overflow===*/
@@ -37,6 +30,8 @@ main {
   display: flex;
   align-items: center;
   justify-content: center;
+  height: 100%;
+  width: 100%;
 }
 
 /* messages display style */
@@ -50,55 +45,11 @@ main {
 
 .msgs-display {
   overflow-y: auto;
-  display: grid;
   height: fit-content;
   max-height: 100%;
   padding-inline: 1rem;
 }
 
-.message {
-  display: flex;
-  align-items: center;
-}
-
-.msg-ctn {
-  border-radius: 0.5rem;
-  gap: 0.5rem;
-  font-size: 0.875rem;
-  height: fit-content;
-  max-width: 768px;
-  width: 100%;
-}
-
-.msg-img {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 40px;
-  background: rgb(var(--bg-2));
-  aspect-ratio: 1;
-  margin-top: 1rem;
-}
-
-.msg-info-ctn {
-  row-gap: 0.25rem;
-  /* border-block-end: 1px solid #eaeaea; */
-  padding-block: 1rem;
-  flex-grow: 1;
-}
-
-.msg-pseudo-date-ctn {
-  gap: 1rem;
-  align-items: center;
-}
-
-.msg-pseudo {
-  font-weight: 500;
-}
-
-.msg-date {
-  font-size: 0.6875rem;
-  opacity: 0.5;
-}
 
 /*===formulaire pour envoyer un message===*/
 .send-msg-form {

@@ -3,16 +3,16 @@ require '../vendor/autoload.php';
 
 use App\Auth\AuthController;
 use App\Chat\ChatController;
-use App\Core\Dispatcher;
+use App\File\FileController;
 use App\Film\FilmController;
 use App\Core\Router;
 use App\Home\HomeController;
+use App\Middleware\AccessControlMiddleware;
 use App\Middleware\RemoveTrailingSlashMiddleware;
 use App\Podcast\PodcastController;
 use App\Admin\AdminController;
 use App\Sensor\SensorController;
 use App\Message\MessageController;
-use App\VideoStream\VideoStreamController;
 use GuzzleHttp\Psr7\Response;
 use Laminas\Diactoros\ServerRequestFactory;
 use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
@@ -48,7 +48,7 @@ $router->setStrategy(new ApplicationStrategy());
 //         $response->getBody()->write("Not authorized");
 //         return $response->withStatus(403);
 // });
-
+$router->middleware(new AccessControlMiddleware);
 $router->register(HomeController::class)
         ->register(AuthController::class)
         ->register(ChatController::class)
@@ -56,13 +56,11 @@ $router->register(HomeController::class)
         ->register(PodcastController::class)
         ->register(AdminController::class)
         ->register(SensorController::class)
-        ->register(VideoStreamController::class)
-        ->register(MessageController::class);
+        ->register(MessageController::class)
+        ->register(FileController::class);
 
-$dispatch = new Dispatcher();
-$dispatch->pipe(new RemoveTrailingSlashMiddleware());
-$dispatch->pipe($router);
+// $response = $dispatch->handle($request);
+$response = $router->dispatch($request);
 
-$response = $dispatch->handle($request);
 
 new SapiEmitter()->emit($response);

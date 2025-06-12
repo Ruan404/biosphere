@@ -1,0 +1,88 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  color: rgb(var(--fg-1));
+}
+textarea {
+  padding: 0.25rem;
+  flex-grow: 1;
+  font: inherit;
+  background: transparent;
+  border: none;
+}
+textarea:focus-visible {
+  outline-color: rgb(var(--accent-blue));
+  border-radius: 0.25rem;
+}
+.container {
+  position: relative;
+  width: 100%;
+  border: 1px solid rgb(var(--bg-3), 0.35);
+  background: rgb(var(--bg-1));
+  border-radius: 0.75rem;
+}
+.controls {
+  display: flex;
+  gap: 0.5rem;
+  height: 100%;
+}
+svg {
+  opacity: 60%;
+}
+.input-area {
+  padding: 0.5rem;
+  border-radius: 0.75rem;
+  width: 100%;
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  align-items: center;
+}
+#emojiBtn,
+#imageBtn {
+  display: flex;
+}
+button {
+  appearance: none;
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+emoji-picker {
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  z-index: 10;
+  --background: rgb(var(--bg-1));
+  --border-color: rgb(var(--bg-3), 0.35);
+  --indicator-color: rgb(var(--accent-blue));
+  --input-border-color: rgb(var(--bg-3), 0.35);
+  --input-font-color: rgb(var(--fg-1));;
+  --input-placeholder-color: rgb(var(--fg-1), 0.6);
+  --outline-color: rgb(var(--accent-blue));
+  --category-font-color: rgb(var(--fg-1));
+  --button-active-background: rgb(var(--bg-3), 0.2);
+  --button-hover-background: rgb(var(--bg-3), 0.14);
+  --border-radius: 0.75rem;
+  --input-border-radius: 0.25rem;
+}
+.image-preview {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  display: none;
+  border: 1px solid rgb(var(--accent-blue));
+  border-radius: 0.75rem;
+}
+.images-preview-ctn {
+  width: 100px;
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+}
+
+:host{
+  width: 100%;
+}

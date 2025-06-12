@@ -2,16 +2,14 @@
 namespace App\Film;
 
 use App\Attributes\Group;
-use App\Attributes\Middleware;
 use App\Attributes\Route;
 use App\Entities\Layout;
-use App\Middleware\IsLoggedInMiddleware;
-use function App\Helpers\json;
 use Exception;
+use function App\Helpers\json;
 use function App\Helpers\view;
 use App\Film\FilmService;
 
-#[Middleware(middlewares: new IsLoggedInMiddleware())]
+
 #[Group("/films")]
 class FilmController
 {

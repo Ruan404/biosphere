@@ -2,8 +2,8 @@
     use App\Entities\Role;
     use App\Helpers\Text;
 
-    $profile = Text::getFirstStr($_SESSION["username"]);
-    $role = $_SESSION["role"];
+    $profile = Text::getFirstStr($_SESSION["username"] ?? "");
+    $role = $_SESSION["role"] ?? "";
     $roles = [Role::Admin];
     
 ?>
@@ -57,5 +57,4 @@
     <?= $content ?? "" ?>
     <script src="/assets/js/script.js"></script>
 </body>
-
 </html>

@@ -9,9 +9,9 @@ class UserAdminPanelDto
                 $this->slug = $this->pseudo;
         }
         public string $pseudo {
-                get => htmlspecialchars(string: $this->pseudo);
+                get => $this->pseudo;
                 set(string $pseudo) {
-                        $this->pseudo = htmlspecialchars(string: $pseudo);
+                        $this->pseudo = $pseudo;
                 }
         }
 
@@ -32,10 +32,10 @@ class UserAdminPanelDto
         {
                 $actions = [];
 
-                array_push($actions, ["type" => "delete_user", "label" => "Supprimer", "confirm" => true]);
+                $actions[] =  ["type" => "delete_user", "label" => "Supprimer", "confirm" => true];
 
                 if ($role !== "admin") {
-                        array_push($actions, ["type" => "promote_user", "label" => "Promouvoir"]);
+                        $actions[] = ["type" => "promote_user", "label" => "Promouvoir"];
                 }
 
                 return $actions;

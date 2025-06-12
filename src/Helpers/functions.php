@@ -50,15 +50,3 @@ function generateRandomString($length = 10, $characters = '0123456789abcdefghijk
     }
     return $randomString;
 }
-
-function send($response)
-{
-    http_response_code($response->getStatusCode());
-    foreach ($response->getHeaders() as $name => $values) {
-        foreach ($values as $value) {
-            header("$name: $value", false);
-        }
-    }
-    echo $response->getBody();
-
-}
