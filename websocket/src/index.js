@@ -5,11 +5,11 @@ const cookie = require("cookie");
 const { unserializeSession } = require("php-unserialize");
 require("dotenv").config();
 
-const { wss1, wss2, wss3 } = require("./websocket");
+const { wss1, wss2, wss3 } = require("./websocket/websocket");
 
 const server = http.createServer();
 
-const sessionDir = "../../../tmp/"; // Change if different
+const sessionDir = process.env.SESSION_DIR; // dossier vers les sessions
 const PHPSESSID_PREFIX = "sess_";
 
 server.on("upgrade", function upgrade(request, socket, head) {

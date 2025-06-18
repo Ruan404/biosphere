@@ -1,5 +1,5 @@
 const WebSocket = require("ws");
-const MQTTHandler = require("./MQTTHandler");
+const MQTTHandler = require("../mqtt/MQTTHandler");
 const WebSocketServer = require("ws").Server;
 
 const wss1 = new WebSocketServer({ noServer: true });

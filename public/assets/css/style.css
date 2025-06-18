@@ -202,14 +202,6 @@ footer {
   display: none;
 }
 
-<<<<<<< HEAD
-=======
-chat-input {
-  flex-grow: 1;
-  min-width: 0;
-}
-
->>>>>>> test-branch
 /**=== responsiveness ===**/
 
 @media (min-width: 1440px) {

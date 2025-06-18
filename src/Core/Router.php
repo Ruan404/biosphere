@@ -65,14 +65,7 @@ class Router extends LeagueRouter implements MiddlewareInterface
                 $group->middlewares($classMiddlewares);
             }
         } else {
-            // Use empty prefix group to apply class middleware
-            if (!empty($classMiddlewares)) {
-                $this->group('', function (RouteCollectionInterface $router) use ($registerMethods) {
-                    $registerMethods($router);
-                })->middlewares($classMiddlewares);
-            } else {
-                $registerMethods($this);
-            }
+            $registerMethods($this);
         }
 
         return $this;

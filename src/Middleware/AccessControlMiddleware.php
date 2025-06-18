@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Middleware;
 
 use App\Auth\AuthService;
@@ -25,17 +24,22 @@ class AccessControlMiddleware implements MiddlewareInterface
         $method = $request->getMethod();
         $accept = $request->getHeaderLine('Accept');
 
-        // Check if user is authenticated
-        $role = $_SESSION['role'] ?? null;
-        if (!$role) {
-            return $this->respond($accept, '/login', 'Utilisateur non connecté', 401);
-        }
-
+        $role = $_SESSION['role'] ?? "guest";
         $sub = (object) ['Role' => $role];
 
-        // Check authorization with Casbin
+        // Debug: Log current role and path
+        error_log("AccessControlMiddleware: Role=$role, Path=$path, Method=$method");
+
         if (!$this->authService->canAccessRoute($sub, $path, $method)) {
-            return $this->respond($accept, '/', 'Accès refusé', 403);
+            error_log("AccessControlMiddleware: Access denied for role $role on $path");
+
+            if ($role === 'guest') {
+                // Redirect to login page with 302 (Found) status
+                return $this->respond($accept, '/login', 'Veuillez vous connecter.', 302);
+            } else {
+                // Redirect to home page with 302 status
+                return $this->respond($accept, '/', 'Accès refusé.', 302);
+            }
         }
 
         return $handler->handle($request);

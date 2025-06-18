@@ -67,7 +67,7 @@ class MessageService
             if ($image) {
                 $upload = new FileService();
                 $upload->validate(["png", "jpg", "jpeg"], $image["name"]);
-                $imagePath = "/" . $upload->generatePath($image["name"], "images/"); //the slash issue must be fixed
+                $imagePath = $upload->generatePath($image["name"], "images/"); //the slash issue must be fixed
 
                 $imageMarkdown = "![alt]({$imagePath})";
             }
