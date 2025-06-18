@@ -1,18 +1,26 @@
 <?php
 namespace App\User;
 
+use App\Exceptions\BadRequestException;
+use UnexpectedValueException;
+
 class User
 {
 
         public function __construct(string $pseudo = "", string $mdp = "")
         {
-                if ($pseudo) {
+                if ($pseudo !== "") {
+                        if (!preg_match('/^[a-zA-Z0-9]+$/', $pseudo)) {
+                                throw new UnexpectedValueException("Pseudo doit être alphanuméric");
+                        }
                         $this->pseudo = $pseudo;
                 }
-                if ($mdp) {
+
+                if ($mdp !== "") {
                         $this->mdp = $mdp;
                 }
         }
+
         public string $pseudo {
                 get => $this->pseudo;
                 set(string $pseudo) {
@@ -20,7 +28,7 @@ class User
                 }
         }
 
-        public int $id = 0{
+        public int $id = 0 {
                 get => $this->id;
         }
 

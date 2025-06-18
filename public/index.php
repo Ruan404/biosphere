@@ -3,6 +3,7 @@ require '../vendor/autoload.php';
 
 use App\Auth\AuthController;
 use App\Chat\ChatController;
+use App\Core\Dispatcher;
 use App\File\FileController;
 use App\Film\FilmController;
 use App\Core\Router;
@@ -38,7 +39,7 @@ $request = ServerRequestFactory::fromGlobals(
     $_SERVER, $_GET, $_POST, $_COOKIE, $_FILES
 );
 
-
+$dispatch = new Dispatcher();
 $router = new Router();
 $router->setStrategy(new ApplicationStrategy());
 
@@ -59,8 +60,10 @@ $router->register(HomeController::class)
         ->register(MessageController::class)
         ->register(FileController::class);
 
-// $response = $dispatch->handle($request);
-$response = $router->dispatch($request);
+
+$dispatch->pipe($router);
+$response = $dispatch->handle($request);
+
 
 
 new SapiEmitter()->emit($response);

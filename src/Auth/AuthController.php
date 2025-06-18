@@ -12,6 +12,8 @@ use App\Attributes\Route;
 use Exception;
 use GuzzleHttp\Psr7\Response;
 use Psr\Http\Message\ServerRequestInterface;
+use Throwable;
+use UnexpectedValueException;
 use function App\Helpers\view;
 
 
@@ -29,7 +31,7 @@ class AuthController
     #[Route(method: "GET", path: "/login")]
     public function loginPage($request)
     {
-       
+
         return view(view: 'auth/login', layout: $this->layout, data: Csrf::get($request));
     }
 
@@ -80,6 +82,9 @@ class AuthController
 
         } catch (HttpExceptionInterface $e) {
             return view(view: 'auth/signup', layout: $this->layout, data: ['error' => true], status: $e->getStatusCode());
+        } catch (UnexpectedValueException $e) {
+            return view(view: 'auth/signup', layout: $this->layout, data: ['success' => false, "message"=>$e->getMessage()]);
+
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());
             return view("/errors/500", Layout::Error);
