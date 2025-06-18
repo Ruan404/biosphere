@@ -4,7 +4,8 @@ namespace App\Message\Dto;
 
 class GetMessageDto
 {
-
+    public ?string $image = null; 
+    
     public function __construct()
     {
         $this->isAuthor = $_SESSION['user_id'] === $this->id_auteur;

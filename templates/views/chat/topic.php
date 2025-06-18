@@ -163,6 +163,7 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 			});
 	}
 	function displayMessages(chat, show = true) {
+		console.log("chat.image =", chat.image);
 		const hasOptions = show && Array.isArray(chat.options) && chat.options.length > 0;
 
 		const msgBox = document.createElement('message-box');
@@ -171,9 +172,22 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 		msgBox.setAttribute('date', chat.date)
 		msgBox.setAttribute('message', chat.message)
 		msgBox.setAttribute('hasOptions', hasOptions)
-		msgBox.setAttribute('options', JSON.stringify(chat.options))
+		msgBox.setAttribute('options', JSON.stringify(chat.options || []))
 
-		msgsDisplayCtn.appendChild(msgBox)
+		// Ajout de l'image de profil
+		const imageUrl = chat.image;
+		console.log("Avatar URL =", imageUrl);
+		const avatar = document.createElement('img');
+		avatar.src = imageUrl;
+		avatar.alt = "avatar";
+		avatar.className = "user-profile-img";
+
+		const wrapper = document.createElement('div');
+		wrapper.classList.add('message');
+		wrapper.appendChild(avatar);
+		wrapper.appendChild(msgBox);
+
+		msgsDisplayCtn.appendChild(wrapper);
 	}
 
 </script>

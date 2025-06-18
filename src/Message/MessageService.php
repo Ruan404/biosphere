@@ -23,11 +23,11 @@ class MessageService
     public function getMessages(int $userId): array
     {
         $query = Database::getPDO()->prepare("
-            SELECT mp.*, u.pseudo 
+            SELECT mp.*, u.pseudo, u.image
             FROM messages_privés mp
             JOIN users u ON u.id = mp.id_auteur
             WHERE (mp.id_auteur = ? AND mp.id_destinataire = ?)
-               OR (mp.id_auteur = ? AND mp.id_destinataire = ?)
+            OR (mp.id_auteur = ? AND mp.id_destinataire = ?)
             ORDER BY mp.id ASC
         ");
         $query->execute([
@@ -46,7 +46,7 @@ class MessageService
 
             $message = nl2br(htmlspecialchars(trim($messageContent)));
 
-            if (strlen($message > 0)) {
+            if (strlen($message) > 0) {
                 $query = Database::getPDO()->prepare("
                 INSERT INTO messages_privés (message, id_destinataire, id_auteur)
                 VALUES (?, ?, ?)

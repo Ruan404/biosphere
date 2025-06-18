@@ -67,16 +67,15 @@ main {
   font-size: 0.875rem;
   height: fit-content;
   max-width: 768px;
-  width: 100%;
+  width: 100%; 
+  align-items: flex-start;
 }
 
-.msg-img {
+.user-profile-img {
   width: 2rem;
   height: 2rem;
-  border-radius: 40px;
-  background: rgb(var(--bg-2));
-  aspect-ratio: 1;
-  margin-top: 1rem;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .msg-info-ctn {

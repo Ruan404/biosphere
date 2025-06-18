@@ -10,6 +10,7 @@ use App\Podcast\PodcastController;
 use App\Admin\AdminController;
 use App\Sensor\SensorController;
 use App\Message\MessageController;
+use App\Profile\ProfileController;
 use App\VideoStream\VideoStreamController;
 
 
@@ -47,4 +48,5 @@ $router->registerController(AdminController::class)
         ->registerController(SensorController::class)
         ->registerController(VideoStreamController::class)
         ->registerController(MessageController::class)
+         ->registerController(ProfileController::class)
         ->run();

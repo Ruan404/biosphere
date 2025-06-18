@@ -52,10 +52,19 @@ class AuthService
         $user = $this->userService->getUserByPseudo($signupUser->pseudo);
 
         if ($user !== null) {
-            throw new BadRequestException("mauvais pseudo ou mot de passe");
-
+            throw new BadRequestException("pseudo déjà utilisé");
         }
 
+        // Récupérer la première lettre du pseudo en majuscule
+        $firstLetter = strtoupper(substr($signupUser->pseudo, 0, 1));
+
+        // Générer le chemin vers l'avatar par défaut
+        $avatarPath = "/images/avatars/" . $firstLetter . ".png";
+
+        // Assigner ce chemin à la propriété image de l'utilisateur
+        $signupUser->image = $avatarPath;
+
+        // Créer l'utilisateur avec cette image par défaut
         return $this->userService->createUser($signupUser);
     }
 

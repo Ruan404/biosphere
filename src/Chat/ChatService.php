@@ -36,14 +36,35 @@ class ChatService extends Chat
 
     public function getChatMessages(int $topicId): ?array
     {
-
         try {
-            $query = Database::getPDO()->prepare('SELECT chat.pseudo, chat.message, chat.date FROM chat WHERE topic_id = :topic ORDER BY chat.id ASC LIMIT 50');
+            $query = Database::getPDO()->prepare(
+                'SELECT chat.pseudo, chat.message, chat.date, users.image 
+                FROM chat JOIN users ON users.pseudo = chat.pseudo 
+                WHERE chat.topic_id = :topic 
+                ORDER BY chat.id ASC 
+                LIMIT 50'
+            );
 
-            $query->bindParam(':topic', $topicId, PDO::PARAM_STR);
+            $query->bindParam(':topic', $topicId, PDO::PARAM_INT);
             $query->execute();
 
-            $messages = $query->fetchAll(PDO::FETCH_CLASS, Chat::class);
+            $messages = $query->fetchAll(PDO::FETCH_ASSOC);
+
+           foreach ($messages as &$msg) {
+                if (!empty($msg['image'])) {
+                    $filename = basename($msg['image']);
+                    $avatarPath = "/uploads/images/avatars/" . $filename;
+                    $fullPath = $_SERVER["DOCUMENT_ROOT"] . $avatarPath;
+                    $timestamp = file_exists($fullPath) ? filemtime($fullPath) : time();
+                    $msg['image'] = $avatarPath . '?v=' . $timestamp;
+                } else {
+                    $firstLetter = strtoupper(substr($msg['pseudo'], 0, 1));
+                    $avatarPath = "/uploads/images/avatars/{$firstLetter}.png";
+                    $fullPath = $_SERVER["DOCUMENT_ROOT"] . $avatarPath;
+                    $timestamp = file_exists($fullPath) ? filemtime($fullPath) : time();
+                    $msg['image'] = $avatarPath . '?v=' . $timestamp;
+                }
+            }
 
             return $messages ?: null;
         } catch (PDOException $e) {

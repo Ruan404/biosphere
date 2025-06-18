@@ -4,13 +4,16 @@ namespace App\User;
 class User
 {
 
-        public function __construct(string $pseudo = "", string $mdp = "")
+       public function __construct(string $pseudo = "", string $mdp = "", ?string $image = null)
         {
                 if ($pseudo) {
                         $this->pseudo = htmlspecialchars($pseudo);
                 }
                 if ($mdp) {
                         $this->mdp = htmlspecialchars($mdp);
+                }
+                if ($image !== null) {
+                        $this->image = $image;
                 }
         }
         public string $pseudo {
@@ -34,4 +37,11 @@ class User
         public string $role {
                 get => $this->role;
         }
+
+        public ?string $image {
+                get => $this->image;
+                set(?string $image) {
+                        $this->image = $image;
+                }
+        }             
 }
