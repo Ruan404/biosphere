@@ -5,7 +5,8 @@ use App\Helpers\Text;
 if(session_status() === 1){
     session_start();
 }
-//l'utilisiteur n'est pas connecté
+
+// L'utilisateur n'est pas connecté
 if(!$_SESSION){
    header('Location: /login');
    exit();
@@ -14,6 +15,15 @@ if(!$_SESSION){
 $username = $_SESSION["username"];
 $role = $_SESSION["role"];
 $roles = [Role::Admin];
+
+// Synchronisation de l'avatar avec la base à chaque connexion/page
+$pdo = \App\Core\Database::getPDO();
+$stmt = $pdo->prepare("SELECT image FROM users WHERE pseudo = ?");
+$stmt->execute([$username]);
+$avatarFromDb = $stmt->fetchColumn();
+if ($avatarFromDb) {
+    $_SESSION['avatar'] = $avatarFromDb;
+}
 
 // Avatar dynamique (uploadé ou prédéfini)
 $avatarFilename = isset($_SESSION['avatar']) ? $_SESSION['avatar'] : (Text::getFirstStr($username) . '.png');

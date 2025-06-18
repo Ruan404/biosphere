@@ -20,7 +20,7 @@ $userService = new UserService();
                     <span class="user-name"><?= htmlspecialchars($user['pseudo']) ?></span>
                 </a>
             <?php endforeach; ?>
-                        <div slot="menu" class="sidebar-menu-button user-row">
+            <div slot="menu" class="sidebar-menu-button user-row">
                 <img class="user-profil-img"
                     src="<?= htmlspecialchars($userService->getAvatarUrl(null, $currentUser)) ?>"
                     alt="Avatar de <?= htmlspecialchars($currentUser['pseudo'] ?? 'Utilisateur') ?>">
