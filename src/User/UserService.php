@@ -23,7 +23,7 @@ class UserService
             if ($user === null) {
                 $query = Database::getPDO()->prepare('INSERT INTO users(pseudo, mdp, image) VALUES(?, ?, ?)');
                 $query->execute([htmlspecialchars($newUser->pseudo), $hashedPassword, $newUser->image]);
-               
+
                 return true;
             }
             throw new BadRequestException("user already exist");
@@ -77,7 +77,7 @@ class UserService
      */
     public function getAvatarUrl($image, $pseudo)
     {
-        
+
         if (!empty($image)) {
             $filename = basename($image);
             $avatarPath = "/uploads/images/avatars/" . $filename;
@@ -133,17 +133,20 @@ class UserService
         }
     }
 
-   public function getUsersExceptOne($userId): array
+    public function getUsersExcludingId(int $userId, string $fetchClass = User::class): array
     {
         try {
-            $query = Database::getPDO()->prepare('SELECT pseudo, role, image FROM users WHERE id!= ?');
-            $query->execute([htmlspecialchars($userId)]);
-            $users = $query->fetchAll(PDO::FETCH_ASSOC);
-            
-            foreach ($users as &$user) {
-                $user['image'] = $this->getAvatarUrl($user['image'], $user['pseudo']);
+            $query = Database::getPDO()->prepare('SELECT pseudo, role, image FROM users WHERE id != ?');
+            $query->execute([$userId]);
+            $users = $query->fetchAll(PDO::FETCH_CLASS, $fetchClass);
+
+            foreach ($users as $user) {
+                /**
+                 * @var User $user
+                 */
+                $user->image = $this->getAvatarUrl($user->image, $user->pseudo);
             }
-           
+
             return $users;
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());

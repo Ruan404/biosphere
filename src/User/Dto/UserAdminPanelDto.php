@@ -3,8 +3,11 @@
 namespace App\User\Dto;
 class UserAdminPanelDto
 {
-        public ?string $image = null; 
-        
+        // public ?string $image = null; 
+        public function __set($property, $value){}
+
+        public function __get($name){}
+
         public function __construct()
         {
                 $this->actions = $this->setActions($this->role);

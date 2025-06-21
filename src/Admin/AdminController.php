@@ -10,6 +10,7 @@ use App\Exceptions\HttpExceptionInterface;
 use App\Film\FilmService;
 use App\Helpers\Response;
 use App\Topic\TopicService;
+use App\User\Dto\UserAdminPanelDto;
 use App\User\UserService;
 use ErrorException;
 use Exception;
@@ -48,7 +49,7 @@ class AdminController
             $tab = htmlspecialchars($params["tab"]);
             switch ($tab) {
                 case "users":
-                    return new Response()->json(new UserService()->getUsersExceptOne($_SESSION['user_id']));
+                    return new Response()->json(new UserService()->getUsersExcludingId($_SESSION['user_id'], UserAdminPanelDto::class));
 
                 case "topics":
                     return new Response()->json(new TopicService()->adminTopics());

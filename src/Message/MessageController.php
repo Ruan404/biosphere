@@ -29,7 +29,7 @@ class MessageController
         $user = htmlspecialchars($_GET["user"] ?? "");
 
         // Récupérer la liste des utilisateurs sauf celui connecté
-        $users = $this->userService->getUsersExceptOne($_SESSION["user_id"]);
+        $users = $this->userService->getUsersExcludingId($_SESSION["user_id"]);
 
         if ($user) {
             $user = $this->userService->getUserByPseudo($user);

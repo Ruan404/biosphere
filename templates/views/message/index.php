@@ -13,11 +13,11 @@ $recipient = $data["recipient"] ?? null;
             <h2 class="sidebar-title" slot="title">Utilisateurs disponibles</h2>
 
             <?php foreach ($users as $user): ?>
-                <a slot="menu" class="sidebar-menu-button" href="?user=<?= urlencode($user['pseudo']) ?>">
+                <a slot="menu" class="sidebar-menu-button" href="?user=<?= urlencode($user->pseudo) ?>">
                     <img class="user-profil-img"
-                         src="<?= htmlspecialchars($user['image']) ?>"
-                         alt="Avatar de <?= htmlspecialchars($user['pseudo']) ?>">
-                    <span class="user-name"><?= htmlspecialchars($user['pseudo']) ?></span>
+                         src="<?= htmlspecialchars($user->image) ?>"
+                         alt="Avatar de <?= htmlspecialchars($user->pseudo) ?>">
+                    <span class="user-name"><?= htmlspecialchars($user->pseudo) ?></span>
                 </a>
             <?php endforeach; ?>
         </sidebar-tab>
