@@ -5,7 +5,6 @@ namespace App\Admin;
 use App\Attributes\Roles;
 use App\Attributes\Route;
 use App\Admin\AdminService;
-use App\Entities\Layout;
 use App\Entities\Role;
 use App\Exceptions\HttpExceptionInterface;
 use App\Film\FilmService;
@@ -32,7 +31,7 @@ class AdminController
     #[Route("GET", "/admin")]
     public function index()
     {
-        return view(view: "/admin/index", layout: Layout::Admin);
+        return view(view: "/admin/index");
     }
 
 

@@ -77,6 +77,7 @@ class UserService
      */
     public function getAvatarUrl($image, $pseudo)
     {
+        
         if (!empty($image)) {
             $filename = basename($image);
             $avatarPath = "/uploads/images/avatars/" . $filename;
