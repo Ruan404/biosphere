@@ -30,6 +30,7 @@ $description = "voir les données";
 <script>
     const socket = new WebSocket(`${WEBSOCKET_URL}/bar`);
     let latestData = {};
+    let currentGroup = null;
 
     const groupSelect = document.getElementById("group-select");
     const tbody = document.getElementById("sensor-table-body");
@@ -37,25 +38,44 @@ $description = "voir les données";
     socket.onmessage = function (event) {
         const data = JSON.parse(event.data);
         latestData = data;
+        console.log(data["surveillance"], Object.keys(data))
 
-        // Populate group selector
-        groupSelect.innerHTML = '';
-        Object.keys(data).forEach(group => {
-            const option = document.createElement("option");
-            option.value = group;
-            option.textContent = group;
-            groupSelect.appendChild(option);
-        });
+        const existingSelection = groupSelect.value;
+        const groups = Object.keys(data);
 
-        // Show the first group by default
-        if (groupSelect.options.length > 0) {
-            groupSelect.value = groupSelect.options[0].value;
-            updateTable(groupSelect.value);
+        // Only update options if the group list has changed
+        const currentOptions = Array.from(groupSelect.options).map(o => o.value);
+        const hasChanged = groups.length !== currentOptions.length ||
+            !groups.every((g, i) => g === currentOptions[i]);
+
+        if (hasChanged) {
+            groupSelect.innerHTML = '';
+            groups.forEach(group => {
+                const option = document.createElement("option");
+                option.value = group;
+                option.textContent = group;
+                groupSelect.appendChild(option);
+            });
+
+            // Try to restore the previous selection if it still exists
+            if (groups.includes(existingSelection)) {
+                groupSelect.value = existingSelection;
+            } else {
+                groupSelect.value = groups[0] || "";
+            }
+        }
+
+        // Update table only if the selected group is still valid
+        const selectedGroup = groupSelect.value;
+        if (selectedGroup) {
+            currentGroup = selectedGroup;
+            updateTable(currentGroup);
         }
     };
 
     groupSelect.addEventListener("change", () => {
-        updateTable(groupSelect.value);
+        currentGroup = groupSelect.value;
+        updateTable(currentGroup);
     });
 
     function updateTable(group) {

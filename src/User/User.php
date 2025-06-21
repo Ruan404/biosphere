@@ -28,6 +28,9 @@ class User
                 }
         }
 
+        public string $image="" {
+                get => $this->image;
+        }
         public int $id = 0 {
                 get => $this->id;
         }
