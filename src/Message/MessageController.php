@@ -37,7 +37,10 @@ class MessageController
             if ($user) {
                 $messages = $this->messageService->getMessages($user->id);
 
-                return view(view: '/message/index', data: ['messages' => $messages, 'users' => $users, 'recipient' => $user->pseudo]);
+                return view(view: '/message/index', data: ['messages' => $messages, 'users' => $users, 'recipient' => [
+                    "pseudo" => $user->pseudo,
+                    "image" => $user->image
+                ]]);
             }
         }
         return view(view: '/message/index', data: ['users' => $users, 'messages' => []]);

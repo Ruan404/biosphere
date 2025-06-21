@@ -42,6 +42,7 @@ class AuthService
             $_SESSION['user_id'] = $user->id;
             $_SESSION['username'] = $user->pseudo;
             $_SESSION['role'] = $user->role;
+            $_SESSION['avatar'] = $user->image;
             return $user;
         }
         throw new BadRequestException("mauvais pseudo ou mot de passe");

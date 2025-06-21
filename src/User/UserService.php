@@ -21,12 +21,6 @@ class UserService
             $hashedPassword = password_hash($newUser->mdp, algo: PASSWORD_BCRYPT);
 
             if ($user === null) {
-                // Ajout : définir une image par défaut en fonction de la première lettre du pseudo
-                if (empty($newUser->image)) {
-                    $firstLetter = strtoupper($newUser->pseudo[0]);
-                    $newUser->image = $firstLetter . ".png";
-                }
-
                 $query = Database::getPDO()->prepare('INSERT INTO users(pseudo, mdp, image) VALUES(?, ?, ?)');
                 $query->execute([htmlspecialchars($newUser->pseudo), $hashedPassword, $newUser->image]);
                
@@ -47,9 +41,9 @@ class UserService
             $query->execute([$id]);
             $user = $query->fetchObject(User::class);
 
-            if ($user) {
-                $user->image = $this->getAvatarUrl($user->image, $user->pseudo);
-            }
+            // if ($user) {
+            //     $user->image = $this->getAvatarUrl($user->image, $user->pseudo);
+            // }
 
             return $user ?: null;
 
@@ -75,27 +69,6 @@ class UserService
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());
             throw new Exception("Something went wrong");
-        }
-    }
-
-    /**
-     * NOUVELLE METHODE AJOUTEE
-     */
-    public function getUsers(): array
-    {
-        try {
-            $query = Database::getPDO()->prepare('SELECT id, pseudo, image FROM users');
-            $query->execute();
-            $users = $query->fetchAll(\PDO::FETCH_ASSOC);
-
-            foreach ($users as &$user) {
-                $user['image'] = $this->getAvatarUrl($user['image'], $user['pseudo']);
-            }
-
-            return $users;
-        } catch (\PDOException $e) {
-            error_log("Database error: " . $e->getMessage());
-            return [];
         }
     }
 
@@ -162,14 +135,14 @@ class UserService
    public function getUsersExceptOne($userId): array
     {
         try {
-            $query = Database::getPDO()->prepare('SELECT id, pseudo, role, image FROM users WHERE id!= ?');
+            $query = Database::getPDO()->prepare('SELECT pseudo, role, image FROM users WHERE id!= ?');
             $query->execute([htmlspecialchars($userId)]);
             $users = $query->fetchAll(PDO::FETCH_ASSOC);
-
+            
             foreach ($users as &$user) {
                 $user['image'] = $this->getAvatarUrl($user['image'], $user['pseudo']);
             }
-
+           
             return $users;
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());
