@@ -46,10 +46,10 @@ class MessageController
 
             return view(view: '/message/index', data: [
                 'users' => $users,
-                'recipient' => [
+                'recipient' => $user ? [
                     "pseudo" => $user->pseudo,
                     "image" => $user->image
-                ]
+                ] : null
             ]);
         } catch (HttpExceptionInterface) {
             header('Location: /message');
@@ -98,7 +98,7 @@ class MessageController
 
             $this->messageService->deleteMessage($messageId, $username, $role);
 
-            return json(['success' => true,"action" => "delete", "messages" => [$messageId]]);
+            return json(['success' => true, "action" => "delete", "messages" => [$messageId]]);
         } catch (HttpExceptionInterface $e) {
             return json(['success' => false, 'message' => 'Erreur de suppression.'], $e->getCode());
         } catch (Exception $e) {

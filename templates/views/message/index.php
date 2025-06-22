@@ -3,8 +3,8 @@ $style = "message";
 
 $users = $data["users"] ?? [];
 $recipient = $data["recipient"] ?? null;
-$recipientPseudo = htmlspecialchars($recipient["pseudo"]);
-$recipientImage = htmlspecialchars($recipient["image"]);
+$recipientPseudo = htmlspecialchars($recipient["pseudo"] ?? "");
+$recipientImage = htmlspecialchars($recipient["image"] ?? "");
 ?>
 <main>
 	<div class="container">
