@@ -52,7 +52,7 @@ class ChatController
                 $messages = $this->chatService->getChatMessages($request->getAttribute("slug"));
                
                 $permissions = $this->authService->getPermissions($role, "chat");
-               
+                
                 return json([
                     "messages" => $messages,
                     "permissions" => $permissions,

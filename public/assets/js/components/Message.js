@@ -12,17 +12,19 @@ class Message extends HTMLElement {
     this.hasOptions = false;
     this.options = [];
     this.wrapper = null;
+    this.avatar = "";
   }
 
   connectedCallback() {
     this.pseudo = this.getAttribute("pseudo");
     this.date = this.getAttribute("date");
+    this.avatar = this.getAttribute("avatar");
     this.message = this.getAttribute("message");
     this.hasOptions = this.getAttribute("hasOptions");
     this.options = JSON.parse(this.getAttribute("options"));
     this.wrapper = document.createElement("div");
     this.wrapper.setAttribute("class", "message");
-
+  
     this.wrapper.innerHTML = `
     <div class='msg-ctn'>
         <div class="msg-img"></div>
@@ -35,13 +37,24 @@ class Message extends HTMLElement {
         </div>
     </div>
     `;
-   
+    
+    if(this.avatar !== ""){
+      const msgImgDiv = this.wrapper.querySelector(".msg-img");
+      const img = document.createElement("img");
+      img.src = this.avatar;
+      img.alt = this.pseudo;
+      img.classList.add("user-profile-img"); // optional: add a class for styling
+      msgImgDiv.appendChild(img);
+    }
+
     if (this.hasOptions == "true") {
       const actionMenu = document.createElement("action-menu");
       actionMenu.setAttribute("item-id", this.date);
       actionMenu.setAttribute("options", JSON.stringify(this.options));
       this.wrapper.appendChild(actionMenu);
     }
+
+    
     this.shadow.innerHTML = ""
     this.shadow.appendChild(this.wrapper)
   }

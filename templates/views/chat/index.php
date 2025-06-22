@@ -185,20 +185,14 @@ $title = $currentTopic ?? "chat";
 
 	function displayMessage(chat, show = true) {
 		const hasOptions = show && Array.isArray(chat.options) && chat.options.length > 0;
-
+		
 		const msgBox = document.createElement("message-box");
 		msgBox.setAttribute("pseudo", chat.pseudo);
 		msgBox.setAttribute("date", chat.date);
 		msgBox.setAttribute("message", chat.htmlMessage);
 		msgBox.setAttribute("hasOptions", hasOptions);
 		msgBox.setAttribute("options", JSON.stringify(chat.options));
-
-		// Ajout de l'image de profil
-		const imageUrl = chat.image;
-		const avatar = document.createElement('img');
-		avatar.src = imageUrl;
-		avatar.alt = "avatar";
-		avatar.className = "user-profile-img";
+		msgBox.setAttribute("avatar", chat.image)
 		
 		msgsDisplayCtn.appendChild(msgBox);
 	}

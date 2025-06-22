@@ -56,6 +56,11 @@
   margin-top: 1rem;
 }
 
+.msg-img img{
+  width: 100%;
+  
+}
+
 .msg-info-ctn {
   row-gap: 0.25rem;
   /* border-block-end: 1px solid #eaeaea; */
