@@ -1,16 +1,5 @@
 <?php
 use App\Entities\Role;
-use App\Helpers\Text;
-
-if(session_status() === 1){
-    session_start();
-}
-
-// L'utilisateur n'est pas connecté
-if(!$_SESSION){
-   header('Location: /login');
-   exit();
-}
 
 $username = $_SESSION["username"];
 $role = $_SESSION["role"];
@@ -87,5 +76,4 @@ $avatarUrl = $_SESSION["avatar"];
     });
     </script>
 </body>
-
 </html>

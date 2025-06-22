@@ -50,7 +50,8 @@ class ProfileController
 
         $predefinedAvatars = $this->predefinedAvatars;
         $style = "profile";
-        require __DIR__ . '/../../templates/views/profile/profile.php';
+        // require __DIR__ . '/../../templates/views/profile/profile.php';
+
     }
 
     #[Route(path: "/profile/avatar", method: "POST")]

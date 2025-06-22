@@ -176,7 +176,6 @@ $currentTopic = htmlspecialchars($data['currentTopic'] ?? '');
 
 		// Ajout de l'image de profil
 		const imageUrl = chat.image;
-		console.log("Avatar URL =", imageUrl);
 		const avatar = document.createElement('img');
 		avatar.src = imageUrl;
 		avatar.alt = "avatar";

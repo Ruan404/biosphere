@@ -17,7 +17,7 @@ if ($data) {
 <main>
     <div class="video-container">
         <video controls>
-            <source src="/stream/<?= urlencode($filePath) ?>">
+            <source src="/videos/<?= urlencode($filePath) ?>">
             Your browser does not support the video tag.
         </video>
     </div>

@@ -2,22 +2,42 @@ table,
 tr,
 td,
 th {
-    border: 1px solid rgb(var(--bg-3));
-    border-collapse: collapse;
+  border: 1px solid rgb(var(--bg-3));
+  border-collapse: collapse;
 }
 
 .sensor-ctn {
-    overflow-x: auto;
+  overflow-x: auto;
+  display: grid;
+  gap: 1rem;
 }
 
-.sensor-value, .head {
-    padding: 0.5rem 1rem;
+.sensor-value,
+.head {
+  padding: 0.5rem 1rem;
 }
-.head{
-    text-align: left;
+.head {
+  text-align: left;
 }
 
 .sensor {
-    padding: 0.5rem 1rem;
-    font-weight: bold;
+  padding: 0.5rem 1rem;
+  font-weight: bold;
+}
+
+.select-ctn {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+select {
+  color: rgb(var(--fg-1));
+  border: 1px solid rgb(var(--bg-3), 0.35);
+  border-radius: 0.625rem;
+}
+
+option, select {
+  background-color: rgb(var(--bg-2));
+  padding: 0.5rem;
 }

@@ -3,29 +3,38 @@
 namespace App\Chat;
 
 use App\Auth\AuthService;
+use App\Markdown\Spoiler\SpoilerExtension;
+use App\User\UserService;
+use ElGigi\CommonMarkEmoji\EmojiExtension;
+use League\CommonMark\CommonMarkConverter;
 //voir les messages par rapport à un topic
 /**
  * récupérer le topic
  * renvoyer les messages correspondant au topic
  */
+
+
 class Chat
 {
-    private $timezone;
-
-    public function __construct(string $pseudo = "", string $date = "")
+    public function __construct()
     {
-        // $date = new DateTime("now", $timezone )->format('Y-m-d H:i:s');
-        if ($pseudo) {
-            $this->pseudo = $pseudo;
-        }
-        if ($date) {
-            $this->date = $date;
-        }
-        if (session_status() === 1) {
-            session_start();
-        }
-        $this->options = $this->getOptions($this->pseudo === $_SESSION['username'] || $_SESSION["role"] === "admin" );
+        $converter = new CommonMarkConverter([
+            'html_input' => 'escape',
+            'allow_unsafe_links' => false,
+            'renderer' => [
+                'soft_break' => "<br />\n",
+            ]
+        ]);
+        $converter->getEnvironment()->addExtension(new EmojiExtension);
+        $converter->getEnvironment()->addExtension(new SpoilerExtension);
+
+        $this->htmlMessage = $converter($this->message)->getContent();
     }
+
+    public int $id = 0 {
+        get => $this->id;
+    }
+
     public int $topic_id = 0 {
         get => $this->topic_id;
 
@@ -35,15 +44,15 @@ class Chat
     }
 
 
-    public string $pseudo = "" {
+    public string $pseudo {
         get => $this->pseudo;
 
         set(string $pseudo) {
-            $this->pseudo = htmlspecialchars($pseudo);
+            $this->pseudo = $pseudo;
         }
     }
 
-    public string $date = "" {
+    public string $date {
         get => $this->date;
     }
 
@@ -54,27 +63,14 @@ class Chat
          * 3. remove spaces
          * 4. nl2br permet à l'utilisateur de sauter des lignes
          */
-        get => nl2br(rtrim(strip_tags(htmlspecialchars_decode(trim($this->message)))));
+        get => $this->message;
 
         set(string $message) {
-            $this->message = nl2br(rtrim(strip_tags(htmlspecialchars_decode(trim($message)))));
+            $this->message = $message;
         }
     }
-
-    public array $options {
-        get => $this->options;
+    
+    public string $htmlMessage {
+        get => $this->htmlMessage;
     }
-
-    private function getOptions(bool $canDelete): array
-    {
-        $actions = [];
-        if ($canDelete) {
-            array_push($actions,["label" => "Delete", 'value' => "delete"]);
-        }
-
-        //future actions
-        
-        return $actions;
-    }
-
 }

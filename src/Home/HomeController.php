@@ -3,7 +3,6 @@ namespace App\Home;
 use App\Attributes\{
     Route
 };
-
 use function App\Helpers\view;
 
 
@@ -13,6 +12,5 @@ class HomeController
     public function index()
     {
         return view(view: 'home/index');
-
     }
 }

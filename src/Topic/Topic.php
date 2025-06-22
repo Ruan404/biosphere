@@ -16,9 +16,9 @@ class Topic
 
     public string $name
     {
-        get => htmlspecialchars($this->name);
+        get => $this->name;
         set(string $name){
-            $slug = explode('/', rtrim(htmlspecialchars($name), '/'));
+            $slug = explode('/', rtrim($name, '/'));
 
             $this->name = array_pop($slug);
             

@@ -14,10 +14,10 @@ class FilmAdminPanelDto
 
 
     public string $title {
-        get => htmlspecialchars($this->title);
+        get => $this->title;
 
         set(string $title) {
-            $this->title = htmlspecialchars($title);
+            $this->title = $title;
         }
     }
 
@@ -26,10 +26,10 @@ class FilmAdminPanelDto
     }
 
     public string $slug{
-        get => htmlspecialchars($this->slug);
+        get => $this->slug;
 
         set(string $slug) {
-            $this->slug = htmlspecialchars($slug);
+            $this->slug = $slug;
         }
     }
 

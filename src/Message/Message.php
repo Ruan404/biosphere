@@ -2,13 +2,41 @@
 
 namespace App\Message;
 
+use App\Markdown\Spoiler\SpoilerExtension;
+use ElGigi\CommonMarkEmoji\EmojiExtension;
+use League\CommonMark\CommonMarkConverter;
+
 class Message
 {
-    public int $id {
+    public function __construct()
+    {
+        $converter = new CommonMarkConverter([
+            'html_input' => 'escape',
+            'allow_unsafe_links' => false,
+            'renderer' => [
+                'soft_break' => "<br />\n",
+            ]
+        ]);
+        $converter->getEnvironment()->addExtension(new EmojiExtension);
+        $converter->getEnvironment()->addExtension(new SpoilerExtension);
+
+
+        $this->htmlMessage = $converter($this->message)->getContent();
+    }
+
+    public string $recipient = "" {
+        get => $this->recipient;
+    }
+
+    public string $sender = "" {
+        get => $this->sender;
+    }
+
+    public int $id = 0 {
         get => $this->id;
     }
 
-    public int $id_destinataire {
+    public int $id_destinataire = 0 {
         get => $this->id_destinataire;
 
         set(int $id_destinataire) {
@@ -16,7 +44,7 @@ class Message
         }
     }
 
-    public int $id_auteur {
+    public int $id_auteur = 0 {
         get => $this->id_auteur;
 
         set(int $id_auteur) {
@@ -31,26 +59,22 @@ class Message
          * 3. remove spaces
          * 4. nl2br permet à l'utilisateur de sauter des lignes
          */
-        get => nl2br(rtrim(strip_tags(htmlspecialchars_decode(trim($this->message)))));
+        get => $this->message;
 
         set(string $message) {
-            $this->message = nl2br(rtrim(strip_tags(htmlspecialchars_decode(trim($message)))));
+            $this->message = $message;
         }
     }
 
-    public bool $isAuthor {
-        get => $this->isAuthor;
+    public string $htmlMessage {
+        get => $this->htmlMessage;
     }
 
-    public array $options {
-        get => $this->options;
-    }
+    public string $date {
+        get => $this->date;
 
-    public string $date{
-        get => htmlspecialchars($this->date);
-
-        set(string $date){
-            $this->date = htmlspecialchars($date);
+        set(string $date) {
+            $this->date = $date;
         }
-    }   
+    }
 }

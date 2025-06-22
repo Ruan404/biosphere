@@ -1,14 +1,15 @@
 <?php
 $title = "rejoindre biosphère";
 $error = $data['error'] ?? false;
+$success = $data['success'] ?? true;
 ?>
 <main>
   <div class="sign-ctn">
     <div class="sub-ctn">
       <h1>Rejoindre Biosphère</h1>
       <?php
-      if ($error) {
-        echo "<div class='error'>le pseudo est indisponible</div>";
+      if (!$success) {
+        echo "<div class='error'>" . (htmlspecialchars($data["message"]) ?? "le pseudo est indisponible") . "</div>";
       }
       ?>
     </div>

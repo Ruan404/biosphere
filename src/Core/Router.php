@@ -1,119 +1,133 @@
 <?php
 namespace App\Core;
 
-use AltoRouter;
+use App\Attributes\Route;
+use App\Attributes\Middleware;
+use App\Attributes\Group;
 use App\Entities\Layout;
-use App\Entities\Role;
+use Dotenv\Dotenv;
+use Exception;
+use League\Route\RouteCollectionInterface;
+use League\Route\Router as LeagueRouter;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use ReflectionClass;
-use App\Attributes\{
-    Route,
-    Roles
-};
-use App\Auth\AuthService;
+use ReflectionMethod;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use function App\Helpers\view;
 
-class Router
+class Router extends LeagueRouter implements MiddlewareInterface
 {
-    private AltoRouter $router;
+    private FilesystemAdapter $cache;
+    private bool $routesCached = false;
+    private $cacheItem;
 
+    private $roads;
 
     public function __construct()
     {
-        $this->router = new AltoRouter();
+        parent::__construct();
+
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/../../');
+        $dotenv->load();
+
+        // Assuming environment is already loaded elsewhere in bootstrap:
+        $cacheDir = $_ENV["CACHE_DIR"];
+        $routesCacheKey = $_ENV["ROUTES_CACHE_KEY"];
+        $routesCacheDuration = (int) ($_ENV["ROUTES_CACHE_DURATION"]);
+
+        $this->cache = new FilesystemAdapter(
+            defaultLifetime: $routesCacheDuration,
+            directory: __DIR__ . '/../../' . $cacheDir
+        );
+        $this->cacheItem = $this->cache->getItem($routesCacheKey);
+        $this->routesCached = $this->cacheItem->isHit();
+
+        if ($this->routesCached) {
+            $cachedRoutes = $this->cacheItem->get();
+            foreach ($cachedRoutes as $route) {
+                $handler = function (ServerRequestInterface $request, array $args) use ($route) {
+                    $controller = new $route['handler']['controller']();
+                    $method = $route['handler']['method'];
+                    return $controller->$method($request, ...array_values($args));
+                };
+                $routeDef = $this->map($route['method'], $route['path'], $handler);
+
+                // If you cached middlewares, apply them here as well
+                if (!empty($route['middlewares'] ?? [])) {
+                    $routeDef->middlewares($route['middlewares']);
+                }
+            }
+        }
     }
 
-    private function handle($target, $match)
+    public function register(object|string $controller): self
     {
-        $controller = new $target['controller'](); //instantiate the controller class
-        $action = $target['action']; //get the class method
+        if ($this->routesCached) {
+            // Don't register if routes are cached
+            return $this;
+        }
 
-        //there is some parameters in the url
-        if ($match['params'] != null) {
-            //use the method with params
-            $controller->$action($match['params']);
-        } else {
-            $controller->$action(); //use the method
+        $controllerInstance = is_string($controller) ? new $controller() : $controller;
+        $reflection = new ReflectionClass($controllerInstance);
+
+        $groupAttr = $reflection->getAttributes(Group::class)[0] ?? null;
+        $middlewareAttr = $reflection->getAttributes(Middleware::class);
+
+        $routePrefix = $groupAttr?->newInstance()->prefix ?? null;
+        $classMiddlewares = $middlewareAttr ? $middlewareAttr[0]->newInstance()->middlewares : [];
+
+        foreach ($reflection->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+            $routeAttr = $method->getAttributes(Route::class)[0] ?? null;
+            if (!$routeAttr) {
+                continue;
+            }
+
+            $route = $routeAttr->newInstance();
+            $methodMiddlewareAttr = $method->getAttributes(Middleware::class);
+            $methodMiddlewares = $methodMiddlewareAttr ? $methodMiddlewareAttr[0]->newInstance()->middlewares : [];
+
+            $fullPath = $routePrefix ? $routePrefix . $route->path : $route->path;
+            $fullPath = rtrim($fullPath, "/");
+
+            $handler = [$controllerInstance, $method->getName()];
+            $routeDef = $this->map($route->method, $fullPath, $handler);
+
+            // Merge class + method middlewares
+            $mergedMiddlewares = array_merge($classMiddlewares, $methodMiddlewares);
+            if (!empty($mergedMiddlewares)) {
+                $routeDef->middlewares($mergedMiddlewares);
+            }
+
+            $this->roads[] = [
+                "method" => $route->method,
+                "path" => $fullPath,
+                "handler" => [
+                    "controller" => get_class($controllerInstance),
+                    "method" => $method->getName(),
+                ],
+                "middlewares" => $mergedMiddlewares,
+            ];
         }
 
         return $this;
     }
 
-    public function registerController($controller)
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        $reflection = new ReflectionClass($controller);
-
-        $routeAttributes = $reflection->getAttributes(Route::class);
-
-        $roleAttributes = $reflection->getAttributes(Roles::class);
-
-        $classRoles = [];
-
-        $prefix = '';
-
-        if (!empty($routeAttributes)) {
-            $prefix = $routeAttributes[0]->newInstance()->path;
-        }
-
-        if (!empty($roleAttributes)) {
-            $classRoles = $roleAttributes[0]->newInstance()->roles;
-        }
-
-        foreach ($reflection->getMethods() as $method) {
-
-            $attributes = $method->getAttributes(Route::class);
-            $rolesAttributes = $method->getAttributes(Roles::class);
-
-            if (empty($attributes)) {
-                continue; //reviens au début de la boucle sans exécuter la suite
+        try {
+            if (!$this->routesCached) {
+                // Save routes to cache only once
+                $this->cacheItem->set($this->roads);
+                $this->cache->save($this->cacheItem);
             }
-
-            foreach ($attributes as $attribute) {
-                $roles = $rolesAttributes ? $rolesAttributes[0]->newInstance()->roles : [];
-                $route = $attribute->newInstance();
-
-                $this->router->map($route->method, $prefix . $route->path, [
-                    'controller' => $controller, //controller class
-                    'action' => $method->getName(), //method name,
-                    'roles' => array_merge($classRoles, $roles)
-                ]);
-            }
+            return $this->handle($request);
+        } catch (Exception $e) {
+            error_log("load route failed: " . $e);
+            return view('/errors/404', Layout::Error);
         }
-
-        return $this;
     }
 
-    public function run()
-    {
-        $match = $this->router->match();
-        $target = $match['target'] ?? null;
-
-        if($target === null){
-            return view("/errors/404", Layout::Error);
-        }
-
-        $roles = $target["roles"] ?? [];
-
-        if (!empty($roles)) {
-            if(session_status() === 1){
-                session_start();
-            }
-            if (empty($_SESSION)) {
-                header("Location: /login");
-                exit;
-            }
-          
-            if (in_array(Role::tryFrom($_SESSION['role']), $roles)) {
-
-                $this->handle($target, $match);
-            }
-            else{
-                header("Location: /");
-                exit;
-            }
-        } elseif (empty($roles)) {
-            $this->handle($target, $match);
-        }
-
-        return $this;
-    }
 }

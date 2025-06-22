@@ -2,6 +2,7 @@
 
 namespace App\User;
 
+use App\Auth\AuthService;
 use App\Core\Database;
 use App\Exceptions\BadRequestException;
 use App\User\Dto\UserAdminPanelDto;
@@ -21,10 +22,10 @@ class UserService
             $hashedPassword = password_hash($newUser->mdp, algo: PASSWORD_BCRYPT);
 
             if ($user === null) {
-                $query = Database::getPDO()->prepare('INSERT INTO users(pseudo, mdp, image) VALUES(?, ?, ?)');
-                $query->execute([htmlspecialchars($newUser->pseudo), $hashedPassword, $newUser->image]);
+                $query = Database::getPDO()->prepare('INSERT INTO users(pseudo, mdp)VALUES(?, ?)');
+                $query->execute([$newUser->pseudo, $hashedPassword]);
 
-                return true;
+                return $query->rowCount() > 0;
             }
             throw new BadRequestException("user already exist");
 
@@ -57,7 +58,7 @@ class UserService
     {
         try {
             $query = Database::getPDO()->prepare('SELECT * FROM users WHERE pseudo = ?');
-            $query->execute([htmlspecialchars($pseudo)]);
+            $query->execute([$pseudo]);
             $user = $query->fetchObject(User::class);
 
             if ($user) {
@@ -101,7 +102,9 @@ class UserService
         try {
             $query = Database::getPDO()->prepare('UPDATE users SET role = ? WHERE id = ?');
             $query->execute(['admin', $userId]);
-            return true;
+
+            return $query->rowCount() > 0;
+
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());
             throw new Exception("Something went wrong.");
@@ -113,7 +116,9 @@ class UserService
         try {
             $query = Database::getPDO()->prepare('DELETE FROM users WHERE id = ?');
             $query->execute([$userId]);
-            return true;
+
+            return $query->rowCount() > 0;
+
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());
             throw new Exception("Something went wrong.");
@@ -133,19 +138,12 @@ class UserService
         }
     }
 
-    public function getUsersExcludingId(int $userId, string $fetchClass = User::class): array
+    public function adminUsersExceptOne($userId): array
     {
         try {
-            $query = Database::getPDO()->prepare('SELECT pseudo, role, image FROM users WHERE id != ?');
+            $query = Database::getPDO()->prepare('SELECT pseudo, role FROM users WHERE id!= ?');
             $query->execute([$userId]);
-            $users = $query->fetchAll(PDO::FETCH_CLASS, $fetchClass);
-
-            foreach ($users as $user) {
-                /**
-                 * @var User $user
-                 */
-                $user->image = $this->getAvatarUrl($user->image, $user->pseudo);
-            }
+            $users = $query->fetchAll(PDO::FETCH_CLASS, UserAdminPanelDto::class);
 
             return $users;
         } catch (PDOException $e) {
@@ -153,4 +151,34 @@ class UserService
             throw new Exception("Something went wrong.");
         }
     }
+
+    public function getUsersExceptOne($userId): array
+    {
+        try {
+            $query = Database::getPDO()->prepare('SELECT pseudo, role FROM users WHERE id!= ?');
+            $query->execute([htmlspecialchars($userId)]);
+            $users = $query->fetchAll(PDO::FETCH_CLASS, User::class);
+
+            return $users;
+
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong.");
+        }
+    }
+    public function getUserActions($name, $role, $owner, $resource): array
+    {
+        $actions = [];
+        $authService = new AuthService();
+        $sub = (object) ["Name" => $name, "Owner" => $owner, "Role" => $role];
+
+        $canDelete = $authService->canPerform($sub, $resource, "DELETE");
+
+        if ($canDelete) {
+            $actions[] = ["label" => "Supprimer", "value" => "delete"];
+        }
+
+        return $actions;
+    }
+
 }

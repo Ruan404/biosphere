@@ -4,18 +4,21 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon ./index.js",
-    "dev-mqtt": "nodemon ./test.js"
+    "dev": "nodemon src/index.js",
+    "build": "esbuild src/index.js --bundle --outfile=dist/bundle.js --platform=node",
+    "start": "node dist/bundle.js"
   },
   "author": "",
   "dependencies": {
-    "cors": "^2.8.5",
+    "cookie": "^1.0.2",
     "dotenv": "^16.4.7",
-    "express": "^4.21.2",
     "mqtt": "^5.10.4",
-    "mysql2": "^3.13.0",
-    "nodemon": "^3.1.9",
+    "php-unserialize": "^0.0.1",
     "ws": "^8.18.1"
   },
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "esbuild": "^0.25.5",
+    "nodemon": "^3.1.10"
+  }
 }

@@ -1,0 +1,12 @@
+{
+    "topics": [
+        {
+            "topic": "icam/LoRaGateway/+/value",
+            "group" : "surveillance"
+        },
+        {
+            "topic": "icam/StationMeteo/#",
+            "group": "météo"
+        }
+    ]
+}
