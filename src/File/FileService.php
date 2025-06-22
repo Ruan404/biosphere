@@ -23,15 +23,15 @@ class FileService
     {
         $dotenv = Dotenv::createImmutable(__DIR__ . '/../../');
         $dotenv->load();
-        
+
         $path = $_SERVER["DOCUMENT_ROOT"];
-        
-        if(str_ends_with($path, "public")){
-            $path = substr($path, 0,-6);
+
+        if (str_ends_with($path, "public")) {
+            $path = substr($path, 0, -6);
         }
-        
+
         $this->uploadBaseDir = realpath($path . $_ENV["UPLOAD_BASE_DIR"]);
-       
+
         $this->tempChunkDir = $_ENV['TEMP_UPLOAD_DIR'];
         $this->uploadSubDir = $_ENV['UPLOAD_DIR'];
     }
@@ -47,7 +47,7 @@ class FileService
 
         $filename = generateRandomString() . '.' . $extension;
 
-        if (!move_uploaded_file($tmp_name, "{$absSubDir}{$filename}")) {
+        if (!move_uploaded_file($tmp_name, $this->normalizePath("{$absSubDir}/{$filename}"))) {
             throw new Exception("Failed to save uploaded file.");
         }
 
@@ -106,7 +106,7 @@ class FileService
     {
         try {
             $absUploadSubDir = $this->normalizePath("{$this->uploadBaseDir}/{$uploadSubDir}");
-            
+
             if (!is_dir($absUploadSubDir)) {
                 mkdir($absUploadSubDir, 0755, true);
             }
@@ -235,10 +235,10 @@ class FileService
     {
         $file = basename($filename); // prevent directory traversal
         $this->validate($allowedTypes, $file);
-
+       
         $relativePath = $this->normalizePath("/$subDir/$file");
         $absolutePath = $this->normalizePath("{$this->uploadBaseDir}/{$relativePath}");
-
+        
         if (!file_exists($absolutePath)) {
             throw new NotFoundException("File not found.");
         }
@@ -255,7 +255,9 @@ class FileService
             "\\/",
             "//",
             "\\/",
-            "/\\"
+            "/\\",
+            "\\"
         ), "/", $fullPath);
     }
+
 }

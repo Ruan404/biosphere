@@ -42,10 +42,6 @@ class UserService
             $query->execute([$id]);
             $user = $query->fetchObject(User::class);
 
-            // if ($user) {
-            //     $user->image = $this->getAvatarUrl($user->image, $user->pseudo);
-            // }
-
             return $user ?: null;
 
         } catch (PDOException $e) {
@@ -61,10 +57,6 @@ class UserService
             $query->execute([$pseudo]);
             $user = $query->fetchObject(User::class);
 
-            if ($user) {
-                $user->image = $this->getAvatarUrl($user->image, $user->pseudo);
-            }
-
             return $user ?: null;
 
         } catch (PDOException $e) {
@@ -73,30 +65,6 @@ class UserService
         }
     }
 
-    /**
-     * Fonction utilitaire pour générer l'URL de l'avatar
-     */
-    public function getAvatarUrl($image, $pseudo)
-    {
-
-        if (!empty($image)) {
-            $filename = basename($image);
-            $avatarPath = "/uploads/images/avatars/" . $filename;
-            $fullPath = $_SERVER["DOCUMENT_ROOT"] . $avatarPath;
-            $timestamp = file_exists($fullPath) ? filemtime($fullPath) : time();
-            return $avatarPath . '?v=' . $timestamp;
-        } else {
-            // On s'assure que $pseudo est une chaîne non vide
-            $firstLetter = 'U'; // Valeur par défaut
-            if (!empty($pseudo) && is_string($pseudo)) {
-                $firstLetter = strtoupper(substr($pseudo, 0, 1));
-            }
-            $avatarPath = "/uploads/images/avatars/{$firstLetter}.png";
-            $fullPath = $_SERVER["DOCUMENT_ROOT"] . $avatarPath;
-            $timestamp = file_exists($fullPath) ? filemtime($fullPath) : time();
-            return $avatarPath . '?v=' . $timestamp;
-        }
-    }
     public function promoteToAdmin(int $userId): bool
     {
         try {

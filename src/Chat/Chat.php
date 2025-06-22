@@ -69,8 +69,13 @@ class Chat
             $this->message = $message;
         }
     }
-    
+
     public string $htmlMessage {
         get => $this->htmlMessage;
     }
+
+    public string $image  {
+        get => $this->image;
+    }
+
 }

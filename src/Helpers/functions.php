@@ -10,9 +10,10 @@ use GuzzleHttp\Psr7\Response;
 function view(string $view, Layout $layout = Layout::Preset, array $data = [], int $status = 200): ResponseInterface
 {
     $viewPath = dirname(__DIR__) . '../../templates';
-
+    
     $templatePath = $viewPath . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . $view . '.php';
     $layoutPath = $viewPath . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . $layout->value . '.php';
+    
     
     ob_start();
     require $templatePath;

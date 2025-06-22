@@ -125,7 +125,7 @@ class Router extends LeagueRouter implements MiddlewareInterface
             }
             return $this->handle($request);
         } catch (Exception $e) {
-            error_log("load route failed: " . $e);
+            error_log("load route failed: " . $e->getMessage());
             return view('/errors/404', Layout::Error);
         }
     }

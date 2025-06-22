@@ -2,15 +2,10 @@
 $style = "profile";
 use App\Helpers\Text;
 // Les variables $existingAvatar et $predefinedAvatars sont fournies par le contrôleur
+
+$predefinedAvatars = $data["predefinedAvatars"];
+$existingAvatar = $data["existingAvatar"];
 ?>
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Profil</title>
-    <link rel="stylesheet" href="/assets/css/profile.css">
-</head>
-<body>
 <div class="profile-container">
     <h1 class="profile-title">Changer mon avatar</h1>
 
@@ -22,16 +17,12 @@ use App\Helpers\Text;
             <input type="file" id="avatar_upload" name="avatar_upload" accept="image/png, image/jpeg">
         </div>
         <div class="form-group">
-            <label>Ou choisir un avatar prédéfini :</label>
+            <p>Ou choisir un avatar prédéfini :</p>
             <div class="avatar-choice-list">
                 <?php foreach ($predefinedAvatars as $img): ?>
                     <label class="avatar-choice">
-                        <input
-                            type="radio"
-                            name="predefined_avatar"
-                            value="<?= $img ?>"
-                            <?php if(isset($_SESSION['avatar']) && $_SESSION['avatar'] === $img): ?>checked<?php endif; ?>>
-                        <img src="/uploads/images/avatars/<?= htmlspecialchars($img) ?>" alt="avatar">
+                        <input type="radio" name="predefined_avatar" value="<?= $img ?>" <?php if (isset($_SESSION['avatar']) && $_SESSION['avatar'] === $img): ?>checked<?php endif; ?>>
+                        <img src="/avatars/<?= htmlspecialchars($img) ?>" alt="avatar">
                     </label>
                 <?php endforeach; ?>
             </div>
@@ -49,10 +40,8 @@ use App\Helpers\Text;
     </div>
 </div>
 <script>
-document.getElementById('avatar_upload').addEventListener('change', function(){
-    let fileName = this.files[0] ? this.files[0].name : "Aucun fichier n’a été sélectionné";
-    document.getElementById('file-name').textContent = fileName;
-});
+    document.getElementById('avatar_upload').addEventListener('change', function () {
+        let fileName = this.files[0] ? this.files[0].name : "Aucun fichier n’a été sélectionné";
+        document.getElementById('file-name').textContent = fileName;
+    });
 </script>
-</body>
-</html>
