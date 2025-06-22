@@ -194,6 +194,16 @@ class FileService
         return $this->normalizePath("/{$subDir}/{$filename}"); //the relative path : /images/file.png
     }
 
+    public function deleteSavedFile(string $relativePath)
+    {
+        $absPath = $this->normalizePath("{$this->uploadBaseDir}/{$relativePath}");
+
+        if (file_exists($absPath)) {
+            unlink($absPath);
+        }
+
+    }
+
     public function deleteUploadedFile(string $relativePath, int $authorId)
     {
         $absPath = $this->normalizePath("{$this->uploadBaseDir}/{$relativePath}");
@@ -235,10 +245,10 @@ class FileService
     {
         $file = basename($filename); // prevent directory traversal
         $this->validate($allowedTypes, $file);
-       
+
         $relativePath = $this->normalizePath("/$subDir/$file");
         $absolutePath = $this->normalizePath("{$this->uploadBaseDir}/{$relativePath}");
-        
+
         if (!file_exists($absolutePath)) {
             throw new NotFoundException("File not found.");
         }

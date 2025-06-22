@@ -7,6 +7,7 @@ use App\Helpers\Text;
 use App\Attributes\Route;
 use App\Core\Database;
 use Exception;
+use GuzzleHttp\Psr7\Response;
 use PDO;
 use PDOException;
 use function App\Helpers\view;
@@ -46,7 +47,7 @@ class ProfileController
 
     }
 
-    #[Route(path: "/profile/avatar", method: "POST")]
+    #[Route(path: "/profile", method: "POST")]
     public function handleAvatarChange()
     {
         try {
@@ -57,6 +58,8 @@ class ProfileController
                 $avatarFile = $_FILES['avatar_upload'] ?? [];
                 $this->fileService->validate(["png", "jpeg", "jpg"], $avatarFile['name']);
                 $saveFile = $this->fileService->save("avatars/", $avatarFile['name'], $avatarFile['tmp_name']);
+                $_SESSION['avatar'] = $saveFile;
+                $this->updateUserAvatar($username, $saveFile);
             }
 
             // Si avatar prédéfini choisi
@@ -66,10 +69,11 @@ class ProfileController
                 if (in_array($chosen, $this->predefinedAvatars)) {
                     $_SESSION['avatar'] = "/avatars/" . $chosen;
                     $this->updateUserAvatar($username, $chosen);
+                    
                 }
             }
 
-            return $this->index();
+            return new Response(301, ["location" => "/profile"]);
         } catch (HttpExceptionInterface) {
             header('Location: /profile');
             exit();

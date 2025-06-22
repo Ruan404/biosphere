@@ -9,7 +9,7 @@ $existingAvatar = $data["existingAvatar"];
 <div class="profile-container">
     <h1 class="profile-title">Changer mon avatar</h1>
 
-    <form method="POST" action="/profile/avatar" enctype="multipart/form-data" class="profile-form">
+    <form method="POST" action="/profile" enctype="multipart/form-data" class="profile-form">
         <div class="form-group">
             <label for="avatar_upload">Choisir une photo :</label>
             <label for="avatar_upload" class="file-label">Choisir un fichier</label>
