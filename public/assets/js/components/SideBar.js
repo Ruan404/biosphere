@@ -85,6 +85,7 @@ class SidebarTab extends HTMLElement {
         color: inherit;
         height: fit-content;
       }
+
       @media (max-width: 768px) {
         .sidebar-menu-ctn {
           position: absolute;
@@ -139,10 +140,26 @@ class SidebarTab extends HTMLElement {
     toggleBtn.addEventListener("click", () => this.open());
     closeBtn.addEventListener("click", () => this.close());
 
+    // Close on mask click
     document.body.addEventListener("click", (ev) => {
       if (ev.target.classList.contains("black-mask")) {
         this.close();
       }
+    });
+
+    // Close sidebar on tab click for mobile
+    const menuSlot = wrapper.querySelector('slot[name="menu"]');
+    menuSlot.addEventListener("slotchange", () => {
+      const tabButtons = menuSlot.assignedElements().filter(el =>
+        el.classList.contains("sidebar-menu-button")
+      );
+      tabButtons.forEach(button => {
+        button.addEventListener("click", () => {
+          if (window.innerWidth <= 768) {
+            this.close();
+          }
+        });
+      });
     });
   }
 

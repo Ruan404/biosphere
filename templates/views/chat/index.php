@@ -14,11 +14,14 @@ $title = $currentTopic ?? "chat";
 			<button slot="trigger" class="tab-btn shadow-btn" id="toggle-btn">Topics</button>
 			<span slot="current-label"><?= Text::escapeAndRemoveUnderscore($currentTopic) ?></span>
 
-			<?php foreach ($topics as $topic): ?>
-				<a slot="menu" class='sidebar-menu-button' data-slug="<?= $topic->name ?>"
-					onclick="viewChat(event, '<?= $topic->name ?>')"
-					href="#"><?= Text::escapeAndRemoveUnderscore($topic->name) ?></a>
-			<?php endforeach ?>
+			<?php for ($i = 0; $i < 5; $i++): ?>
+				<?php foreach ($topics as $topic): ?>
+					<a slot="menu" class='sidebar-menu-button' data-slug="<?= $topic->name ?>"
+						onclick="viewChat(event, '<?= $topic->name ?>')"
+						href="#"><?= Text::escapeAndRemoveUnderscore($topic->name) ?></a>
+				<?php endforeach; ?>
+			<?php endfor; ?>
+
 		</sidebar-tab>
 		<!--messages-->
 		<div class="messages hidden">
@@ -185,7 +188,7 @@ $title = $currentTopic ?? "chat";
 
 	function displayMessage(chat, show = true) {
 		const hasOptions = show && Array.isArray(chat.options) && chat.options.length > 0;
-		
+
 		const msgBox = document.createElement("message-box");
 		msgBox.setAttribute("pseudo", chat.pseudo);
 		msgBox.setAttribute("date", chat.date);
@@ -193,7 +196,7 @@ $title = $currentTopic ?? "chat";
 		msgBox.setAttribute("hasOptions", hasOptions);
 		msgBox.setAttribute("options", JSON.stringify(chat.options));
 		msgBox.setAttribute("avatar", chat.image)
-		
+
 		msgsDisplayCtn.appendChild(msgBox);
 	}
 

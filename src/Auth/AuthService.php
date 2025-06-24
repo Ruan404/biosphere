@@ -31,10 +31,16 @@ class AuthService
 
     public function login(User $loginUser): ?User
     {
+        
         $user = $this->userService->getUserByPseudo($loginUser->pseudo);
 
         if (!$user || !(password_verify($loginUser->mdp, $user->mdp) || sha1($loginUser->mdp) === $user->mdp)) {
             throw new BadRequestException("mauvais pseudo ou mot de passe");
+        }
+
+        //créer l'image si elle n'existe pas
+        if(!$user->image){
+            //
         }
 
         if (session_status() === PHP_SESSION_NONE) {

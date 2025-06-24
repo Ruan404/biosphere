@@ -123,7 +123,7 @@ class UserService
     public function getUsersExceptOne($userId): array
     {
         try {
-            $query = Database::getPDO()->prepare('SELECT pseudo, role FROM users WHERE id!= ?');
+            $query = Database::getPDO()->prepare('SELECT image, pseudo, role FROM users WHERE id!= ?');
             $query->execute([htmlspecialchars($userId)]);
             $users = $query->fetchAll(PDO::FETCH_CLASS, User::class);
 

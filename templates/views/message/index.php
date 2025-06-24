@@ -27,8 +27,7 @@ $recipientImage = htmlspecialchars($recipient["image"] ?? "");
 		<div class="conversation-container">
 			<div class="conversations <?= $recipient ? '' : 'hidden' ?>">
 				<div class="title">
-					<img class="user-profil-img" src="<?= $recipientImage ?>"
-						alt="Avatar de <?= $recipientPseudo ?>">
+					<img class="user-profil-img" src="<?= $recipientImage ?>" alt="Avatar de <?= $recipientPseudo ?>">
 					<h2>Conversation avec <?= $recipientPseudo ?></h2>
 				</div>
 				<div class="messages" id="ctn-action-menu"></div>
@@ -141,15 +140,32 @@ $recipientImage = htmlspecialchars($recipient["image"] ?? "");
 		fetch(`/message?user=${user}`, { headers: { 'Accept': 'application/json' } })
 			.then(res => res.json())
 			.then(data => {
+				// Clear old messages
 				msgsDisplayCtn.innerHTML = "";
+
+				// Update conversation title and avatar
+				if (data.recipient) {
+					const titleEl = document.querySelector('.conversation-container .title h2');
+					const imgEl = document.querySelector('.conversation-container .title img');
+
+					titleEl.textContent = `Conversation avec ${data.recipient.pseudo}`;
+					imgEl.setAttribute('src', data.recipient.image);
+					imgEl.setAttribute('alt', `Avatar de ${data.recipient.pseudo}`);
+				}
+
+				// Render messages
 				data.messages.forEach(msg => {
 					msg.options = deriveOptions(msg);
 					displayMessage(msg);
 				});
+
 				scrollToBottom();
 			})
-			.catch(() => console.log);
+			.catch(err => {
+				console.log("Error fetching messages:");
+			});
 	}
+
 
 	function deriveOptions(message) {
 		const opts = [];

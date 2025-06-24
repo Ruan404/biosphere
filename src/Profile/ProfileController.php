@@ -68,8 +68,8 @@ class ProfileController
                 $previous = $_SESSION['avatar'];
                 if (in_array($chosen, $this->predefinedAvatars)) {
                     $_SESSION['avatar'] = "/avatars/" . $chosen;
-                    $this->updateUserAvatar($username, $chosen);
-                    
+                    $this->updateUserAvatar($username, "/avatars/" . $chosen);
+
                 }
             }
 

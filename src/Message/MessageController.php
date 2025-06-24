@@ -40,7 +40,11 @@ class MessageController
                 $messages = $this->messageService->getMessagesByUser($recipient);
 
                 return json([
-                    "messages" => $messages
+                    "messages" => $messages,
+                    'recipient' => $user ? [
+                        "pseudo" => $user->pseudo,
+                        "image" => $user->image
+                    ] : null
                 ]);
             }
 
