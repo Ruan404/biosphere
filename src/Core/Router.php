@@ -7,6 +7,7 @@ use App\Attributes\Group;
 use App\Entities\Layout;
 use Dotenv\Dotenv;
 use Exception;
+use GuzzleHttp\Psr7\Response;
 use League\Route\RouteCollectionInterface;
 use League\Route\Router as LeagueRouter;
 use Psr\Http\Message\ResponseInterface;
@@ -18,7 +19,7 @@ use ReflectionMethod;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use function App\Helpers\view;
 
-class Router extends LeagueRouter implements MiddlewareInterface
+class Router extends LeagueRouter
 {
     private FilesystemAdapter $cache;
     private bool $routesCached = false;
@@ -115,17 +116,23 @@ class Router extends LeagueRouter implements MiddlewareInterface
         return $this;
     }
 
-    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
+    public function run(ServerRequestInterface $request): ResponseInterface
     {
+        $path = $request->getUri()->getPath();
+
+        if ($path !== '/' && str_ends_with($path, '/')) {
+            $uri = $request->getUri()->withPath(rtrim($path, '/'));
+            return new Response(301, ["location" => "/{$uri}"]);
+        }
+
         try {
             if (!$this->routesCached) {
-                // Save routes to cache only once
-                $this->cacheItem->set($this->roads);
-                $this->cache->save($this->cacheItem);
+                $this->cache->save($this->cacheItem->set($this->roads));
             }
-            return $this->handle($request);
+
+            return $this->dispatch($request);
         } catch (Exception $e) {
-            error_log("load route failed: " . $e->getMessage());
+            error_log("Routing failed: " . $e->getMessage());
             return view('/errors/404', Layout::Error);
         }
     }
