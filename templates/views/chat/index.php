@@ -14,13 +14,11 @@ $title = $currentTopic ?? "chat";
 			<button slot="trigger" class="tab-btn shadow-btn" id="toggle-btn">Topics</button>
 			<span slot="current-label"><?= Text::escapeAndRemoveUnderscore($currentTopic) ?></span>
 
-			<?php for ($i = 0; $i < 5; $i++): ?>
-				<?php foreach ($topics as $topic): ?>
-					<a slot="menu" class='sidebar-menu-button' data-slug="<?= $topic->name ?>"
-						onclick="viewChat(event, '<?= $topic->name ?>')"
-						href="#"><?= Text::escapeAndRemoveUnderscore($topic->name) ?></a>
-				<?php endforeach; ?>
-			<?php endfor; ?>
+			<?php foreach ($topics as $topic): ?>
+				<a slot="menu" class='sidebar-menu-button' data-slug="<?= $topic->name ?>"
+					onclick="viewChat(event, '<?= $topic->name ?>')"
+					href="#"><?= Text::escapeAndRemoveUnderscore($topic->name) ?></a>
+			<?php endforeach; ?>
 
 		</sidebar-tab>
 		<!--messages-->

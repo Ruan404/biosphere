@@ -64,9 +64,10 @@ class ChatService
                         );
                     }
 
-                   return ["pseudo" => $newChat->pseudo, "date" => $newChat->date, "htmlMessage" => $newChat->htmlMessage, 'topic' => $topic->name];
+                    return ["pseudo" => $newChat->pseudo,"image" => $newChat->image, "date" => $newChat->date, "htmlMessage" => $newChat->htmlMessage, 'topic' => $topic->name];
 
-                }else throw new BadRequestException("impossible d'ajouter un message");
+                } else
+                    throw new BadRequestException("impossible d'ajouter un message");
             }
 
             throw new BadRequestException("enter a valid message");
@@ -86,16 +87,30 @@ class ChatService
             if ($topic === null) {
                 throw new NotFoundException("le topic n'existe pas");
             }
-            
+
             $topicId = $topic->id;
 
-            $query = Database::getPDO()->prepare('SELECT chat.pseudo, chat.message, chat.date, users.image FROM chat JOIN users ON users.pseudo = chat.pseudo WHERE topic_id = :topic ORDER BY chat.id ASC LIMIT 50');
+            $query = Database::getPDO()->prepare(
+                'SELECT 
+                            chat.pseudo,
+                            chat.message,
+                            chat.date,
+                            COALESCE(users.image, "") AS image,
+                            CASE 
+                                WHEN users.pseudo IS NULL THEN "[supprimé]" 
+                                ELSE chat.pseudo 
+                            END AS pseudo
+                        FROM chat
+                        LEFT JOIN users ON users.pseudo = chat.pseudo
+                        WHERE topic_id = :topic
+                        ORDER BY chat.id ASC
+                        LIMIT 50');
 
             $query->bindParam(':topic', $topicId, PDO::PARAM_INT);
             $query->execute();
 
             $messages = $query->fetchAll(PDO::FETCH_CLASS, Chat::class);
-          
+
 
             return $messages ?: null;
 
@@ -127,17 +142,17 @@ class ChatService
                 'Name' => $username,
                 'Owner' => $chat['pseudo'] ?? '',
             ];
-           
+
             // Check permission with Casbin
             if ($this->authService->canPerform($sub, "chat", "delete")) {
                 $allowedChatIds[] = $chat['id'];
             }
         }
-       
+
         if (empty($allowedChatIds)) {
             throw new BadRequestException("impossible de supprimer le message");
         }
-        
+
         // 3. Delete allowed messages from DB
         $success = $this->deleteMessagesByIds($topic->id, $allowedChatIds);
         if (!$success) {
@@ -200,7 +215,7 @@ class ChatService
     {
         try {
 
-            $query = Database::getPDO()->prepare('SELECT * FROM chat WHERE id = ?');
+            $query = Database::getPDO()->prepare('SELECT chat.*, users.image FROM chat JOIN users ON chat.pseudo = users.pseudo WHERE chat.id = ?');
             $query->setFetchMode(PDO::FETCH_CLASS, Chat::class);
             $query->execute([$id]);
 
