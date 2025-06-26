@@ -1,5 +1,5 @@
 import "/assets/js/emoji-picker-element/picker.js";
-import styles from '/assets/css/MessageBubble.css' with { type: 'css' }
+import styles from '/assets/css/messageBubble.css' with { type: 'css' }
 import ActionMenu from "./ActionMenu.js";
 
 class MessageBubble extends HTMLElement {

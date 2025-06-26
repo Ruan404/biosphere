@@ -23,7 +23,8 @@ class MQTTHandler {
 
   loadTopicsFromFile() {
     try {
-      const filePath = path.resolve(__dirname, "mqtt-topics.json");
+      const filePath = path.resolve(__dirname, "../config/mqtt-topics.json");
+     
       const data = fs.readFileSync(filePath, "utf8");
       const parsed = JSON.parse(data);
       return parsed.topics || [];

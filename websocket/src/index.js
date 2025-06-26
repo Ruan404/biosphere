@@ -5,7 +5,7 @@ const cookie = require("cookie");
 const { unserializeSession } = require("php-unserialize");
 require("dotenv").config();
 
-const { wss1, wss2, wss3 } = require("./websocket/websocket");
+const { wss1, wss2, wss3 } = require("./websocket");
 
 const server = http.createServer();
 
