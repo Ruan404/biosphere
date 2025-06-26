@@ -9,6 +9,9 @@ use App\Exceptions\BadRequestException;
 use Casbin\Enforcer;
 use CasbinAdapter\Database\Adapter;
 use App\Core\Database;
+use Dotenv\Dotenv;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 
 class AuthService
 {
@@ -27,11 +30,13 @@ class AuthService
         // Load Casbin enforcers with separate models
         $this->routeEnforcer = new Enforcer(__DIR__ . '/../Core/route_model.conf', $adapter);
         $this->permissionEnforcer = new Enforcer(__DIR__ . '/../Core/permission_model.conf', $adapter);
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/../../');
+        $dotenv->load();
     }
 
     public function login(User $loginUser): ?User
     {
-        
+
         $user = $this->userService->getUserByPseudo($loginUser->pseudo);
 
         if (!$user || !(password_verify($loginUser->mdp, $user->mdp) || sha1($loginUser->mdp) === $user->mdp)) {
@@ -39,7 +44,7 @@ class AuthService
         }
 
         //créer l'image si elle n'existe pas
-        if(!$user->image){
+        if (!$user->image) {
             //
         }
 
@@ -52,6 +57,9 @@ class AuthService
         $_SESSION['username'] = $user->pseudo;
         $_SESSION['role'] = $user->role;
         $_SESSION['avatar'] = $user->image;
+        // Generate and store token
+        $_SESSION['jwt_token'] = $this->generateJWT($user);
+
 
         return $user;
     }
@@ -83,9 +91,13 @@ class AuthService
         if (ini_get("session.use_cookies")) {
             $params = session_get_cookie_params();
             setcookie(
-                session_name(), '', time() - 42000,
-                $params["path"], $params["domain"],
-                $params["secure"], $params["httponly"]
+                session_name(),
+                '',
+                time() - 42000,
+                $params["path"],
+                $params["domain"],
+                $params["secure"],
+                $params["httponly"]
             );
         }
 
@@ -125,4 +137,21 @@ class AuthService
 
         return $permissions;
     }
+
+
+    public function generateJWT(User $user): string
+    {
+        $payload = [
+            'sub' => $user->id,
+            'username' => $user->pseudo,
+            'role' => $user->role,
+            'iat' => time(),
+            'exp' => time() + $_ENV['TOKEN_DURATION']
+        ];
+
+        $secret = $_ENV['JWT_SECRET'];
+
+        return JWT::encode($payload, $secret, 'HS256');
+    }
+
 }

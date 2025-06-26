@@ -30,7 +30,8 @@
         "laminas/laminas-stratigility": "^4.2",
         "elgigi/commonmark-emoji": "^2.0",
         "casbin/casbin": "^4.0",
-        "casbin/database-adapter": "^2.1"
+        "casbin/database-adapter": "^2.1",
+        "firebase/php-jwt": "^6.11"
     },
     "require-dev": {
         "filp/whoops": "^2.17",

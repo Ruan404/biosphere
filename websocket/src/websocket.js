@@ -50,7 +50,7 @@ wss3.on("connection", function connection(ws, req) {
     }
 
     // Validate that the message belongs to this user (sender or recipient)
-    if (received.sender === ws.user || received.recipient === ws.user) {
+    if (received.sender === ws.user.username || received.recipient === ws.user.username) {
       wss3.clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
           client.send(JSON.stringify(received));

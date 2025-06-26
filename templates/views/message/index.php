@@ -54,7 +54,34 @@ $recipientImage = htmlspecialchars($recipient["image"] ?? "");
 	let currentRecipient = "<?= $recipientPseudo ?>";
 	const currentUser = "<?= htmlspecialchars($_SESSION["username"] ?? "") ?>";
 
-	const socket = new WebSocket(`${WEBSOCKET_URL}/message`);
+	let socket;
+
+	// Fetch JWT token from server API
+	async function getToken() {
+		const res = await fetch('/api/token', { credentials: 'include' });
+		if (!res.ok) return;
+		const data = await res.json();
+		return data.token;
+	}
+
+	// Connect WebSocket with fresh token
+	async function connectWebSocket() {
+		try {
+			const token = await getToken();
+			socket = new WebSocket(`${WEBSOCKET_URL}/message?token=${token}`);
+
+			socket.onmessage = handleMessage;
+
+			socket.onclose = async (event) => {
+				// Try reconnecting on close (e.g., token expired)
+				console.log("Socket closed, reconnecting...");
+				setTimeout(connectWebSocket, 1000);
+			};
+
+		} catch (err) {
+			console.error("WebSocket connection error:", err);
+		}
+	}
 
 	window.addEventListener("DOMContentLoaded", () => {
 		if (currentRecipient) {
@@ -63,6 +90,7 @@ $recipientImage = htmlspecialchars($recipient["image"] ?? "");
 		}
 		updateView(currentRecipient);
 		history.replaceState({ user: currentRecipient }, `Messages ${currentRecipient}`, currentRecipient ? `/message?user=${currentRecipient}` : "/message");
+		connectWebSocket();
 	});
 
 	function updateView(user) {
@@ -112,7 +140,7 @@ $recipientImage = htmlspecialchars($recipient["image"] ?? "");
 			.finally(() => form.reset());
 	});
 
-	socket.onmessage = function (event) {
+	function handleMessage(event) {
 		const data = JSON.parse(event.data);
 
 		if (data.action === "delete" && Array.isArray(data.messages)) {
@@ -124,16 +152,15 @@ $recipientImage = htmlspecialchars($recipient["image"] ?? "");
 		}
 
 		if (data.action === "add") {
-			const sender = data?.sender
-			const recipient = data?.recipient
+			const sender = data?.sender;
+			const recipient = data?.recipient;
 
-			if (sender === currentRecipient && recipient === currentUser || recipient === currentRecipient && sender === currentUser) {
+			if ((sender === currentRecipient && recipient === currentUser) || (recipient === currentRecipient && sender === currentUser)) {
 				data.options = deriveOptions(data);
 				displayMessage(data);
 				scrollToBottom();
 			}
 		}
-
 	}
 
 	function fetchData(user) {
@@ -162,10 +189,9 @@ $recipientImage = htmlspecialchars($recipient["image"] ?? "");
 				scrollToBottom();
 			})
 			.catch(err => {
-				console.log("Error fetching messages:");
+				console.log("Error fetching messages:", err);
 			});
 	}
-
 
 	function deriveOptions(message) {
 		const opts = [];
