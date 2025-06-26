@@ -103,6 +103,6 @@ $style = "admin"
         </div>
     </div>
 </main>
-<script src="/assets/js/components/Sidebar.js"></script>
+<script src="/assets/js/components/SideBar.js"></script>
 <script type="module" src="/assets/js/components/ActionMenu.js"></script>
 <script src="/assets/js/adminPanel.js"></script>

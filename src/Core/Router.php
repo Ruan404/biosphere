@@ -8,6 +8,7 @@ use App\Entities\Layout;
 use Dotenv\Dotenv;
 use Exception;
 use GuzzleHttp\Psr7\Response;
+use League\Route\Http\Exception\NotFoundException;
 use League\Route\RouteCollectionInterface;
 use League\Route\Router as LeagueRouter;
 use Psr\Http\Message\ResponseInterface;
@@ -17,6 +18,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 use ReflectionClass;
 use ReflectionMethod;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use function App\Helpers\json;
 use function App\Helpers\view;
 
 class Router extends LeagueRouter
@@ -119,11 +121,15 @@ class Router extends LeagueRouter
     public function run(ServerRequestInterface $request): ResponseInterface
     {
         $path = $request->getUri()->getPath();
+        $acceptsJson = strpos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false;
 
+        // Redirect paths with trailing slashes (except root)
         if ($path !== '/' && str_ends_with($path, '/')) {
-            $uri = $request->getUri()->withPath(rtrim($path, '/'));
-            return new Response(301, ["location" => "/{$uri}"]);
+            $trimmedPath = rtrim($path, '/');
+            $uri = $request->getUri()->withPath($trimmedPath);
+            return new Response(301, ['Location' => (string) $uri]);
         }
+
 
         try {
             if (!$this->routesCached) {
@@ -131,10 +137,24 @@ class Router extends LeagueRouter
             }
 
             return $this->dispatch($request);
+
+        } catch (NotFoundException $e) {
+            // Custom 404 handling
+            error_log("Route not found: " . $e->getMessage());
+
+            return $acceptsJson
+                ? json(['error' => 'Route not found'], 404)
+                : view('/errors/404', Layout::Error);
+
         } catch (Exception $e) {
-            error_log("Routing failed: " . $e->getMessage());
-            return view('/errors/404', Layout::Error);
+            // Generic 500 error fallback
+            error_log("Routing failed: " . $e);
+
+            return $acceptsJson
+                ? json(['error' => 'Something went wrong'], 500)
+                : view('/errors/500', Layout::Error);
         }
     }
+
 
 }
