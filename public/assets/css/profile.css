@@ -1,37 +1,29 @@
-body {
-  background: #f4f7fa;
+.profile-container,
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
 }
 
-.profile-container {
-  max-width: 500px;
-  margin: 48px auto 0 auto;
-  background: #fff;
-  border-radius: 18px;
-  box-shadow: 0 4px 32px rgba(60,120,200,0.08);
-  padding: 40px 32px 32px 32px;
-  font-family: 'Segoe UI', Arial, sans-serif;
-  position: relative;
+form{
+  max-width: 400px;
+}
+
+form button{
+  align-self: end;
 }
 
 .profile-title {
-  font-size: 2.2rem;
-  margin-bottom: 26px;
-  color: #223055;
   text-align: center;
-  font-weight: 700;
-  letter-spacing: 1px;
-}
-
-.form-group {
-  margin-bottom: 20px;
 }
 
 .avatar-choice-list {
-  display: flex;
-  gap: 1.6rem;
-  margin: 22px 0 0 0;
-  justify-content: center;
-  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(4rem, 1fr));
+  max-width: 100%;
 }
 
 .avatar-choice {
@@ -44,36 +36,24 @@ body {
   border: 2px solid transparent;
   background: transparent;
   position: relative;
-  transition: box-shadow 0.18s, border 0.18s;
-}
-
-.avatar-choice input[type="radio"] {
-  margin-bottom: 6px;
-  accent-color: #3887f6;
-  width: 1.2em;
-  height: 1.2em;
+  transition: border 0.18s;
 }
 
 .avatar-choice img {
   width: 4.2rem;
   height: 4.2rem;
   border-radius: 50%;
-  border: 2px solid #e0e0e0;
-  background: #f6f6f6;
-  box-shadow: 0 2px 10px rgba(80,120,200,0.08);
-  transition: border 0.18s, box-shadow 0.18s, transform 0.14s;
+  transition: border 0.18s, transform 0.14s;
   object-fit: cover;
 }
 
 .avatar-choice:hover img {
   border: 2px solid #3887f6;
-  box-shadow: 0 2px 16px rgba(56,135,246,0.16);
   transform: scale(1.06);
 }
 
 .avatar-choice input[type="radio"]:checked + img {
   border: 2.5px solid #3887f6;
-  box-shadow: 0 0 0 4px #e3ecfa, 0 2px 12px rgba(56,135,246,0.12);
   transform: scale(1.11);
 }
 
@@ -90,87 +70,21 @@ body {
 }
 
 .current-avatar {
-  margin-top: 36px;
+  margin-top: 2rem;
   text-align: center;
 }
 
 .current-avatar img {
-  width: 4.7rem;
-  height: 4.7rem;
+  width: 7.5rem;
+  height: 7.5rem;
   border-radius: 50%;
-  border: 2.5px solid #3887f6;
-  background: #f6f6f6;
-  box-shadow: 0 2px 16px rgba(56,135,246,0.07);
-  margin-bottom: 8px;
-}
-
-.primary-btn {
-  background: linear-gradient(90deg, #3887f6 60%, #4fbcfe 100%);
-  color: #fff !important;
-  border: none;
-  border-radius: 8px;
-  padding: 12px 36px;
-  font-size: 1.07rem;
-  margin-top: 22px;
-  cursor: pointer;
-  transition: background .16s, box-shadow .14s;
-  text-decoration: none;
-  display: inline-block;
-  font-weight: 600;
-  box-shadow: 0 1px 6px rgba(80,120,200,0.07);
-}
-
-.primary-btn:hover {
-  background: linear-gradient(90deg, #1a63d5 60%, #2ba6f9 100%);
+  margin-bottom: 1rem;
 }
 
 input[type="file"] {
   display: none;
 }
 
-.file-label {
-  background: #3887f6;
-  color: #fff;
-  padding: 8px 20px;
-  border-radius: 7px;
-  font-size: 1rem;
-  cursor: pointer;
-  font-family: inherit;
-  margin-right: 12px;
-  transition: background 0.16s;
-  display: inline-block;
-  margin-top: 7px;
-  font-weight: 500;
-  letter-spacing: 0.03em;
-  box-shadow: 0 1px 7px rgba(56,135,246,0.07);
-}
-.file-label:hover {
-  background: #1a63d5;
-}
-
-.selected-file-name {
-  font-size: 1rem;
-  color: #333;
-  vertical-align: middle;
-  margin-top: 8px;
-  display: inline-block;
-}
-
-@media (max-width: 650px) {
-  .profile-container {
-    padding: 14px 2vw;
-    min-width: 0;
-  }
-  .avatar-choice-list {
-    gap: 0.7rem;
-  }
-  .primary-btn {
-    width: 100%;
-    padding: 12px 0;
-    font-size: 1.05rem;
-  }
-  .current-avatar img {
-    width: 3.5rem;
-    height: 3.5rem;
-  }
+input[type="radio"] {
+  display: none;
 }
