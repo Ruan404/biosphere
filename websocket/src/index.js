@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const cookie = require("cookie");
 const { unserializeSession } = require("php-unserialize");
-require("dotenv").config();
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 const { wss1, wss2, wss3 } = require("./websocket");
 
