@@ -51,7 +51,7 @@ $avatarUrl = $_SESSION["avatar"];
                         <img class="user-profile-img" src="<?= htmlspecialchars($avatarUrl) ?>" alt="<?= htmlspecialchars($username) ?>">
                     </button>
                     <div class="profil-menu" id="profilMenu">
-                        <a class="primary-btn" href="/profile">Changer mon avatar</a>
+                        <a class="primary-btn" href="/profile">Mon avatar</a>
                         <a class="primary-btn" href="/logout">Se déconnecter</a>
                     </div>
                 </div>

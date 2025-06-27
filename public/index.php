@@ -10,7 +10,7 @@ use App\Home\HomeController;
 use App\Middleware\AccessControlMiddleware;
 use App\Podcast\PodcastController;
 use App\Admin\AdminController;
-use App\Profile\ProfileController;
+use App\User\UserController;
 use App\Sensor\SensorController;
 use App\Message\MessageController;
 use GuzzleHttp\Psr7\Response;
@@ -56,7 +56,7 @@ $router->register(HomeController::class)
         ->register(SensorController::class)
         ->register(MessageController::class)
         ->register(FileController::class)
-        ->register(ProfileController::class);
+        ->register(UserController::class);
 
 $response = $router->run($request);
 

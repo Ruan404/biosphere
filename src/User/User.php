@@ -7,12 +7,13 @@ use UnexpectedValueException;
 class User
 {
 
-       public function __construct(string $pseudo = "", string $mdp = "", ?string $image = null)
+        public function __construct(string $pseudo = "", string $mdp = "", ?string $image = null)
         {
                 if ($pseudo !== "") {
-                        if (!preg_match('/^[a-zA-Z0-9]+$/', $pseudo)) {
-                                // throw new UnexpectedValueException("Pseudo doit être alphanuméric");
+                        if (!preg_match('/^[\p{L}\p{N}]+$/u', $pseudo)) {
+                                throw new UnexpectedValueException("Pseudo doit être alphanumérique (lettres accentuées autorisées)");
                         }
+
                         $this->pseudo = $pseudo;
                 }
 
@@ -48,5 +49,5 @@ class User
                 set(?string $image) {
                         $this->image = $image;
                 }
-        }             
+        }
 }

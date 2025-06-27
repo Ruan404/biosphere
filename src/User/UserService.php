@@ -149,4 +149,15 @@ class UserService
         return $actions;
     }
 
+    public function updateUserAvatar($username, $avatarFilename)
+    {
+        try {
+            $pdo = Database::getPDO();
+            $stmt = $pdo->prepare("UPDATE users SET image = ? WHERE pseudo = ?");
+            $stmt->execute([$avatarFilename, $username]);
+        } catch (PDOException $e) {
+            error_log("Erreur lors de la mise à jour de l'avatar : " . $e->getMessage());
+        }
+    }
+
 }
