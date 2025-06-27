@@ -4,7 +4,6 @@
   justify-content: flex-start;
   height: 100%;
   overflow: hidden;
-  padding-inline: 1rem;
 }
 
 .sidebar-tab {
@@ -20,13 +19,21 @@ main {
 
 /* Conteneur de conversation */
 .conversation-container {
-  width: 100%;
-  display: grid;
+  width: calc(100% - 2rem);
+  height: 100%;
+  margin-inline: 1rem;
+  overflow: hidden;
+}
+
+.conversations {
+  display: flex;
   grid-template-rows: auto min-content;
+  width: 100%;
   height: 100%;
   border-radius: 0.5rem 0.5rem 0 0;
-  overflow: hidden;
   background: rgb(var(--bg-2));
+  grid-template-columns: 100%;
+  flex-direction: column;
 }
 
 /* Quand aucun utilisateur n'est sélectionné */
@@ -35,13 +42,13 @@ main {
   justify-content: center;
   align-items: center;
   color: rgb(var(--fg-1), 0.35);
+  height: 100%;
 }
 
-.full-page {
+.conversation {
   display: flex;
-  flex-direction: column;
-  height: 100%;
   overflow: hidden; /* pour éviter un scroll externe */
+  flex-direction: column;
 }
 
 /* Le style des messages dans la conversation */
@@ -51,6 +58,7 @@ main {
   flex-direction: column;
   padding: 1rem;
   row-gap: 0.875rem;
+  flex-grow: 1;
 }
 
 .send-message-form {
@@ -72,14 +80,44 @@ main {
   font-weight: 500;
 }
 
+.user-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.sidebar-menu-button {
+  display: flex;
+  align-items: center; /* Centre verticalement l’avatar et le pseudo */
+  gap: 0.75rem; /* Espace entre l’avatar et le pseudo */
+  padding: 0.5rem 0;
+  text-decoration: none; /* Pour retirer le soulignement des liens */
+}
+.user-profil-img {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.user-name {
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.conversation-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 /* Style des bulles de message */
-.bubble {
+.bubble-message {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
   column-gap: 0.875rem;
 }
 
-.bubble.right {
+.bubble-message.right {
   justify-items: end;
 }
 
@@ -95,5 +133,9 @@ main {
     flex-direction: column;
     align-items: flex-start;
     margin-top: 0.625rem;
+  }
+
+  .sidebar-ctn {
+    margin-left: 1rem;
   }
 }

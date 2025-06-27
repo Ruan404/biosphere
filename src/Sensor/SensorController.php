@@ -9,7 +9,7 @@ Class SensorController{
     #[Route("GET", "/sensors")]
     public function index(){
 
-        view("/sensors/index");
+        return view("/sensors/index");
         
     }
 }

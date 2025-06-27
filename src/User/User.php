@@ -1,37 +1,53 @@
 <?php
 namespace App\User;
 
+use App\Exceptions\BadRequestException;
+use UnexpectedValueException;
+
 class User
 {
 
-        public function __construct(string $pseudo = "", string $mdp = "")
+        public function __construct(string $pseudo = "", string $mdp = "", ?string $image = null)
         {
-                if ($pseudo) {
-                        $this->pseudo = htmlspecialchars($pseudo);
+                if ($pseudo !== "") {
+                        if (!preg_match('/^[\p{L}\p{N}]+$/u', $pseudo)) {
+                                throw new UnexpectedValueException("Pseudo doit être alphanumérique (lettres accentuées autorisées)");
+                        }
+
+                        $this->pseudo = $pseudo;
                 }
-                if ($mdp) {
-                        $this->mdp = htmlspecialchars($mdp);
-                }
-        }
-        public string $pseudo {
-                get => htmlspecialchars(string: $this->pseudo);
-                set(string $pseudo) {
-                        $this->pseudo = htmlspecialchars(string: $pseudo);
+
+                if ($mdp !== "") {
+                        $this->mdp = $mdp;
                 }
         }
 
-        public int $id {
+        public string $pseudo {
+                get => $this->pseudo;
+                set(string $pseudo) {
+                        $this->pseudo = $pseudo;
+                }
+        }
+
+        public int $id = 0 {
                 get => $this->id;
         }
 
-        public string $mdp {
-                get => htmlspecialchars(string: $this->mdp);
+        public string $mdp = "" {
+                get => $this->mdp;
                 set(string $mdp) {
-                        $this->mdp = htmlspecialchars($mdp);
+                        $this->mdp = $mdp;
                 }
         }
 
         public string $role {
                 get => $this->role;
+        }
+
+        public ?string $image = "" {
+                get => $this->image;
+                set(?string $image) {
+                        $this->image = $image;
+                }
         }
 }

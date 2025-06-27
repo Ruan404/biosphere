@@ -2,9 +2,10 @@
 
 namespace App\User;
 
+use App\Auth\AuthService;
 use App\Core\Database;
 use App\Exceptions\BadRequestException;
-use App\Exceptions\NotFoundException;
+use App\User\Dto\UserAdminPanelDto;
 use App\User\User;
 use Exception;
 use PDO;
@@ -12,19 +13,19 @@ use PDOException;
 
 class UserService
 {
-    public function createUser(User $newUser): string
+    public function createUser(User $newUser): bool
     {
         try {
-            //verify if the user already exists in the database
+            // Vérifier si l'utilisateur existe déjà
             $user = $this->getUserByPseudo($newUser->pseudo);
 
-            $hashedPassword = password_hash($newUser->mdp, PASSWORD_BCRYPT);
+            $hashedPassword = password_hash($newUser->mdp, algo: PASSWORD_BCRYPT);
 
             if ($user === null) {
                 $query = Database::getPDO()->prepare('INSERT INTO users(pseudo, mdp)VALUES(?, ?)');
-                $query->execute([htmlspecialchars($newUser->pseudo), $hashedPassword]);
-                $response = "your account has been created";
-                return $response;
+                $query->execute([$newUser->pseudo, $hashedPassword]);
+
+                return $query->rowCount() > 0;
             }
             throw new BadRequestException("user already exist");
 
@@ -39,7 +40,6 @@ class UserService
         try {
             $query = Database::getPDO()->prepare('SELECT * FROM users WHERE id = ?');
             $query->execute([$id]);
-
             $user = $query->fetchObject(User::class);
 
             return $user ?: null;
@@ -53,9 +53,8 @@ class UserService
     public function getUserByPseudo(string $pseudo): ?User
     {
         try {
-            //get user
             $query = Database::getPDO()->prepare('SELECT * FROM users WHERE pseudo = ?');
-            $query->execute([htmlspecialchars($pseudo)]);
+            $query->execute([$pseudo]);
             $user = $query->fetchObject(User::class);
 
             return $user ?: null;
@@ -66,48 +65,27 @@ class UserService
         }
     }
 
-    /**
-     * Fonction pour promouvoir un utilisateur en administrateur
-     * @param int $userId
-     * @return bool
-     */
-    public function promoteToAdmin(int $userId): string
+    public function promoteToAdmin(int $userId): bool
     {
         try {
-            $user = $this->getUserById($userId);
-
-            if($user===null){
-                throw new NotFoundException("user was not found");
-            }
-
             $query = Database::getPDO()->prepare('UPDATE users SET role = ? WHERE id = ?');
-            $query->execute(['admin', $user->id]);
+            $query->execute(['admin', $userId]);
 
-            return "user $user->pseudo has been successfully promoted";
+            return $query->rowCount() > 0;
 
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());
             throw new Exception("Something went wrong.");
         }
-
     }
 
-
-    /**
-     * Fonction pour supprimer un utilisateur
-     * @param int $userId
-     * @return bool
-     */
-    public function deleteUser(int $userId): string
+    public function deleteUser(int $userId): bool
     {
         try {
-            $user = $this->getUserById($userId);
-
             $query = Database::getPDO()->prepare('DELETE FROM users WHERE id = ?');
-            $query->execute([$user->id]);
-            $response = "user $user->pseudo has been successfully deleted";
+            $query->execute([$userId]);
 
-            return $response;
+            return $query->rowCount() > 0;
 
         } catch (PDOException $e) {
             error_log("Database error: " . $e->getMessage());
@@ -115,14 +93,38 @@ class UserService
         }
     }
 
-    public function getUsers(): array
+    public function deleteUsers($users)
     {
         try {
-            if (session_status() == 1) {
-                session_start();
-            }
+            $in = str_repeat('?,', count($users) - 1) . '?';
+            $query = Database::getPDO()->prepare("DELETE FROM users WHERE pseudo IN ($in)");
+            $query->execute($users);
+            return $query->rowCount() > 0 ?: throw new BadRequestException("les utilisateurs n'existent pas");
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong.");
+        }
+    }
+
+    public function adminUsersExceptOne($userId): array
+    {
+        try {
             $query = Database::getPDO()->prepare('SELECT pseudo, role FROM users WHERE id!= ?');
-            $query->execute([htmlspecialchars($_SESSION['user_id'])]);
+            $query->execute([$userId]);
+            $users = $query->fetchAll(PDO::FETCH_CLASS, UserAdminPanelDto::class);
+
+            return $users;
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            throw new Exception("Something went wrong.");
+        }
+    }
+
+    public function getUsersExceptOne($userId): array
+    {
+        try {
+            $query = Database::getPDO()->prepare('SELECT image, pseudo, role FROM users WHERE id!= ?');
+            $query->execute([htmlspecialchars($userId)]);
             $users = $query->fetchAll(PDO::FETCH_CLASS, User::class);
 
             return $users;
@@ -132,4 +134,30 @@ class UserService
             throw new Exception("Something went wrong.");
         }
     }
+    public function getUserActions($name, $role, $owner, $resource): array
+    {
+        $actions = [];
+        $authService = new AuthService();
+        $sub = (object) ["Name" => $name, "Owner" => $owner, "Role" => $role];
+
+        $canDelete = $authService->canPerform($sub, $resource, "DELETE");
+
+        if ($canDelete) {
+            $actions[] = ["label" => "Supprimer", "value" => "delete"];
+        }
+
+        return $actions;
+    }
+
+    public function updateUserAvatar($username, $avatarFilename)
+    {
+        try {
+            $pdo = Database::getPDO();
+            $stmt = $pdo->prepare("UPDATE users SET image = ? WHERE pseudo = ?");
+            $stmt->execute([$avatarFilename, $username]);
+        } catch (PDOException $e) {
+            error_log("Erreur lors de la mise à jour de l'avatar : " . $e->getMessage());
+        }
+    }
+
 }

@@ -2,150 +2,130 @@
 namespace App\Chat;
 
 
+use App\Attributes\Group;
 use App\Attributes\Route;
 use App\Auth\AuthService;
+use App\Chat\Dto\AddMessageDto;
 use App\Entities\Layout;
-use App\Exceptions\BadRequestException;
 use App\Exceptions\HttpExceptionInterface;
-use App\Helpers\Response;
 use App\Topic\TopicService;
 use App\Chat\ChatService;
-use DateTime;
-use DateTimeZone;
 use Exception;
+use function App\Helpers\json;
 use function App\Helpers\view;
 
 
-#[Route("GET", "/chat")]
+#[Group("/chat")]
 class ChatController
 {
-    private $authService;
     private $topics;
+    private $chatService;
+    private $topicService;
+    private $authService;
 
     public function __construct()
     {
         $this->authService = new AuthService();
-        $this->topics = new TopicService()->getAllTopics();
+        $this->chatService = new chatService();
+        $this->topicService = new TopicService();
     }
 
-    #[Route("GET", "")]
+    #[Route("GET", "/")]
     public function index()
     {
-        return view(view: '/chat/index', data: ['topics' => $this->topics]);
+        $topics = $this->topicService->getAllTopics();
+        return view(view: '/chat/index', data: ['topics' => $topics]);
     }
+    
 
-    #[Route("GET", "/api/[*:slug]")]
-    public function getChat($params)
+    #[Route("GET", "/{slug}")]
+    public function viewChat($request)
     {
+        $accept = strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false;
+
         try {
-            if (isset($params['slug'])) {
-                $topic = new TopicService()->getTopicByName(htmlspecialchars($params['slug']));
-                //topic does not exists
-                if ($topic == null) {
-                    header('Location: /chat');
-                    exit();
-                }
-                $topicId = $topic->id;
+            if ($accept) {
+                $username = $_SESSION['username'] ?? null;
+                $role = $_SESSION['role'] ?? 'guest';
 
+                // Fetch messages
+                $messages = $this->chatService->getChatMessages($request->getAttribute("slug"));
+               
+                $permissions = $this->authService->getPermissions($role, "chat");
+                
+                return json([
+                    "messages" => $messages,
+                    "permissions" => $permissions,
+                    "currentUser" => $username
+                ]);
+            } else {
+                $topics = $this->topicService->getAllTopics();
+                $topic = $this->topicService->getTopicByName($request->getAttribute("slug"));
 
-                // récupère l'id du dernier message affiché
-                $messages = new ChatService()->getChatMessages($topicId);
-                return new Response()->json(["messages" => $messages]);
-            }
-        } catch (Exception $e) {
-            error_log("Something wrong happened: " . $e->getMessage());
-            return view("/errors/500", Layout::Error);
-        }
-    }
-
-
-    #[Route("GET", "/[*:slug]")]
-    public function viewChat($params)
-    {
-        try {
-            if (isset($params['slug'])) {
-                $topic = new TopicService()->getTopicByName(htmlspecialchars($params['slug']));
-                //topic does not exists
                 if ($topic === null) {
                     header('Location: /chat');
                     exit();
                 }
-                return view(view: '/chat/topic', data: ['topics' => $this->topics, 'currentTopic' => $topic->name]);
+
+                return view(view: '/chat/index', data: ['topics' => $topics, 'currentTopic' => $topic->name]);
             }
+        } catch (HttpExceptionInterface) {
+            header('Location: /chat');
+            exit();
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());
-            return view("/errors/500", Layout::Error);
+            if ($accept) {
+                return json(["success" => false, "message" => "impossible de recupérer les messages"]);
+            } else {
+                return view("/errors/500", Layout::Error);
+            }
         }
     }
 
-    #[Route("DELETE", "/[*:slug]")]
-    public function deleteMyMessages($params)
+
+    #[Route("DELETE", "/{slug}")]
+    public function deleteMyMessages($request)
     {
         try {
-            if ($_SERVER['REQUEST_METHOD'] === "DELETE" && isset($params['slug'])) {
-                $data = json_decode(file_get_contents('php://input'), true);
+            $username = $_SESSION['username'] ?? null;
+            $role = $_SESSION['role'];
+            $data = json_decode(file_get_contents('php://input'), true);
 
-                if (session_status() === 1) {
-                    session_start();
-                }
-                $user = $_SESSION["username"];
-                $role = $_SESSION["role"];
+            $result = $this->chatService->handleDeletion($request->getAttribute("slug"), $data, $username, $role);
 
-                if ($user) {
-                    $topic = new TopicService()->getTopicByName($params["slug"]);
-                    
+            return json($result);
 
-                    if ($topic) {
-                        if ($role === "admin") {
-                            $response = new ChatService()->deleteMessagesAsAdmin($topic->id, [$data["messages"]]);
-                        } else {
-                            // Sinon, ne supprime que ses propres messages
-                            $response = new ChatService()->deleteMyMessages($user, $topic->id, [$data["messages"]]);
-                        }
-                        
-                        if ($response) {
-                            return new Response()->json(["success" => "deletion succeeded", "action" => "delete",...$data]);
-                        }
-                    }
-                }
-            }
+        } catch (HttpExceptionInterface $e) {
+            return json(["error" => $e->getMessage()], $e->getCode());
+
         } catch (Exception $e) {
-            error_log("Something wrong happened: " . $e->getMessage());
+            error_log("Unexpected error: " . $e->getMessage());
             return view("/errors/500", Layout::Error);
         }
     }
 
 
-    #[Route("POST", "/[*:slug]")]
-    public function addMessage($params)
+
+    #[Route("POST", "/{slug}")]
+    public function addMessage($request)
     {
+        $slug = $request->getAttribute('slug');
+
+        $data = $request->getParsedBody();
+
+
         try {
-            if (!empty($_POST) && isset($params['slug'])) {
-                $topic = new TopicService()->getTopicByName(htmlspecialchars($params['slug']));
-                //topic does not exists
-                if ($topic == null) {
-                    return $this->index();
-                }
-                $topicId = $topic->id;
+            $image = $_FILES["image"] ?? null;
 
-                //create a new chat
-                if (session_status() === 1) {
-                    session_start();
-                }
-                $timezone = new DateTimeZone('Europe/Paris');
-                $date = new DateTime("now", $timezone)->format('Y-m-d H:i:s');
+            $addChat = new AddMessageDto($_SESSION["username"], $_POST["message"], $slug, $image);
+            
+            $newChat = $this->chatService->addMessage($addChat);
+           
+            return json(["action" => "add", ...$newChat]);
 
-                $chat = new Chat($_SESSION["username"], $date);
-                $chat->message = $_POST['message'];
 
-                $result = new chatService()->addMessage($chat, $topicId);
-
-                return new Response()->json([...$chat, 'topic'=>$topic->name]);
-
-            }
-            return new Response()->json(["error" => "enter required fields"], 400);
-        } catch (BadRequestException $e) {
-            return new Response()->json(["error" => $e->getMessage()], $e->getCode());
+        } catch (HttpExceptionInterface $e) {
+            return json(["error" => $e->getMessage()], $e->getCode());
 
         } catch (Exception $e) {
             error_log("Something wrong happened: " . $e->getMessage());

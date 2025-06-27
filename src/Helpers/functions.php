@@ -3,20 +3,45 @@ namespace App\Helpers;
 
 use App\Entities\Layout;
 
-function view($view, Layout $layout = Layout::Preset, array $data = [])
+
+use Psr\Http\Message\ResponseInterface;
+use GuzzleHttp\Psr7\Response;
+
+function view(string $view, Layout $layout = Layout::Preset, array $data = [], int $status = 200): ResponseInterface
 {
     $viewPath = dirname(__DIR__) . '../../templates';
+    
+    $templatePath = $viewPath . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . $view . '.php';
+    $layoutPath = $viewPath . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . $layout->value . '.php';
+    
+    
+    ob_start();
+    require $templatePath;
+    $content = ob_get_clean();
 
-    if ($layout !== Layout::Clean) {
-        ob_start();
-        require $viewPath . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . $view . '.php';
-        $content = ob_get_clean();
+    ob_start();
+    require $layoutPath;
+    $html = ob_get_clean();
 
-        require $viewPath . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . $layout->value . '.php';
-    } else {
-        require $viewPath . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . $view . '.php';
-    }
+    // ob_start();
+    // require $viewPath . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . 'footer.php';
+    // $footer = ob_get_clean();
+
+    // $html .= $footer;
+
+    return new Response($status, ['Content-Type' => 'text/html'], $html);
 }
+
+
+function json(array $data, int $status = 200): ResponseInterface
+{
+    return new Response(
+        $status,
+        ['Content-Type' => 'application/json'],
+        json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+    );
+}
+
 
 function generateRandomString($length = 10, $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
 {

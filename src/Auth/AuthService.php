@@ -1,74 +1,93 @@
 <?php
 
 namespace App\Auth;
-use \App\User\{
-    User,
-    UserService
-};
 
+use App\User\User;
+use App\User\UserService;
 use App\Exceptions\BadRequestException;
 
+use Casbin\Enforcer;
+use CasbinAdapter\Database\Adapter;
+use App\Core\Database;
+use Dotenv\Dotenv;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 
 class AuthService
 {
-    private $userService;
+    private UserService $userService;
+
+    private Enforcer $routeEnforcer;
+    private Enforcer $permissionEnforcer;
 
     public function __construct()
     {
         $this->userService = new UserService();
+
+        $config = Database::getDBConfig();
+        $adapter = Adapter::newAdapter($config);
+
+        // Load Casbin enforcers with separate models
+        $this->routeEnforcer = new Enforcer(__DIR__ . '/../Core/route_model.conf', $adapter);
+        $this->permissionEnforcer = new Enforcer(__DIR__ . '/../Core/permission_model.conf', $adapter);
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/../../');
+        $dotenv->load();
     }
 
     public function login(User $loginUser): ?User
     {
+
         $user = $this->userService->getUserByPseudo($loginUser->pseudo);
 
-        if ($user === null) {
+        if (!$user || !(password_verify($loginUser->mdp, $user->mdp) || sha1($loginUser->mdp) === $user->mdp)) {
             throw new BadRequestException("mauvais pseudo ou mot de passe");
-
         }
-        //verify password
 
-        if (password_verify($loginUser->mdp, $user->mdp) || sha1($loginUser->mdp) == $user->mdp) {
-            /**
-             * 0 ----> PHP_SESSION_DISABLED if sessions are disabled.
-             * 1 ----> PHP_SESSION_NONE if sessions are enabled, but none exists.
-             * 2 ----> PHP_SESSION_ACTIVE if sessions are enabled, and one exists.
-             */
-            if (session_status() == PHP_SESSION_NONE) {
-                session_start();
-                $_SESSION['user_id'] = $user->id;
-                $_SESSION['username'] = $user->pseudo;
-                $_SESSION['role'] = $user->role;
-                return $user;
-            }
-
-            return $user;
+        //créer l'image si elle n'existe pas
+        if (!$user->image) {
+            //
         }
-        throw new BadRequestException("mauvais pseudo ou mot de passe");
+
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        $_SESSION['auth'] = $user->id;
+        $_SESSION['user_id'] = $user->id;
+        $_SESSION['username'] = $user->pseudo;
+        $_SESSION['role'] = $user->role;
+        $_SESSION['avatar'] = $user->image;
+        // Generate and store token
+        $_SESSION['jwt_token'] = $this->generateJWT($user);
+
+
+        return $user;
     }
 
     public function signup(User $signupUser)
     {
+        $user = $this->userService->getUserByPseudo($signupUser->pseudo);
+        if ($user !== null) {
+            throw new BadRequestException("Pseudo déjà utilisé");
+        }
 
+        // Récupérer la première lettre du pseudo en majuscule
+        $firstLetter = strtoupper(substr($signupUser->pseudo, 0, 1));
+
+        // Générer le chemin vers l'avatar par défaut
+        $avatarPath = "/images/avatars/" . $firstLetter . ".png";
+
+        // Assigner ce chemin à la propriété image de l'utilisateur
+        $signupUser->image = $avatarPath;
+
+        // Créer l'utilisateur avec cette image par défaut
         return $this->userService->createUser($signupUser);
     }
 
-    /**
-     * la fonction est statique pour ne pas avoir à instancier la classe
-     * instancier signifie créer un nouvel objet à partir d'une classe
-     * exemple : $auth = new Auth();
-     */
     public static function logout()
     {
-        // Initialize the session.
-        // If you are using session_name("something"), don't forget it now!
-        session_start();
+        $_SESSION = [];
 
-        // Unset all of the session variables.
-        $_SESSION = array();
-
-        // If it's desired to kill the session, also delete the session cookie.
-        // Note: This will destroy the session, and not just the session data!
         if (ini_get("session.use_cookies")) {
             $params = session_get_cookie_params();
             setcookie(
@@ -82,7 +101,57 @@ class AuthService
             );
         }
 
-        // Finally, destroy the session.
         session_destroy();
     }
+
+    /**
+     * Check route access using route enforcer.
+     */
+    public function canAccessRoute(object $sub, string $path, string $method): bool
+    {
+        return $this->routeEnforcer->enforce($sub, $path, strtoupper($method));
+    }
+
+    /**
+     * Check if the subject can perform a given action on a resource.
+     */
+    public function canPerform(object $sub, string $resource, string $action): bool
+    {
+        return $this->permissionEnforcer->enforce($sub, $resource, $action);
+    }
+
+    /**
+     * Get a list of permissions the given role has on a resource.
+     */
+    public function getPermissions(string $role, string $resource = 'message'): array
+    {
+        $actions = ['delete_own', 'delete_any'];
+        $sub = (object) ['Role' => $role];
+        $permissions = [];
+
+        foreach ($actions as $action) {
+            if ($this->permissionEnforcer->enforce($sub, $resource, $action)) {
+                $permissions[] = "{$action}_{$resource}";
+            }
+        }
+
+        return $permissions;
+    }
+
+
+    public function generateJWT(User $user): string
+    {
+        $payload = [
+            'sub' => $user->id,
+            'username' => $user->pseudo,
+            'role' => $user->role,
+            'iat' => time(),
+            'exp' => time() + $_ENV['TOKEN_DURATION']
+        ];
+
+        $secret = $_ENV['JWT_SECRET'];
+
+        return JWT::encode($payload, $secret, 'HS256');
+    }
+
 }

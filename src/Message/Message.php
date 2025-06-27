@@ -2,68 +2,79 @@
 
 namespace App\Message;
 
-use App\Auth\AuthService;
+use App\Markdown\Spoiler\SpoilerExtension;
+use ElGigi\CommonMarkEmoji\EmojiExtension;
+use League\CommonMark\CommonMarkConverter;
 
 class Message
 {
-    private $timezone;
-    
-    public int $message_id = 0;
-    public string $pseudo = "";
-    public string $date = "";
-    public string $content = "";
-    public string $options = "";
-
-    public function __construct(string $pseudo = "", string $date = "")
+    public function __construct()
     {
-        if ($pseudo) {
-            $this->pseudo = $pseudo;
+        $converter = new CommonMarkConverter([
+            'html_input' => 'escape',
+            'allow_unsafe_links' => false,
+            'renderer' => [
+                'soft_break' => "<br />\n",
+            ]
+        ]);
+        $converter->getEnvironment()->addExtension(new EmojiExtension);
+        $converter->getEnvironment()->addExtension(new SpoilerExtension);
+
+
+        $this->htmlMessage = $converter($this->message)->getContent();
+    }
+
+    public string $recipient = "" {
+        get => $this->recipient;
+    }
+
+    public string $sender = "" {
+        get => $this->sender;
+    }
+
+    public int $id = 0 {
+        get => $this->id;
+    }
+
+    public int $id_destinataire = 0 {
+        get => $this->id_destinataire;
+
+        set(int $id_destinataire) {
+            $this->id_destinataire = $id_destinataire;
         }
-        if ($date) {
+    }
+
+    public int $id_auteur = 0 {
+        get => $this->id_auteur;
+
+        set(int $id_auteur) {
+            $this->id_auteur = $id_auteur;
+        }
+    }
+
+    public string $message {
+        /**
+         * 1. change special to html tag
+         * 2. remove html tags
+         * 3. remove spaces
+         * 4. nl2br permet à l'utilisateur de sauter des lignes
+         */
+        get => $this->message;
+
+        set(string $message) {
+            $this->message = $message;
+        }
+    }
+
+    public string $htmlMessage {
+        get => $this->htmlMessage;
+    }
+
+    public string $date {
+        get => $this->date;
+
+        set(string $date) {
             $this->date = $date;
         }
-        // Vérifier si la session n'est pas active, puis la démarrer
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
-        }
-        // On suppose que $_SESSION['username'] est défini dès que la session est active
-        $this->options = $this->getOptions($this->pseudo === $_SESSION['username'] || ($_SESSION["role"] ?? "") === "admin");
-    }
-
-    public function setMessageId(int $message_id): void
-    {
-        $this->message_id = $message_id;
-    }
-
-    public function setContent(string $content): void
-    {
-        // Nettoyage du contenu pour l'affichage
-        $this->content = nl2br(rtrim(strip_tags(htmlspecialchars_decode(trim($content)))));
-    }
-
-    /**
-     * Génère le HTML contenant les options disponibles pour ce message.
-     * Utilise le message_id pour le bouton de suppression.
-     */
-    private function getOptions(bool $canDelete): string
-    {
-        if ($canDelete) {
-            return "
-            <div class='options-ctn'>
-                <div class='options'>
-                    <button class='option-btn' onclick='deleteMessage({$this->message_id})'>supprimer</button>
-                </div>
-                <button class='options-btn'>
-                    <svg width='24' height='24' viewBox='0 0 24 24' fill='currentColor' xmlns='http://www.w3.org/2000/svg'>
-                        <rect x='11' y='5' width='2' height='2' rx='1'/>
-                        <rect x='11' y='11' width='2' height='2' rx='1'/>
-                        <rect x='11' y='17' width='2' height='2' rx='1'/>
-                    </svg>
-                </button>
-            </div>
-        ";
-        }
-        return "";
     }
 }
-?>

@@ -83,6 +83,54 @@ nav {
   overflow: hidden;
 }
 
+/* Ajoute ces styles à la fin de ton fichier navbar.css */
+
+.profil-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.profil-avatar-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.user-profile-img {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profil-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 110%;
+  background: rgb(var(--bg-1));
+  border: 1px solid rgb(var(--bg-3), 0.14);
+  border-radius: 1.125rem;
+  z-index: 100;
+  padding: 0.5rem;
+  white-space: nowrap;
+}
+
+.profil-dropdown.open .profil-menu {
+  display: block;
+}
+
+.profil-menu .primary-btn {
+  display: block;
+  margin-bottom: 0.5rem;
+  text-align: left;
+}
+
+.profil-menu .primary-btn:last-child {
+  margin-bottom: 0;
+}
+
 @media (max-width: 768px) {
   .nav-links {
     flex-direction: column;

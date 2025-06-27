@@ -9,17 +9,19 @@ $title = "regarder une vidéo";
 
 $filePath = "";
 
-if($data){
+if ($data) {
     $filePath = explode($_ENV['UPLOAD_DIR'], $data['file_path'])[1];
 }
 ?>
 
-<div class="video-container">
-    <video controls>
-        <source src="/stream/<?= urlencode($filePath) ?>" >
-        Your browser does not support the video tag.
-    </video>
-</div>
+<main>
+    <div class="video-container">
+        <video controls>
+            <source src="/videos/<?= urlencode($filePath) ?>">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+</main>
 <script>
     controller = new AbortController();
 </script>

@@ -2,152 +2,123 @@
 
 namespace App\Admin;
 
-use App\Attributes\Roles;
+use App\Attributes\Group;
 use App\Attributes\Route;
-use App\Admin\AdminService;
-use App\Entities\Layout;
-use App\Entities\Role;
+use App\Exceptions\HttpExceptionInterface;
+use App\Film\Dto\FilmChunkUploadDto;
 use App\Film\FilmService;
-use App\Helpers\Response;
+
 use App\Topic\TopicService;
+use App\User\Dto\UserAdminPanelDto;
 use App\User\UserService;
 use Exception;
+use Psr\Http\Message\ServerRequestInterface;
+use function App\Helpers\json;
 use function App\Helpers\view;
+
 ini_set('max_execution_time', 300);
 
-
+#[Group("/admin")]
 class AdminController
 {
-    private $adminService;
-    private $filmService;
+    private AdminService $adminService;
+    private FilmService $filmService;
+    private UserService $userService;
+    private TopicService $topicService;
 
     public function __construct()
     {
         $this->adminService = new AdminService();
         $this->filmService = new FilmService();
+        $this->userService = new UserService();
+        $this->topicService = new TopicService();
     }
 
-    #[Route("GET", "/admin")]
-    #[Roles(array(Role::Admin))]
+    #[Route("GET", "/")]
     public function index()
     {
-        $users = new UserService()->getUsers();
-        $topics = new TopicService()->getAllTopics();
-        $films = new FilmService()->getAllFilms();
-
-        return view(view: "/admin/index", data: ['users' => $users, 'topics' => $topics, 'films' => $films], layout: Layout::Admin);
+        return view('/admin/index');
     }
 
-    #[Route("GET", "/admin/film/upload")]
-    #[Roles(array(Role::Admin))]
+    #[Route("GET", "/film/upload")]
     public function upload()
     {
-        return view(view: '/film/upload', layout: Layout::Admin);
+        return view('/admin/filmUpload');
     }
 
-    // Route for handling the video upload and HLS conversion
-    #[Route("POST", "/film/upload")]
-    #[Roles(array(Role::Admin))]
-    public function uploadFilm()
+    #[Route("GET", "/{tab}")]
+    public function getData($request)
     {
         try {
-            $token = $_POST['token'];
-            $videoFile = $_FILES['file'];
-            $chunkNumber = (int) ($_POST['step']);
-            $totalChunks = (int) ($_POST['totalChunks']);
-            $filename = $_POST['filename'];
-        } catch (Exception) {
-            return new Response()->json(["error" => "Invalid upload data."], 400);
+            $tab = $request->getAttribute("tab");
+
+            return match ($tab) {
+                "users"  => json($this->userService->adminUsersExceptOne($_SESSION['user_id'] ?? 0)),
+                "topics" => json($this->topicService->adminTopics()),
+                "films"  => json($this->filmService->adminFilms()),
+                default  => json([]),
+            };
+        } catch (Exception $e) {
+            error_log("Admin panel load failed: " . $e->getMessage());
+            return json(["success" => false, "message" => "Impossible de charger la page"], 500);
         }
+    }
 
+    #[Route("POST", "/film/upload")]
+    public function uploadFilm($request)
+    {
+        $data = $request->getParsedBody();
+        $files = $request->getUploadedFiles();
+        
         try {
-            $result = $this->filmService->chunkedUpload($videoFile, $chunkNumber, $totalChunks, $filename, $token);
+            $dto = new FilmChunkUploadDto(
+                $_FILES['file'] ?? [],
+                (int) ($_POST['step'] ?? 0),
+                (int) ($_POST['totalChunks'] ?? 0),
+                $_POST['filename'] ?? '',
+                $_POST['token'] ?? '',
+                $_POST['title'] ?? '',
+                $_POST['description'] ?? '',
+                $_FILES['cover'] ?? []
+            );
 
-            if ($result["state"] !== "done") {
-                return new Response()->json(["message" => "chunk $chunkNumber téléchargé avec success."]);
-            } else {
-                try {
-                    $title = $_POST['title'];
-                    $description = $_POST['description'];
-                    $coverFile = $_FILES['cover'];
+            $message = $this->filmService->upload($dto);
+            return json(["success" => true, "message" => $message]);
 
-                    $cover = $this->filmService->uploadImage($coverFile, $result["token"]);
-
-                    if ($cover) {
-                        $this->filmService->addFilm($title, $description, $result["path"], 'playlistPath', $cover, $result["token"]);
-                        return new Response()->json(["message" => "téléchargement terminé"]);
-                    }
-                } catch (Exception $e) {
-                    error_log("Video upload failed: " . $e->getMessage());
-                    return new Response()->json(["error" => "une erreur s'est produite lors du téléchargement"]);
-                }
-            }
         } catch (Exception $e) {
             error_log("Chunk upload failed: " . $e->getMessage());
-            return new Response()->json(["error" => "une erreur s'est produite lors du téléchargement"]);
+            return json(["success" => false, "message" => "Erreur lors du téléchargement"], 500);
         }
     }
 
-    #[Route("POST", "/admin/action")]
-    #[Roles(array(Role::Admin))]
-    public function handleActions()
+    #[Route("POST", "/action")]
+    public function handleActions(ServerRequestInterface $request)
     {
-        if (isset($_POST['action'])) {
-            $action = $_POST['action'];
-            $pseudo = $_POST['pseudo'] ?? null;
-            $topic = $_POST['topic'] ?? null;
-            $podcast = $_POST['podcast'] ?? null;
-            $film = $_POST['film'] ?? null;
+        try {
+            $action = $_POST['action'] ?? '';
+            $slug   = $_POST['slug'] ?? '';
+            $slugs  = $_POST['slugs'] ?? [];
 
-            switch ($action) {
-                case 'delete_user':
-                    if ($pseudo) {
-                        $this->adminService->deleteUser($pseudo);
-                        // Redirect or show confirmation
-                    }
-                    break;
+            match ($action) {
+                'delete_user'     => $this->adminService->deleteUser($slug),
+                'delete_users'    => $this->adminService->deleteUsers($slugs),
+                'promote_user'    => $this->adminService->promoteUser($slug),
+                'delete_topic'    => $this->adminService->deleteTopic($slug),
+                'delete_topics'   => $this->adminService->deleteTopics($slugs),
+                'add_topic'       => $this->adminService->addTopic($slug),
+                'delete_film'     => $this->adminService->deleteFilm($slug),
+                'delete_films'    => $this->adminService->deleteFilms($slugs),
+                'delete_podcast'  => $this->adminService->deletePodcast($slug),
+                default           => json(["success" => false, "message" => "L'action n'a pas pu aboutir"], 400)
+            };
 
-                case 'promote_user':
-                    if ($pseudo) {
-                        $this->adminService->promoteUser($pseudo);
-                        // Redirect or show confirmation
-                    }
-                    break;
+            return json(["success" => true, "message" => "Action menée avec succès"]);
 
-                case 'delete_topic':
-                    if ($topic) {
-                        $this->adminService->deleteTopic($topic);
-                        // Redirect or show confirmation
-                    }
-                    break;
-
-                case 'delete_podcast':
-                    if ($podcast) {
-                        $this->adminService->deletePodcast($podcast);
-                        // Redirect or show confirmation
-                    }
-                    break;
-
-                case 'add_topic':
-                    if ($topic) {
-                        $message = $this->adminService->addTopic($topic);  // Appeler la méthode addTopic
-                        // Redirect or show confirmation
-                    }
-                    break;
-                case 'delete_film':
-                    if ($film) {
-                        $this->adminService->deleteFilm($film);
-                        // Redirect or show confirmation
-                    }
-                    break;
-
-                default:
-                    // Handle unknown actions
-                    echo 'Action not found';
-                    break;
-            }
-
-            header("location: /admin");
+        } catch (HttpExceptionInterface $e) {
+            return json(["success" => false, "message" => "Erreur logique"], $e->getStatusCode());
+        } catch (Exception $e) {
+            error_log("Admin action failed: " . $e->getMessage());
+            return json(["success" => false, "message" => "L'action n'a pas pu aboutir"], 500);
         }
     }
 }

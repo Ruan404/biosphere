@@ -11,7 +11,7 @@ function fetchdata(videoId) {
     })
     .then((data) => {
       detailsCtn.innerHTML = `
-                <img src='/${data.cover_image}' />
+                <img src='${data.cover_image}' />
                     <div class='film-info'>
                         <div class='film-info-ctn'>
                             <p class='film-title'>${data.title}</p>
@@ -38,7 +38,7 @@ function fetchdata(videoId) {
         detailsCtn.classList.add("show");
       }, 100);
     })
-    .catch((err) => console.error(`Fetch problem: ${err.message}`));
+    .catch(() => console.log);
 }
 
 function hideFilmCard() {
