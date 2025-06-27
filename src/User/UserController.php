@@ -46,7 +46,7 @@ class UserController
         $existingAvatar = $_SESSION['avatar'];
         $predefinedAvatars = $this->predefinedAvatars;
 
-        return view(view: "profile/profile", data: ["predefinedAvatars" => $predefinedAvatars, "existingAvatar" => $existingAvatar]);
+        return view(view: "user/profile", data: ["predefinedAvatars" => $predefinedAvatars, "existingAvatar" => $existingAvatar]);
 
     }
 
